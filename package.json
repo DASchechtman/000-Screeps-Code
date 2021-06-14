@@ -1,0 +1,20 @@
+{
+  "name": "screep-code",
+  "version": "1.0.0",
+  "description": "code for screeps game",
+  "main": "main.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^15.12.2",
+    "@types/screeps": "^3.2.2",
+    "grunt": "^1.4.1",
+    "grunt-screeps": "^1.5.0",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "upload": "tsc && python flatten.py && grunt screeps"
+  },
+  "author": "Daniel Schechtman",
+  "license": "ISC"
+}
