@@ -37,7 +37,7 @@ var UpgradeBehavior = /** @class */ (function () {
     UpgradeBehavior.prototype.Save = function (creep) {
         HardDrive_1.HardDrive.Write(creep.name, this.m_Should_upgrade);
     };
-    UpgradeBehavior.prototype.Destroy = function (creep) {
+    UpgradeBehavior.prototype.ClearDiskData = function (creep) {
         HardDrive_1.HardDrive.Erase(creep.name);
     };
     return UpgradeBehavior;

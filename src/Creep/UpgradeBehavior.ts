@@ -43,7 +43,7 @@ export class UpgradeBehavior implements CreepBehavior {
         HardDrive.Write(creep.name, this.m_Should_upgrade)
     }
 
-    Destroy(creep: Creep): void {
+    ClearDiskData(creep: Creep): void {
         HardDrive.Erase(creep.name)
     }
 

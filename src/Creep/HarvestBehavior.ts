@@ -1,8 +1,11 @@
+import { HardDrive } from "../Disk/HardDrive";
 import { RoomWrapper } from "../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class HarvestBehavior implements CreepBehavior {
-    Load(creep: Creep): void {}
+    Load(creep: Creep): void {
+        HardDrive.Erase(creep.name)
+    }
 
     Behavior(creep: Creep, room: RoomWrapper): void {
         const source = room.GetSources()[1]
@@ -24,6 +27,6 @@ export class HarvestBehavior implements CreepBehavior {
 
     Save(creep: Creep): void {}
 
-    Destroy(creep: Creep): void {}
+    ClearDiskData(creep: Creep): void {}
 
 }

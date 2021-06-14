@@ -1,10 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HarvestBehavior = void 0;
+var HardDrive_1 = require("./HardDrive");
 var HarvestBehavior = /** @class */ (function () {
     function HarvestBehavior() {
     }
-    HarvestBehavior.prototype.Load = function (creep) { };
+    HarvestBehavior.prototype.Load = function (creep) {
+        HardDrive_1.HardDrive.Erase(creep.name);
+    };
     HarvestBehavior.prototype.Behavior = function (creep, room) {
         var source = room.GetSources()[1];
         var harvest_result = creep.harvest(source);
@@ -20,7 +23,7 @@ var HarvestBehavior = /** @class */ (function () {
         }
     };
     HarvestBehavior.prototype.Save = function (creep) { };
-    HarvestBehavior.prototype.Destroy = function (creep) { };
+    HarvestBehavior.prototype.ClearDiskData = function (creep) { };
     return HarvestBehavior;
 }());
 exports.HarvestBehavior = HarvestBehavior;

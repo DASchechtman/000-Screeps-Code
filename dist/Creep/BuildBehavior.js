@@ -1,14 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BuildBehavior = void 0;
+var HardDrive_1 = require("../Disk/HardDrive");
 var BuildBehavior = /** @class */ (function () {
     function BuildBehavior() {
     }
-    BuildBehavior.prototype.Destroy = function (creep) {
+    BuildBehavior.prototype.ClearDiskData = function (creep) {
         throw new Error("Method not implemented.");
     };
     BuildBehavior.prototype.Load = function (creep) {
-        throw new Error("Method not implemented.");
+        HardDrive_1.HardDrive.Erase(creep.name);
     };
     BuildBehavior.prototype.Save = function (creep) {
         throw new Error("Method not implemented.");

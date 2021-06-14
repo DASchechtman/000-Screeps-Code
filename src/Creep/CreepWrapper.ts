@@ -1,3 +1,4 @@
+import { EventManager } from "../Events/EventManager";
 import { GameObject } from "../Events/GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
 import { BuildBehavior } from "./BuildBehavior";
@@ -11,18 +12,18 @@ export class CreepWrapper extends GameObject {
     private static behavior_types: Map<number, CreepBehavior>
 
     private m_Creep_name: string
-    private m_Is_alive: boolean
     private m_Behavior: CreepBehavior | null
     private m_Cur_type = HARVEST_TYPE
     private m_Room: RoomWrapper
+    private m_Creep: Creep | undefined
 
-    constructor(id: string, room: RoomWrapper) {
+    constructor(name: string, room: RoomWrapper) {
         super()
-        this.m_Creep_name = id;
+        this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map()
         this.m_Behavior = null
-        this.m_Is_alive = true
         this.m_Room = room
+        this.m_Creep = Game.creeps[name]
     }
 
     private LoadTypes(): void {
@@ -53,23 +54,18 @@ export class CreepWrapper extends GameObject {
         }
     }
 
-    Act(): boolean {
-        const creep = Game.creeps[this.m_Creep_name]
+    Act(): void {
+        this.m_Creep = Game.creeps[this.m_Creep_name]
 
-        if (creep && this.m_Behavior) {
-            this.m_Behavior.Load(creep)
-            this.m_Behavior.Behavior(creep, this.m_Room)
-            this.m_Behavior.Save(creep)
+        if (this.m_Creep && this.m_Behavior) {
+            this.m_Behavior.Load(this.m_Creep)
+            this.m_Behavior.Behavior(this.m_Creep, this.m_Room)
+            this.m_Behavior.Save(this.m_Creep)
 
-            if (creep.ticksToLive === 1) {
-                this.m_Behavior.Destroy(creep)
+            if (this.m_Creep.ticksToLive === 1) {
+                this.m_Behavior.ClearDiskData(this.m_Creep)
             }
         }
-        else {
-            this.m_Is_alive = false
-        }
-
-        return this.m_Is_alive
     }
 
     GetName(): string {
@@ -78,9 +74,5 @@ export class CreepWrapper extends GameObject {
 
     HasBehavior(): boolean {
         return Boolean(this.m_Behavior)
-    }
-
-    IsAlive(): boolean {
-        return this.m_Is_alive
     }
 }

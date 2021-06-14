@@ -24,14 +24,14 @@ var HarvestBehavior_1 = require("./HarvestBehavior");
 var UpgradeBehavior_1 = require("./UpgradeBehavior");
 var CreepWrapper = /** @class */ (function (_super) {
     __extends(CreepWrapper, _super);
-    function CreepWrapper(id, room) {
+    function CreepWrapper(name, room) {
         var _this = _super.call(this) || this;
         _this.m_Cur_type = CreepTypes_1.HARVEST_TYPE;
-        _this.m_Creep_name = id;
+        _this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map();
         _this.m_Behavior = null;
-        _this.m_Is_alive = true;
         _this.m_Room = room;
+        _this.m_Creep = Game.creeps[name];
         return _this;
     }
     CreepWrapper.prototype.LoadTypes = function () {
@@ -58,28 +58,21 @@ var CreepWrapper = /** @class */ (function (_super) {
         }
     };
     CreepWrapper.prototype.Act = function () {
-        var creep = Game.creeps[this.m_Creep_name];
-        if (creep && this.m_Behavior) {
-            this.m_Behavior.Load(creep);
-            this.m_Behavior.Behavior(creep, this.m_Room);
-            this.m_Behavior.Save(creep);
-            if (creep.ticksToLive === 1) {
-                this.m_Behavior.Destroy(creep);
+        this.m_Creep = Game.creeps[this.m_Creep_name];
+        if (this.m_Creep && this.m_Behavior) {
+            this.m_Behavior.Load(this.m_Creep);
+            this.m_Behavior.Behavior(this.m_Creep, this.m_Room);
+            this.m_Behavior.Save(this.m_Creep);
+            if (this.m_Creep.ticksToLive === 1) {
+                this.m_Behavior.ClearDiskData(this.m_Creep);
             }
         }
-        else {
-            this.m_Is_alive = false;
-        }
-        return this.m_Is_alive;
     };
     CreepWrapper.prototype.GetName = function () {
         return this.m_Creep_name;
     };
     CreepWrapper.prototype.HasBehavior = function () {
         return Boolean(this.m_Behavior);
-    };
-    CreepWrapper.prototype.IsAlive = function () {
-        return this.m_Is_alive;
     };
     return CreepWrapper;
 }(GameObject_1.GameObject));
