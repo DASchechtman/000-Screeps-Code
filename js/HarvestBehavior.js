@@ -8,9 +8,7 @@ var HarvestBehavior = /** @class */ (function () {
     }
     HarvestBehavior.prototype.Load = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        if (typeof (data) === typeof (this.m_Source_id)) {
-            this.m_Source_id = data;
-        }
+        this.m_Source_id = String(data);
     };
     HarvestBehavior.prototype.Behavior = function (creep, room) {
         var source_id = this.m_Source_id;

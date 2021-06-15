@@ -8,4 +8,6 @@ export abstract class GameObject {
     OnLoad(): void {}
     OnRun(): void {}
     OnSave(): void {}
+
+    OnInvasion(): void {}
 }

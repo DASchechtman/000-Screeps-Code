@@ -1,7 +1,7 @@
 type JsonType = (
     string 
     | number 
-    | (string | number | boolean | null)[] 
+    | Array<string | number | boolean | null>
     | boolean 
     | null 
     | JsonObj

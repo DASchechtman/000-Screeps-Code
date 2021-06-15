@@ -50,6 +50,9 @@ var CreepWrapper = /** @class */ (function (_super) {
         this.Act();
     };
     CreepWrapper.prototype.OnSave = function () { };
+    CreepWrapper.prototype.OnInvasion = function () {
+        this.m_Behavior = CreepWrapper.behavior_types.get(CreepTypes_1.DEFENDER_TYPE);
+    };
     CreepWrapper.prototype.SetType = function (new_type) {
         this.LoadTypes();
         if (CreepWrapper.behavior_types.has(new_type)) {

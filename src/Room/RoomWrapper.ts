@@ -4,6 +4,7 @@ import { ObjectsInRoom } from "./ObjectsInRoom";
 export class RoomWrapper {
     private m_Name: string
     private m_Room_objects: ObjectsInRoom
+    private m_Avalible_energy: number | null = null
 
     constructor(room_name: string) {
         this.m_Name = room_name;
@@ -23,6 +24,7 @@ export class RoomWrapper {
             const construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES)
             const my_creeps = room.find(FIND_MY_CREEPS)
             const hostile_creeps = room.find(FIND_HOSTILE_CREEPS)
+            this.m_Avalible_energy = room.energyAvailable
 
             for (var struct of found_structs) {
                 struct.id
@@ -164,6 +166,16 @@ export class RoomWrapper {
 
     GetHostileCreeps(): Creep[] {
         return this.GetResource<Creep>(ObjectsInRoom.HOSTILE_CREEPS)
+    }
+
+    GetEnergyCapacity(): number {
+        let total_energy = -1
+
+        if (this.m_Avalible_energy !== null) {
+            total_energy = this.m_Avalible_energy
+        }
+
+        return total_energy
     }
 
 }

@@ -35,12 +35,8 @@ var EventManager = /** @class */ (function () {
                     observer.OnRun();
                     break;
                 }
-                case EventManager.CREEP_DEATH_EVENT: {
-                    observer.OnCreepDeath();
-                    break;
-                }
-                case EventManager.CREEP_CREATE_EVENT: {
-                    observer.OnCreepCreate();
+                case EventManager.INVASION_EVENT: {
+                    observer.OnInvasion();
                     break;
                 }
             }
@@ -52,6 +48,7 @@ var EventManager = /** @class */ (function () {
     EventManager.RUN_EVENT = 2;
     EventManager.CREEP_DEATH_EVENT = 3;
     EventManager.CREEP_CREATE_EVENT = 4;
+    EventManager.INVASION_EVENT = 5;
     EventManager.instance = null;
     return EventManager;
 }());

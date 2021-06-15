@@ -5,6 +5,7 @@ var Consts_1 = require("./Consts");
 var ObjectsInRoom_1 = require("./ObjectsInRoom");
 var RoomWrapper = /** @class */ (function () {
     function RoomWrapper(room_name) {
+        this.m_Avalible_energy = null;
         this.m_Name = room_name;
         this.m_Room_objects = new ObjectsInRoom_1.ObjectsInRoom();
         this.LoadRoomResources();
@@ -17,6 +18,7 @@ var RoomWrapper = /** @class */ (function () {
             var construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES);
             var my_creeps = room.find(FIND_MY_CREEPS);
             var hostile_creeps = room.find(FIND_HOSTILE_CREEPS);
+            this.m_Avalible_energy = room.energyAvailable;
             for (var _i = 0, found_structs_1 = found_structs; _i < found_structs_1.length; _i++) {
                 var struct = found_structs_1[_i];
                 struct.id;
@@ -78,7 +80,8 @@ var RoomWrapper = /** @class */ (function () {
             if (list) {
                 for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
                     var id = list_1[_i];
-                    var struct = Game.getObjectById(id);
+                    var struct_id = id;
+                    var struct = Game.getObjectById(struct_id);
                     if (struct) {
                         found_structs.push(struct);
                     }
@@ -92,10 +95,11 @@ var RoomWrapper = /** @class */ (function () {
         var resource_array = this.m_Room_objects.GetArray(key);
         if (resource_array) {
             for (var _i = 0, resource_array_1 = resource_array; _i < resource_array_1.length; _i++) {
-                var resource = resource_array_1[_i];
-                var resource_id = Game.getObjectById(resource);
-                if (resource_id) {
-                    resource_objects.push(resource_id);
+                var id = resource_array_1[_i];
+                var resource_id = id;
+                var resource = Game.getObjectById(resource_id);
+                if (resource) {
+                    resource_objects.push(resource);
                 }
             }
         }
@@ -127,6 +131,13 @@ var RoomWrapper = /** @class */ (function () {
     };
     RoomWrapper.prototype.GetHostileCreeps = function () {
         return this.GetResource(ObjectsInRoom_1.ObjectsInRoom.HOSTILE_CREEPS);
+    };
+    RoomWrapper.prototype.GetEnergyCapacity = function () {
+        var total_energy = -1;
+        if (this.m_Avalible_energy !== null) {
+            total_energy = this.m_Avalible_energy;
+        }
+        return total_energy;
     };
     return RoomWrapper;
 }());

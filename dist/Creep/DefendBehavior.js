@@ -14,7 +14,11 @@ var DefendBehavior = /** @class */ (function () {
     DefendBehavior.prototype.Save = function (creep) {
     };
     DefendBehavior.prototype.Behavior = function (creep, room) {
-        throw new Error("Method not implemented.");
+        var hostile_creeps = room.GetHostileCreeps();
+        var res = creep.attack(hostile_creeps[0]);
+        if (res === ERR_NOT_IN_RANGE) {
+            creep.moveTo(hostile_creeps[0]);
+        }
     };
     return DefendBehavior;
 }());

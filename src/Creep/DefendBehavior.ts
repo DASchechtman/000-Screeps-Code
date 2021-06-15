@@ -13,7 +13,13 @@ export class DefendBehavior implements CreepBehavior {
         
     }
     Behavior(creep: Creep, room: RoomWrapper): void {
-        throw new Error("Method not implemented.");
+        const hostile_creeps = room.GetHostileCreeps()
+
+        const res = creep.attack(hostile_creeps[0])
+
+        if(res === ERR_NOT_IN_RANGE) {
+            creep.moveTo(hostile_creeps[0])
+        }
     }
 
 }

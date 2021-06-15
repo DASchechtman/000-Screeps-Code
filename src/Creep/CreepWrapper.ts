@@ -46,6 +46,10 @@ export class CreepWrapper extends GameObject {
 
     OnSave(): void { }
 
+    OnInvasion(): void {
+        this.m_Behavior = CreepWrapper.behavior_types.get(DEFENDER_TYPE)!!
+    }
+
     SetType(new_type: number) {
         this.LoadTypes()
         if (CreepWrapper.behavior_types.has(new_type)) {

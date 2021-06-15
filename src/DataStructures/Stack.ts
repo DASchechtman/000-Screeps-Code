@@ -34,4 +34,8 @@ export class Stack<T> {
 
         return item
     }
+
+    Size(): number {
+        return this.m_Stack.length
+    }
 }

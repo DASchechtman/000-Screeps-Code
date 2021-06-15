@@ -28,6 +28,9 @@ var Stack = /** @class */ (function () {
         }
         return item;
     };
+    Stack.prototype.Size = function () {
+        return this.m_Stack.length;
+    };
     return Stack;
 }());
 exports.Stack = Stack;
