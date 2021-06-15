@@ -1,0 +1,9 @@
+Main resources:
+- Energy
+    - used to do vital tasks like spawn creeps or take/keep control of a room or power/build structures
+- Room
+    - a 50 x 50 cell square that contain resources like Energy
+    - controlling a room makes things like Energy harvesting or building structures easier
+    
+
+

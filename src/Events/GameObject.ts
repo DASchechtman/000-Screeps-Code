@@ -5,9 +5,7 @@ export abstract class GameObject {
         EventManager.Inst().Add(this)
     }
 
-    OnSave(): void {}
     OnLoad(): void {}
     OnRun(): void {}
-    OnCreepDeath(): void {}
-    OnCreepCreate(): void {}
+    OnSave(): void {}
 }

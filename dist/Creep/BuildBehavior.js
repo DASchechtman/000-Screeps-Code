@@ -6,7 +6,7 @@ var BuildBehavior = /** @class */ (function () {
     function BuildBehavior() {
     }
     BuildBehavior.prototype.ClearDiskData = function (creep) {
-        throw new Error("Method not implemented.");
+        HardDrive_1.HardDrive.Erase(creep.name);
     };
     BuildBehavior.prototype.Load = function (creep) {
         HardDrive_1.HardDrive.Erase(creep.name);

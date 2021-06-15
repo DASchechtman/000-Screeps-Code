@@ -15,6 +15,4 @@ export class BuildBehavior implements CreepBehavior {
     Behavior(creep: Creep, room: RoomWrapper): void {
         throw new Error("Method not implemented.");
     }
-
-
 }

@@ -99,11 +99,14 @@ export class RoomWrapper {
 
             if (list) {
                 for (var id of list) {
-                    const struct = Game.getObjectById<T>(id)
+                    const struct_id = id as Id<T>
+
+                    const struct = Game.getObjectById(struct_id)
 
                     if (struct) {
                         found_structs.push(struct)
                     }
+
                 }
             }
         }
@@ -116,11 +119,12 @@ export class RoomWrapper {
         const resource_array = this.m_Room_objects.GetArray(key)
 
         if (resource_array) {
-            for (var resource of resource_array) {
-                const resource_id = Game.getObjectById<T>(resource)
+            for (var id of resource_array) {
+                const resource_id = id as Id<T>
+                const resource = Game.getObjectById(resource_id)
 
-                if (resource_id) {
-                    resource_objects.push(resource_id)
+                if (resource) {
+                    resource_objects.push(resource)
                 }
             }
         }
