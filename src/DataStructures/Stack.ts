@@ -38,4 +38,8 @@ export class Stack<T> {
     Size(): number {
         return this.m_Stack.length
     }
+
+    Clear(): void {
+        this.m_Stack = new Array()
+    }
 }

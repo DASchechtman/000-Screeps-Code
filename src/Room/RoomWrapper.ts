@@ -24,7 +24,7 @@ export class RoomWrapper {
             const construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES)
             const my_creeps = room.find(FIND_MY_CREEPS)
             const hostile_creeps = room.find(FIND_HOSTILE_CREEPS)
-            this.m_Avalible_energy = room.energyAvailable
+            this.m_Avalible_energy = room.energyCapacityAvailable
 
             for (var struct of found_structs) {
                 struct.id
@@ -176,6 +176,10 @@ export class RoomWrapper {
         }
 
         return total_energy
+    }
+
+    GetName(): string {
+        return this.m_Name
     }
 
 }

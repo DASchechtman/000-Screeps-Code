@@ -18,7 +18,7 @@ var RoomWrapper = /** @class */ (function () {
             var construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES);
             var my_creeps = room.find(FIND_MY_CREEPS);
             var hostile_creeps = room.find(FIND_HOSTILE_CREEPS);
-            this.m_Avalible_energy = room.energyAvailable;
+            this.m_Avalible_energy = room.energyCapacityAvailable;
             for (var _i = 0, found_structs_1 = found_structs; _i < found_structs_1.length; _i++) {
                 var struct = found_structs_1[_i];
                 struct.id;
@@ -138,6 +138,9 @@ var RoomWrapper = /** @class */ (function () {
             total_energy = this.m_Avalible_energy;
         }
         return total_energy;
+    };
+    RoomWrapper.prototype.GetName = function () {
+        return this.m_Name;
     };
     return RoomWrapper;
 }());

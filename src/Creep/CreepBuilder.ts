@@ -43,6 +43,16 @@ export class CreepBuilder {
         return cost
     }
 
+    private static BuildScalable(energy_cost: number, body: Array<BodyPartConstant>) {
+        let build_cost = 1200
+
+        if (energy_cost < build_cost) {
+            build_cost = energy_cost
+        }
+
+        return this.BuildBody(build_cost, body)
+    }
+
     static BuildBody(enegy_cost_cap: number, body_parts: Array<BodyPartConstant>): BodyPartConstant[] {
         let total = 0
         let building = true
@@ -74,4 +84,13 @@ export class CreepBuilder {
 
         return total
     }
+
+    static BuildScalableWorker(avalible_energy: number) {
+        return this.BuildScalable(avalible_energy, CreepBuilder.WORKER_BODY)  
+    }
+
+    static BuildScalableDefender(avalible_energy: number) {
+        return this.BuildScalable(avalible_energy, CreepBuilder.DEFENDER_BODY)
+    }
+
 }

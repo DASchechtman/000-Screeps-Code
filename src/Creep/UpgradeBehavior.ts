@@ -1,13 +1,19 @@
 import { HardDrive, JsonObj } from "../Disk/HardDrive";
+import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
+import { Signal } from "../Signals/SignalManager";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class UpgradeBehavior implements CreepBehavior {
     private m_Should_upgrade: boolean | null = null
 
+    SignalTask(): ((signal: Signal, obj: GameObject) => boolean) | null {
+        return null
+    }
+
     Load(creep: Creep): void {
         const data = HardDrive.Read(creep.name)
-        this.m_Should_upgrade = Boolean(data)
+        this.m_Should_upgrade = Boolean(data.behavior)
     }
 
     Behavior(creep: Creep, room: RoomWrapper): void {
@@ -40,7 +46,9 @@ export class UpgradeBehavior implements CreepBehavior {
     }
 
     Save(creep: Creep): void {
-        HardDrive.Write(creep.name, this.m_Should_upgrade)
+        const data = HardDrive.Read(creep.name) as JsonObj
+        data.behavior = this.m_Should_upgrade
+        HardDrive.Write(creep.name, data)
     }
 
     ClearDiskData(creep: Creep): void {

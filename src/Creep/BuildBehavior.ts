@@ -1,18 +1,24 @@
-import { HardDrive } from "../Disk/HardDrive";
+import { HardDrive, JsonObj } from "../Disk/HardDrive";
+import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
+import { Signal } from "../Signals/SignalManager";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class BuildBehavior implements CreepBehavior {
+    SignalTask(): ((signal: Signal, obj: GameObject) => boolean) | null {
+        return null
+    }
 
     private m_Can_build = false
-    
+
     Load(creep: Creep): void {
-        this.m_Can_build = Boolean(HardDrive.Read(creep.name))
+        const data = HardDrive.Read(creep.name)
+        this.m_Can_build = Boolean(data.behavior)
     }
-    
+
     Behavior(creep: Creep, room: RoomWrapper): void {
         const sites = room.GetConstructionSites()
-        
+
         if (sites.length > 0) {
             const build_site = sites[0]
             const source = room.GetSources()[0]
@@ -20,7 +26,7 @@ export class BuildBehavior implements CreepBehavior {
             if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
                 this.m_Can_build = false
             }
-            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === creep.store.getCapacity(RESOURCE_ENERGY)){
+            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === creep.store.getCapacity(RESOURCE_ENERGY)) {
                 this.m_Can_build = true
             }
 
@@ -44,7 +50,9 @@ export class BuildBehavior implements CreepBehavior {
     }
 
     Save(creep: Creep): void {
-        HardDrive.Write(creep.name, this.m_Can_build)
+        const data = HardDrive.Read(creep.name)
+        data.behavior = this.m_Can_build
+        HardDrive.Write(creep.name, data)
     }
 
     ClearDiskData(creep: Creep): void {

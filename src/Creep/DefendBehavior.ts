@@ -1,8 +1,13 @@
 import { HardDrive } from "../Disk/HardDrive";
+import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
+import { Signal } from "../Signals/SignalManager";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class DefendBehavior implements CreepBehavior {
+    SignalTask(): ((signal: Signal, obj: GameObject) => boolean) | null {
+        return null
+    }
     ClearDiskData(creep: Creep): void {
         HardDrive.Erase(creep.name)
     }
@@ -19,6 +24,9 @@ export class DefendBehavior implements CreepBehavior {
 
         if(res === ERR_NOT_IN_RANGE) {
             creep.moveTo(hostile_creeps[0])
+        }
+        else {
+            creep.suicide()
         }
     }
 

@@ -6,9 +6,12 @@ var UpgradeBehavior = /** @class */ (function () {
     function UpgradeBehavior() {
         this.m_Should_upgrade = null;
     }
+    UpgradeBehavior.prototype.SignalTask = function () {
+        return null;
+    };
     UpgradeBehavior.prototype.Load = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        this.m_Should_upgrade = Boolean(data);
+        this.m_Should_upgrade = Boolean(data.behavior);
     };
     UpgradeBehavior.prototype.Behavior = function (creep, room) {
         var controller = room.GetOwnedStructures(STRUCTURE_CONTROLLER)[0];
@@ -35,7 +38,9 @@ var UpgradeBehavior = /** @class */ (function () {
         }
     };
     UpgradeBehavior.prototype.Save = function (creep) {
-        HardDrive_1.HardDrive.Write(creep.name, this.m_Should_upgrade);
+        var data = HardDrive_1.HardDrive.Read(creep.name);
+        data.behavior = this.m_Should_upgrade;
+        HardDrive_1.HardDrive.Write(creep.name, data);
     };
     UpgradeBehavior.prototype.ClearDiskData = function (creep) {
         HardDrive_1.HardDrive.Erase(creep.name);

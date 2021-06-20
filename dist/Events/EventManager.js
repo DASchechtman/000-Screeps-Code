@@ -20,7 +20,9 @@ var EventManager = /** @class */ (function () {
     };
     EventManager.prototype.Notify = function (event_type) {
         var i = 0;
+        //console.log(this.observers_list.length)
         while (i < this.observers_list.length) {
+            console.log(this.observers_list.length);
             var observer = this.observers_list[i];
             switch (event_type) {
                 case EventManager.SAVE_EVENT: {

@@ -31,6 +31,9 @@ var Stack = /** @class */ (function () {
     Stack.prototype.Size = function () {
         return this.m_Stack.length;
     };
+    Stack.prototype.Clear = function () {
+        this.m_Stack = new Array();
+    };
     return Stack;
 }());
 exports.Stack = Stack;

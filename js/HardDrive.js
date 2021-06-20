@@ -11,6 +11,9 @@ var HardDrive = /** @class */ (function () {
     };
     HardDrive.Read = function (identifier) {
         var data = JSON.parse(RawMemory.get())[identifier];
+        if (!data) {
+            data = {};
+        }
         return data;
     };
     HardDrive.Erase = function (identifier) {

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameObject = void 0;
-var EventManager_1 = require("./EventManager");
-var SignalManager_1 = require("./SignalManager");
+var EventManager_1 = require("./Events/EventManager");
+var SignalManager_1 = require("./Signals/SignalManager");
 var GameObject = /** @class */ (function () {
     function GameObject(id, type) {
         this.m_Id = id;

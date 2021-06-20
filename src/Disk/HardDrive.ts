@@ -12,14 +12,17 @@ export interface JsonObj {
 }
 
 export class HardDrive {
-    static Write(identifier: string, data: JsonType): void {
+    static Write(identifier: string, data: JsonObj): void {
         let disk = JSON.parse(RawMemory.get())
         disk[identifier] = data
         RawMemory.set(JSON.stringify(disk))
     }
 
-    static Read(identifier: string): JsonType | undefined {
-        const data = JSON.parse(RawMemory.get())[identifier]
+    static Read(identifier: string): JsonObj {
+        let data: JsonObj = JSON.parse(RawMemory.get())[identifier]
+        if (!data) {
+            data = {}
+        }
         return data
     }
 

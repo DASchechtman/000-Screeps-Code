@@ -5,6 +5,9 @@ var HardDrive_1 = require("../Disk/HardDrive");
 var DefendBehavior = /** @class */ (function () {
     function DefendBehavior() {
     }
+    DefendBehavior.prototype.SignalTask = function () {
+        return null;
+    };
     DefendBehavior.prototype.ClearDiskData = function (creep) {
         HardDrive_1.HardDrive.Erase(creep.name);
     };
@@ -18,6 +21,9 @@ var DefendBehavior = /** @class */ (function () {
         var res = creep.attack(hostile_creeps[0]);
         if (res === ERR_NOT_IN_RANGE) {
             creep.moveTo(hostile_creeps[0]);
+        }
+        else {
+            creep.suicide();
         }
     };
     return DefendBehavior;

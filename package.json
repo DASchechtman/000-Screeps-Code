@@ -13,7 +13,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "upload": "tsc && python flatten.py && grunt screeps"
+    "compile": "tsc && python flatten.py",
+    "upload-main": "npm run compile && grunt screeps --branch=0",
+    "upload-debug": "npm run compile && grunt screeps --branch=1"
   },
   "author": "Daniel Schechtman",
   "license": "ISC"

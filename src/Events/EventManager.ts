@@ -1,4 +1,4 @@
-import { GameObject } from "./GameObject"
+import { GameObject } from "../GameObject"
 
 export class EventManager {
     public static readonly SAVE_EVENT = 0
@@ -34,7 +34,9 @@ export class EventManager {
 
     Notify(event_type: number): void {
         let i = 0;
+        //console.log(this.observers_list.length)
         while (i < this.observers_list.length) {
+            console.log(this.observers_list.length)
             const observer = this.observers_list[i]
             switch(event_type) {
                 case EventManager.SAVE_EVENT: {

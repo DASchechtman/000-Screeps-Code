@@ -6,8 +6,12 @@ var BuildBehavior = /** @class */ (function () {
     function BuildBehavior() {
         this.m_Can_build = false;
     }
+    BuildBehavior.prototype.SignalTask = function () {
+        return null;
+    };
     BuildBehavior.prototype.Load = function (creep) {
-        this.m_Can_build = Boolean(HardDrive_1.HardDrive.Read(creep.name));
+        var data = HardDrive_1.HardDrive.Read(creep.name);
+        this.m_Can_build = Boolean(data.behavior);
     };
     BuildBehavior.prototype.Behavior = function (creep, room) {
         var sites = room.GetConstructionSites();
@@ -39,7 +43,9 @@ var BuildBehavior = /** @class */ (function () {
         }
     };
     BuildBehavior.prototype.Save = function (creep) {
-        HardDrive_1.HardDrive.Write(creep.name, this.m_Can_build);
+        var data = HardDrive_1.HardDrive.Read(creep.name);
+        data.behavior = this.m_Can_build;
+        HardDrive_1.HardDrive.Write(creep.name, data);
     };
     BuildBehavior.prototype.ClearDiskData = function (creep) {
         HardDrive_1.HardDrive.Erase(creep.name);
