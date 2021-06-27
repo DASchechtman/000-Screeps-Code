@@ -10,17 +10,15 @@ var HardDrive_1 = require("../Disk/HardDrive");
 var HarvestBehavior = /** @class */ (function () {
     function HarvestBehavior() {
         this.m_Source_id = "";
+        this.m_Transfered_all_energy = false;
     }
     HarvestBehavior.prototype.SignalTask = function () {
-        return function (signal, obj) {
-            var creep = signal.from;
-            obj.ResetBehaviors();
-            return true;
-        };
+        return null;
     };
     HarvestBehavior.prototype.Load = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        this.m_Source_id = String(data.behavior);
+        this.m_Source_id = String(data.behavior.id);
+        this.m_Transfered_all_energy = Boolean(data.behavior.empty);
     };
     HarvestBehavior.prototype.Behavior = function (creep, room) {
         var source_id = this.m_Source_id;
@@ -31,23 +29,41 @@ var HarvestBehavior = /** @class */ (function () {
         if (source) {
             var harvest_result = creep.harvest(source);
             this.m_Source_id = source.id;
-            if (creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+            if (creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                this.m_Transfered_all_energy = true;
+            }
+            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                this.m_Transfered_all_energy = false;
+            }
+            if (this.m_Transfered_all_energy) {
                 var spawn = room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
                 var extensions = room.GetOwnedStructures(STRUCTURE_EXTENSION);
                 var deposit_places = __spreadArray([spawn], extensions);
-                var deposit = creep.transfer(spawn, RESOURCE_ENERGY);
+                var container = deposit_places[0];
+                for (var _i = 0, deposit_places_1 = deposit_places; _i < deposit_places_1.length; _i++) {
+                    var storage = deposit_places_1[_i];
+                    if (storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                        container = storage;
+                        break;
+                    }
+                }
+                var deposit = creep.transfer(container, RESOURCE_ENERGY);
                 if (deposit === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(deposit_places[0]);
+                    creep.moveTo(container);
                 }
             }
-            else if (harvest_result === ERR_NOT_IN_RANGE) {
+            else {
                 creep.moveTo(source);
             }
         }
     };
     HarvestBehavior.prototype.Save = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        data.behavior = this.m_Source_id;
+        var behavior_data = {
+            id: this.m_Source_id,
+            empty: this.m_Transfered_all_energy
+        };
+        data.behavior = behavior_data;
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     HarvestBehavior.prototype.ClearDiskData = function (creep) {

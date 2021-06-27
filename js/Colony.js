@@ -24,6 +24,9 @@ var Stack_1 = require("./Stack");
 var HardDrive_1 = require("./HardDrive");
 var GameObject_1 = require("./GameObject");
 var RoomWrapper_1 = require("./RoomWrapper");
+var SignalManager_1 = require("./SignalManager");
+var CreepTypeQueue_1 = require("./CreepTypeQueue");
+var CreepTypeTracker_1 = require("./CreepTypeTracker");
 var Colony = /** @class */ (function (_super) {
     __extends(Colony, _super);
     function Colony(room_name) {
@@ -32,128 +35,128 @@ var Colony = /** @class */ (function (_super) {
         _this.m_Colony_queen = _this.m_Room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
         _this.m_Creeps_count = 0;
         _this.m_Creep_cap = 10;
-        _this.m_Being_invaded = false;
         _this.m_Creep_types = new Stack_1.Stack();
-        _this.m_Creeps_name_data = {};
+        _this.m_Creeps_list = {};
         _this.m_Data_key = "creeps";
         _this.m_Creeps = new Array();
+        _this.m_Type_tracker = new CreepTypeTracker_1.CreepTypeTracker();
+        _this.m_Type_queue = new CreepTypeQueue_1.CreepTypeQueue(_this.m_Room);
         return _this;
     }
+    Colony.prototype.GetCreepNames = function () {
+        var data = HardDrive_1.HardDrive.Read(this.m_Room.GetName());
+        if (data[this.m_Data_key]) {
+            this.m_Creeps_list[this.m_Data_key] = data[this.m_Data_key];
+        }
+        else if (!this.m_Creeps_list[this.m_Data_key]) {
+            this.m_Creeps_list[this.m_Data_key] = new Array();
+        }
+        return this.m_Creeps_list[this.m_Data_key];
+    };
     Colony.prototype.SpawnCreep = function () {
-        var _a, _b, _c;
+        var _a, _b;
         var type = this.m_Creep_types.Peek();
         if (type !== null) {
-            var name_1 = "creep-" + new Date().getTime();
+            var name_1 = "creep-" + Date.now();
             var creation = void 0;
             var energy = this.m_Room.GetEnergyCapacity();
-            var body = CreepBuilder_1.CreepBuilder.WORKER_BODY;
+            var body_type = CreepBuilder_1.CreepBuilder.WORKER_BODY;
             if (type === CreepTypes_1.DEFENDER_TYPE) {
-                body = CreepBuilder_1.CreepBuilder.DEFENDER_BODY;
-                creation = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawnCreep(CreepBuilder_1.CreepBuilder.BuildScalableDefender(energy), name_1);
+                body_type = CreepBuilder_1.CreepBuilder.DEFENDER_BODY;
+                var defender_body = CreepBuilder_1.CreepBuilder.BuildScalableDefender(energy);
+                creation = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawnCreep(defender_body, name_1);
             }
             else {
-                creation = (_b = this.m_Colony_queen) === null || _b === void 0 ? void 0 : _b.spawnCreep(CreepBuilder_1.CreepBuilder.BuildScalableWorker(energy), name_1);
-            }
-            if (creation === ERR_NOT_ENOUGH_ENERGY) {
-                creation = (_c = this.m_Colony_queen) === null || _c === void 0 ? void 0 : _c.spawnCreep(body, name_1);
+                var worker_body = CreepBuilder_1.CreepBuilder.BuildScalableWorker(energy);
+                creation = (_b = this.m_Colony_queen) === null || _b === void 0 ? void 0 : _b.spawnCreep(worker_body, name_1);
             }
             if (creation === OK) {
-                console.log("adding name");
-                this.m_Creeps_name_data[this.m_Data_key].push(name_1);
+                this.GetCreepNames().push(name_1);
                 this.m_Creeps_count++;
                 var creep_wrap = new CreepWrapper_1.CreepWrapper(name_1, this.m_Room);
-                creep_wrap.SetType(type);
+                creep_wrap.SetBehavior(type);
                 this.m_Creep_types.Pop();
                 this.m_Creeps.push(creep_wrap);
+                this.m_Type_tracker.Add(creep_wrap.GetBehavior(), creep_wrap.GetName());
             }
         }
     };
-    Colony.prototype.LoadBuilderTypes = function () {
-        var sites = this.m_Room.GetConstructionSites();
-        if (sites.length > 0) {
-            var builders = Math.floor(sites.length / 25);
-            if (builders === 0) {
-                builders = 1;
+    Colony.prototype.ConvertToHarvester = function () {
+        var _this = this;
+        var creep_levels = [
+            CreepTypeTracker_1.CreepTypeTracker.LEVEL_THREE,
+            CreepTypeTracker_1.CreepTypeTracker.LEVEL_TWO
+        ];
+        var _loop_1 = function (level) {
+            var count = this_1.m_Type_tracker.GetLevelCount(level);
+            console.log("count: " + count);
+            if (count > 0) {
+                var names_1 = this_1.m_Type_tracker.GetNamesByLevel(level);
+                console.log("level: " + level);
+                var filter = function (sender, other) {
+                    return other.SignalRecieverID() === names_1[0];
+                };
+                var signal = {
+                    from: this_1,
+                    data: null,
+                    method: function (sender, reciever) {
+                        var creep = reciever;
+                        _this.m_Type_tracker.Remove(creep.GetBehavior(), creep.GetName());
+                        creep.SetBehavior(CreepTypes_1.HARVEST_TYPE);
+                        _this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName());
+                        console.log("converting to harvester");
+                        return true;
+                    }
+                };
+                SignalManager_1.SignalManager.Inst().SendSignal(signal, filter);
+                return "break";
             }
-            if (sites.length + builders > this.m_Creep_cap) {
-                builders = sites.length + builders - this.m_Creep_cap;
-            }
-            for (var i = 0; i < builders; i++) {
-                this.m_Creep_types.Push(CreepTypes_1.BUILDER_TYPE);
-            }
+        };
+        var this_1 = this;
+        for (var _i = 0, creep_levels_1 = creep_levels; _i < creep_levels_1.length; _i++) {
+            var level = creep_levels_1[_i];
+            var state_1 = _loop_1(level);
+            if (state_1 === "break")
+                break;
         }
-    };
-    Colony.prototype.LoadDefenderTypes = function () {
-        var enemies = this.m_Room.GetHostileCreeps();
-        if (enemies.length > 0) {
-            if (enemies.length + this.m_Creep_types.Size() > this.m_Creep_cap) {
-                this.m_Creep_cap = enemies.length + this.m_Creep_types.Size();
-            }
-            for (var i = 0; i < enemies.length; i++) {
-                this.m_Creep_types.Push(CreepTypes_1.DEFENDER_TYPE);
-            }
-        }
-    };
-    Colony.prototype.LoadTypes = function () {
-        this.m_Creep_types.Push(CreepTypes_1.HARVEST_TYPE);
-        this.m_Creep_types.Push(CreepTypes_1.HARVEST_TYPE);
-        this.m_Creep_types.Push(CreepTypes_1.UPGRADER_TYPE);
-        this.m_Creep_types.Push(CreepTypes_1.UPGRADER_TYPE);
-        this.LoadDefenderTypes();
-        this.LoadBuilderTypes();
-        while (this.m_Creep_types.Size() < this.m_Creep_cap) {
-            this.m_Creep_types.Push(CreepTypes_1.HARVEST_TYPE);
-        }
-    };
-    Colony.prototype.IsInvaded = function () {
-        return this.m_Room.GetHostileCreeps().length > 0;
     };
     Colony.prototype.OnLoad = function () {
         var _a, _b;
-        this.LoadTypes();
-        var data = HardDrive_1.HardDrive.Read(this.m_Room.GetName());
-        if (data[this.m_Data_key]) {
-            this.m_Creeps_name_data[this.m_Data_key] = data[this.m_Data_key];
-        }
-        else {
-            this.m_Creeps_name_data[this.m_Data_key] = new Array();
-        }
-        for (var _i = 0, _c = this.m_Creeps_name_data[this.m_Data_key]; _i < _c.length; _i++) {
-            var creep_name = _c[_i];
+        var creep_names = this.GetCreepNames();
+        for (var _i = 0, creep_names_1 = creep_names; _i < creep_names_1.length; _i++) {
+            var creep_name = creep_names_1[_i];
             if (creep_name !== ((_b = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawning) === null || _b === void 0 ? void 0 : _b.name)) {
-                console.log("creating new creep");
-                this.m_Creeps.push(new CreepWrapper_1.CreepWrapper(creep_name, this.m_Room));
-                this.m_Creep_types.Pop();
+                var wrapper = new CreepWrapper_1.CreepWrapper(creep_name, this.m_Room);
+                this.m_Creeps.push(wrapper);
                 this.m_Creeps_count++;
             }
         }
     };
     Colony.prototype.OnRun = function () {
         if (this.m_Colony_queen) {
-            if (this.m_Creeps_count < this.m_Creep_cap) {
+            for (var _i = 0, _a = this.m_Creeps; _i < _a.length; _i++) {
+                var creep = _a[_i];
+                this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName());
+            }
+            var harvester_count = this.m_Type_tracker.GetTypeCount(CreepTypes_1.HARVEST_TYPE);
+            var max = this.m_Type_queue.GetMax(CreepTypes_1.HARVEST_TYPE);
+            if (max !== -1 && harvester_count < max) {
+                this.ConvertToHarvester();
+            }
+            this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
+            if (this.m_Creep_types.Size() > 0) {
                 this.SpawnCreep();
             }
         }
     };
     Colony.prototype.OnSave = function () {
-        HardDrive_1.HardDrive.Write(this.m_Room.GetName(), this.m_Creeps_name_data);
+        HardDrive_1.HardDrive.Write(this.m_Room.GetName(), this.m_Creeps_list);
     };
     Colony.prototype.RemoveFromMemory = function (name) {
-        var creep_names = this.m_Creeps_name_data[this.m_Data_key];
+        var creep_names = this.m_Creeps_list[this.m_Data_key];
         var index = creep_names.indexOf(name);
         if (index > -1) {
             creep_names.splice(index, 1);
-        }
-    };
-    Colony.prototype.ResetBehaviors = function () {
-        this.m_Creep_types.Clear();
-        this.LoadTypes();
-        for (var _i = 0, _a = this.m_Creeps; _i < _a.length; _i++) {
-            var creep = _a[_i];
-            var type = this.m_Creep_types.Pop();
-            if (type) {
-                creep.SetType(type);
-            }
         }
     };
     return Colony;

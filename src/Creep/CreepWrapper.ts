@@ -24,7 +24,6 @@ export class CreepWrapper extends GameObject {
 
     constructor(name: string, room: RoomWrapper) {
         super(name, CREEP_TYPE)
-        console.log("adding to queue")
         this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map()
         this.m_Behavior = null
@@ -59,6 +58,7 @@ export class CreepWrapper extends GameObject {
         let task = this.m_Behavior?.SignalTask()
 
         if (!task) {
+            console.log("remove name method")
             task = (sender, reciever): boolean => {
                 const creep = sender.from as CreepWrapper
                 (reciever as Colony).RemoveFromMemory(creep.GetName())
@@ -77,12 +77,10 @@ export class CreepWrapper extends GameObject {
 
     OnLoad(): void {
         this.LoadTypes()
-        console.log(`loading type: ${this.m_Cur_type}`)
-        this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type)!!
         if (this.m_Creep) {
             const data = HardDrive.Read(this.m_Creep.name)
             const behavior = data.type
-            if (behavior) {
+            if (typeof behavior === 'number') {
                 this.m_Cur_type = behavior as number
                 this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type)!!
             }
@@ -98,7 +96,6 @@ export class CreepWrapper extends GameObject {
     }
 
     OnRun(): void {
-        console.log("running")
         if (this.m_Creep && this.m_Behavior) {
             this.m_Behavior.Load(this.m_Creep)
             this.m_Behavior.Behavior(this.m_Creep, this.m_Room)
@@ -111,9 +108,11 @@ export class CreepWrapper extends GameObject {
     }
 
     OnSave(): void {
-        const data = HardDrive.Read(this.m_Creep_name)
-        data.type = this.m_Cur_type
-        HardDrive.Write(this.m_Creep_name, data)
+        if (this.m_Creep) {
+            const data = HardDrive.Read(this.m_Creep_name)
+            data.type = this.m_Cur_type
+            HardDrive.Write(this.m_Creep_name, data)
+        }
 
     }
 
@@ -121,13 +120,16 @@ export class CreepWrapper extends GameObject {
         this.m_Behavior = CreepWrapper.behavior_types.get(DEFENDER_TYPE)!!
     }
 
-    SetType(new_type: number) {
+    SetBehavior(new_type: number) {
         this.LoadTypes()
         if (CreepWrapper.behavior_types.has(new_type)) {
-            console.log(`setting type to: ${new_type}`)
             this.m_Cur_type = new_type
             this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type)!!
         }
+    }
+
+    GetBehavior(): number {
+        return this.m_Cur_type
     }
 
     GetName(): string {

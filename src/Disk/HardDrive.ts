@@ -4,11 +4,10 @@ type JsonType = (
     | Array<string | number | boolean | null>
     | boolean 
     | null 
-    | JsonObj
 )
 
 export interface JsonObj {
-    [item: string]: JsonType
+    [item: string]: JsonType | JsonObj
 }
 
 export class HardDrive {

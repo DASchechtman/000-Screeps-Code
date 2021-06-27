@@ -1,9 +1,13 @@
 import os
 
+lines_total = 0
+
 def ReadFile(path):
+    global lines_total
     output = []
     with open(path, "r") as f:
         output = f.readlines()
+    lines_total += len(output)
     return output
 
 def RestructReqPath(line):
@@ -54,6 +58,7 @@ def CopyFiles(path):
             file_text = ReadFile(path)
             changed_text = EditText(file_text)
             WriteFile(changed_text, name)
+    print(f"total number of lines: {lines_total}")
 
 if __name__ == "__main__":
     CopyFiles("./dist")

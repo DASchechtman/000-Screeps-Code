@@ -1,25 +1,22 @@
 import { Colony } from "../Colony/Colony";
 import { HardDrive, JsonObj } from "../Disk/HardDrive";
-import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
-import { Signal } from "../Signals/SignalManager";
+import { Method, Signal } from "../Signals/SignalManager";
 import { CreepBehavior } from "./CreepBehavior";
 import { CreepWrapper } from "./CreepWrapper";
 
 export class HarvestBehavior implements CreepBehavior {
-    SignalTask(): ((signal: Signal, obj: GameObject) => boolean) | null {
-        return (signal, obj): boolean => {
-            const creep = signal.from as CreepWrapper
-            (obj as Colony).ResetBehaviors()
-            return true
-        }
-    }
-
     private m_Source_id = ""
+    private m_Transfered_all_energy = false
+
+    SignalTask(): Method | null {
+        return null
+    }
 
     Load(creep: Creep): void {
         const data = HardDrive.Read(creep.name)
-        this.m_Source_id = String(data.behavior)
+        this.m_Source_id = String((data.behavior as JsonObj).id)
+        this.m_Transfered_all_energy = Boolean((data.behavior as JsonObj).empty)
     }
 
     Behavior(creep: Creep, room: RoomWrapper): void {
@@ -36,19 +33,35 @@ export class HarvestBehavior implements CreepBehavior {
             const harvest_result = creep.harvest(source)
             this.m_Source_id = source.id
 
-            if (creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+            if (creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                this.m_Transfered_all_energy = true
+            }
+            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                this.m_Transfered_all_energy = false
+            }
+
+            if (this.m_Transfered_all_energy) {
                 const spawn = room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
                 const extensions = room.GetOwnedStructures<StructureExtension>(STRUCTURE_EXTENSION)
 
                 const deposit_places = [spawn, ...extensions]
 
-                const deposit = creep.transfer(spawn, RESOURCE_ENERGY)
+                let container: StructureSpawn | StructureExtension = deposit_places[0]
+
+                for (let storage of deposit_places) {
+                    if (storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                        container = storage
+                        break
+                    }
+                }
+
+                const deposit = creep.transfer(container, RESOURCE_ENERGY)
 
                 if (deposit === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(deposit_places[0])
+                    creep.moveTo(container)
                 }
             }
-            else if (harvest_result === ERR_NOT_IN_RANGE) {
+            else {
                 creep.moveTo(source)
             }
         }
@@ -57,7 +70,13 @@ export class HarvestBehavior implements CreepBehavior {
 
     Save(creep: Creep): void {
         const data = HardDrive.Read(creep.name) as JsonObj
-        data.behavior = this.m_Source_id
+
+        const behavior_data: JsonObj = {
+            id: this.m_Source_id,
+            empty: this.m_Transfered_all_energy
+        }
+        
+        data.behavior = behavior_data
         HardDrive.Write(creep.name, data)
     }
 

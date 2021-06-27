@@ -29,7 +29,6 @@ var CreepWrapper = /** @class */ (function (_super) {
     __extends(CreepWrapper, _super);
     function CreepWrapper(name, room) {
         var _this = _super.call(this, name, Consts_1.CREEP_TYPE) || this;
-        console.log("adding to queue");
         _this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map();
         _this.m_Behavior = null;
@@ -60,6 +59,7 @@ var CreepWrapper = /** @class */ (function (_super) {
         };
         var task = (_a = this.m_Behavior) === null || _a === void 0 ? void 0 : _a.SignalTask();
         if (!task) {
+            console.log("remove name method");
             task = function (sender, reciever) {
                 var creep = sender.from;
                 reciever.RemoveFromMemory(creep.GetName());
@@ -75,12 +75,10 @@ var CreepWrapper = /** @class */ (function (_super) {
     };
     CreepWrapper.prototype.OnLoad = function () {
         this.LoadTypes();
-        console.log("loading type: " + this.m_Cur_type);
-        this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
         if (this.m_Creep) {
             var data = HardDrive_1.HardDrive.Read(this.m_Creep.name);
             var behavior = data.type;
-            if (behavior) {
+            if (typeof behavior === 'number') {
                 this.m_Cur_type = behavior;
                 this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
             }
@@ -94,7 +92,6 @@ var CreepWrapper = /** @class */ (function (_super) {
         }
     };
     CreepWrapper.prototype.OnRun = function () {
-        console.log("running");
         if (this.m_Creep && this.m_Behavior) {
             this.m_Behavior.Load(this.m_Creep);
             this.m_Behavior.Behavior(this.m_Creep, this.m_Room);
@@ -106,20 +103,24 @@ var CreepWrapper = /** @class */ (function (_super) {
         }
     };
     CreepWrapper.prototype.OnSave = function () {
-        var data = HardDrive_1.HardDrive.Read(this.m_Creep_name);
-        data.type = this.m_Cur_type;
-        HardDrive_1.HardDrive.Write(this.m_Creep_name, data);
+        if (this.m_Creep) {
+            var data = HardDrive_1.HardDrive.Read(this.m_Creep_name);
+            data.type = this.m_Cur_type;
+            HardDrive_1.HardDrive.Write(this.m_Creep_name, data);
+        }
     };
     CreepWrapper.prototype.OnInvasion = function () {
         this.m_Behavior = CreepWrapper.behavior_types.get(CreepTypes_1.DEFENDER_TYPE);
     };
-    CreepWrapper.prototype.SetType = function (new_type) {
+    CreepWrapper.prototype.SetBehavior = function (new_type) {
         this.LoadTypes();
         if (CreepWrapper.behavior_types.has(new_type)) {
-            console.log("setting type to: " + new_type);
             this.m_Cur_type = new_type;
             this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
         }
+    };
+    CreepWrapper.prototype.GetBehavior = function () {
+        return this.m_Cur_type;
     };
     CreepWrapper.prototype.GetName = function () {
         return this.m_Creep_name;
