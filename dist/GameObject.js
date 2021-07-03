@@ -19,7 +19,11 @@ var GameObject = /** @class */ (function () {
     GameObject.prototype.SignalRecieverID = function () { return this.m_Id; };
     GameObject.prototype.SignalRecieverType = function () { return this.m_Type; };
     GameObject.prototype.OnSignal = function (signal) {
-        return signal.method(signal, this);
+        var ret = true;
+        if (signal.method) {
+            ret = signal.method(signal, this);
+        }
+        return ret;
     };
     GameObject.prototype.OnReceivedSignal = function (signal) {
         if (this.OnSignal(signal)) {

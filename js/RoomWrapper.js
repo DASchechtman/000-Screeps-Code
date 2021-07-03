@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomWrapper = void 0;
-var Consts_1 = require("./Consts");
+var GameObjectConsts_1 = require("./GameObjectConsts");
 var ObjectsInRoom_1 = require("./ObjectsInRoom");
 var RoomWrapper = /** @class */ (function () {
     function RoomWrapper(room_name) {
@@ -61,7 +61,7 @@ var RoomWrapper = /** @class */ (function () {
     RoomWrapper.prototype.IsOwned = function (struct) {
         var is_owned = false;
         if (struct instanceof OwnedStructure
-            && Consts_1.Owner === struct.owner.username) {
+            && GameObjectConsts_1.Owner === struct.owner.username) {
             is_owned = true;
         }
         return is_owned;
@@ -69,7 +69,7 @@ var RoomWrapper = /** @class */ (function () {
     RoomWrapper.prototype.IsHostile = function (struct) {
         var is_hostile = false;
         if (struct instanceof OwnedStructure
-            && Consts_1.Owner !== struct.owner.username) {
+            && GameObjectConsts_1.Owner !== struct.owner.username) {
         }
         return is_hostile;
     };

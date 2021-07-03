@@ -1,14 +1,4 @@
-type JsonType = (
-    string 
-    | number 
-    | Array<string | number | boolean | null>
-    | boolean 
-    | null 
-)
-
-export interface JsonObj {
-    [item: string]: JsonType | JsonObj
-}
+import { JsonObj } from "../CompilerTyping/Interfaces"
 
 export class HardDrive {
     static Write(identifier: string, data: JsonObj): void {

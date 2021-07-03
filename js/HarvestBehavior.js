@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __spreadArray = (this && this.__spreadArray) || function (to, from) {
     for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
         to[j] = from[i];
@@ -7,68 +22,80 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HarvestBehavior = void 0;
 var HardDrive_1 = require("./HardDrive");
-var HarvestBehavior = /** @class */ (function () {
+var CreepBehavior_1 = require("./CreepBehavior");
+var HarvestBehavior = /** @class */ (function (_super) {
+    __extends(HarvestBehavior, _super);
     function HarvestBehavior() {
-        this.m_Source_id = "";
-        this.m_Transfered_all_energy = false;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.m_Data = {};
+        return _this;
     }
-    HarvestBehavior.prototype.SignalTask = function () {
-        return null;
-    };
     HarvestBehavior.prototype.Load = function (creep) {
+        var _a, _b;
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        this.m_Source_id = String(data.behavior.id);
-        this.m_Transfered_all_energy = Boolean(data.behavior.empty);
+        var cur_state = Boolean((_a = data.behavior) === null || _a === void 0 ? void 0 : _a.full);
+        this.m_Data = {
+            id: String((_b = data.behavior) === null || _b === void 0 ? void 0 : _b.id),
+            full: this.UpdateWorkState(creep, cur_state)
+        };
     };
-    HarvestBehavior.prototype.Behavior = function (creep, room) {
-        var source_id = this.m_Source_id;
-        var source = Game.getObjectById(source_id);
-        if (!source) {
-            source = creep.pos.findClosestByPath(FIND_SOURCES);
-        }
+    HarvestBehavior.prototype.Run = function (creep, room) {
+        var source = this.GetEnergySource(creep);
         if (source) {
-            var harvest_result = creep.harvest(source);
-            this.m_Source_id = source.id;
-            if (creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-                this.m_Transfered_all_energy = true;
-            }
-            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-                this.m_Transfered_all_energy = false;
-            }
-            if (this.m_Transfered_all_energy) {
-                var spawn = room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
-                var extensions = room.GetOwnedStructures(STRUCTURE_EXTENSION);
-                var deposit_places = __spreadArray([spawn], extensions);
-                var container = deposit_places[0];
-                for (var _i = 0, deposit_places_1 = deposit_places; _i < deposit_places_1.length; _i++) {
-                    var storage = deposit_places_1[_i];
-                    if (storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-                        container = storage;
-                        break;
-                    }
-                }
-                var deposit = creep.transfer(container, RESOURCE_ENERGY);
-                if (deposit === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(container);
-                }
+            this.m_Data.id = source.id;
+            if (this.m_Data.full) {
+                var container = this.GetFreeContainer(room);
+                this.DepositToContainer(creep, container);
             }
             else {
-                creep.moveTo(source);
+                this.Harvest(creep, source);
             }
         }
     };
     HarvestBehavior.prototype.Save = function (creep) {
-        var data = HardDrive_1.HardDrive.Read(creep.name);
-        var behavior_data = {
-            id: this.m_Source_id,
-            empty: this.m_Transfered_all_energy
-        };
-        data.behavior = behavior_data;
-        HardDrive_1.HardDrive.Write(creep.name, data);
+        var save_data = HardDrive_1.HardDrive.Read(creep.name);
+        save_data.behavior = this.m_Data;
+        HardDrive_1.HardDrive.Write(creep.name, save_data);
     };
-    HarvestBehavior.prototype.ClearDiskData = function (creep) {
-        HardDrive_1.HardDrive.Erase(creep.name);
+    HarvestBehavior.prototype.UpdateWorkState = function (creep, cur_state) {
+        var resource_type = RESOURCE_ENERGY;
+        var used_cap = creep.store.getUsedCapacity(resource_type);
+        var free_cap = creep.store.getFreeCapacity(resource_type);
+        var state = cur_state;
+        if (used_cap === 0) {
+            state = false;
+        }
+        else if (free_cap === 0) {
+            state = true;
+        }
+        return state;
+    };
+    HarvestBehavior.prototype.GetFreeContainer = function (room) {
+        var spawn = room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
+        var extensions = room.GetOwnedStructures(STRUCTURE_EXTENSION);
+        var free_containers = __spreadArray([spawn], extensions);
+        var container = spawn;
+        for (var _i = 0, free_containers_1 = free_containers; _i < free_containers_1.length; _i++) {
+            var storage = free_containers_1[_i];
+            if (storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                container = storage;
+                break;
+            }
+        }
+        return container;
+    };
+    HarvestBehavior.prototype.DepositToContainer = function (creep, container) {
+        var res = creep.transfer(container, RESOURCE_ENERGY);
+        this.MoveTo(res, creep, container);
+    };
+    HarvestBehavior.prototype.GetEnergySource = function (creep) {
+        var source_id = this.m_Data.id;
+        var source = Game.getObjectById(source_id);
+        if (!source) {
+            source = creep.pos.findClosestByPath(FIND_SOURCES);
+        }
+        return source;
     };
     return HarvestBehavior;
-}());
+}(CreepBehavior_1.CreepBehavior));
 exports.HarvestBehavior = HarvestBehavior;

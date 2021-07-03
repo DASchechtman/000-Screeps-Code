@@ -1,4 +1,4 @@
-import { Owner } from "../Consts";
+import { Owner } from "../Constants/GameObjectConsts";
 import { ObjectsInRoom } from "./ObjectsInRoom";
 
 export class RoomWrapper {

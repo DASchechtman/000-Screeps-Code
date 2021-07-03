@@ -1,15 +1,5 @@
-import { BUILDER_TYPE, DEFENDER_TYPE, HARVEST_TYPE, UPGRADER_TYPE } from "../Creep/CreepTypes"
-
-interface CreepType {
-    creep_type: number,
-    creep_name: string
-}
-
-interface CreepTypeCollection {
-    level: number,
-    count: number,
-    collection: Map<number, Array<CreepType>>
-}
+import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts"
+import { CreepType, CreepTypeCollection } from "../CompilerTyping/Interfaces"
 
 export class CreepTypeTracker {
 
@@ -30,19 +20,19 @@ export class CreepTypeTracker {
         let level: number | undefined
 
         switch (type) {
-            case DEFENDER_TYPE: {
+            case DEFENDER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_RESERVED
                 break
             }
-            case HARVEST_TYPE: {
+            case HARVEST_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_ONE
                 break
             }
-            case UPGRADER_TYPE: {
+            case UPGRADER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_TWO
                 break
             }
-            case BUILDER_TYPE: {
+            case BUILDER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_THREE
                 break
             }

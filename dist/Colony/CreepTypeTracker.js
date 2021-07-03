@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreepTypeTracker = void 0;
-var CreepTypes_1 = require("../Creep/CreepTypes");
+var CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
 var CreepTypeTracker = /** @class */ (function () {
     function CreepTypeTracker() {
         this.m_Creep_catagories = new Map();
@@ -9,19 +9,19 @@ var CreepTypeTracker = /** @class */ (function () {
     CreepTypeTracker.prototype.GetLevel = function (type) {
         var level;
         switch (type) {
-            case CreepTypes_1.DEFENDER_TYPE: {
+            case CreepBehaviorConsts_1.DEFENDER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_RESERVED;
                 break;
             }
-            case CreepTypes_1.HARVEST_TYPE: {
+            case CreepBehaviorConsts_1.HARVEST_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_ONE;
                 break;
             }
-            case CreepTypes_1.UPGRADER_TYPE: {
+            case CreepBehaviorConsts_1.UPGRADER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_TWO;
                 break;
             }
-            case CreepTypes_1.BUILDER_TYPE: {
+            case CreepBehaviorConsts_1.BUILDER_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_THREE;
                 break;
             }

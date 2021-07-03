@@ -1,40 +1,43 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpgradeBehavior = void 0;
 var HardDrive_1 = require("./HardDrive");
-var UpgradeBehavior = /** @class */ (function () {
+var CreepBehavior_1 = require("./CreepBehavior");
+var UpgradeBehavior = /** @class */ (function (_super) {
+    __extends(UpgradeBehavior, _super);
     function UpgradeBehavior() {
-        this.m_Should_upgrade = null;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.m_Should_upgrade = null;
+        return _this;
     }
-    UpgradeBehavior.prototype.SignalTask = function () {
-        return null;
-    };
     UpgradeBehavior.prototype.Load = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        this.m_Should_upgrade = Boolean(data.behavior);
+        var cur_state = Boolean(data.behavior);
+        this.m_Should_upgrade = this.UpdateWorkState(creep, cur_state);
     };
-    UpgradeBehavior.prototype.Behavior = function (creep, room) {
+    UpgradeBehavior.prototype.Run = function (creep, room) {
         var controller = room.GetOwnedStructures(STRUCTURE_CONTROLLER)[0];
         var source = room.GetSources()[0];
-        var cur_capacity = creep.store.getUsedCapacity(RESOURCE_ENERGY);
-        var max_capacity = creep.store.getCapacity(RESOURCE_ENERGY);
-        if (cur_capacity === 0) {
-            this.m_Should_upgrade = false;
-        }
-        else if (max_capacity === cur_capacity) {
-            this.m_Should_upgrade = true;
-        }
         if (this.m_Should_upgrade === true) {
-            var res = creep.upgradeController(controller);
-            if (res === ERR_NOT_IN_RANGE) {
-                creep.moveTo(controller);
-            }
+            this.Upgrade(creep, controller);
         }
         else if (this.m_Should_upgrade === false) {
-            var res = creep.harvest(source);
-            if (res === ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-            }
+            this.Harvest(creep, source);
         }
     };
     UpgradeBehavior.prototype.Save = function (creep) {
@@ -42,9 +45,9 @@ var UpgradeBehavior = /** @class */ (function () {
         data.behavior = this.m_Should_upgrade;
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
-    UpgradeBehavior.prototype.ClearDiskData = function (creep) {
-        HardDrive_1.HardDrive.Erase(creep.name);
+    UpgradeBehavior.prototype.Upgrade = function (creep, controller) {
+        this.MoveTo(creep.upgradeController(controller), creep, controller);
     };
     return UpgradeBehavior;
-}());
+}(CreepBehavior_1.CreepBehavior));
 exports.UpgradeBehavior = UpgradeBehavior;

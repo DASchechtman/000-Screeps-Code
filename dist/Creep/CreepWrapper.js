@@ -16,19 +16,24 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreepWrapper = void 0;
-var Consts_1 = require("../Consts");
+var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
 var HardDrive_1 = require("../Disk/HardDrive");
 var GameObject_1 = require("../GameObject");
 var SignalManager_1 = require("../Signals/SignalManager");
-var BuildBehavior_1 = require("./BuildBehavior");
-var CreepTypes_1 = require("./CreepTypes");
-var DefendBehavior_1 = require("./DefendBehavior");
-var HarvestBehavior_1 = require("./HarvestBehavior");
-var UpgradeBehavior_1 = require("./UpgradeBehavior");
+var BuildBehavior_1 = require("./Behaviors/BuildBehavior");
+var CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
+var DefendBehavior_1 = require("./Behaviors/DefendBehavior");
+var HarvestBehavior_1 = require("./Behaviors/HarvestBehavior");
+var UpgradeBehavior_1 = require("./Behaviors/UpgradeBehavior");
+/*
+Class meant to extend functionaliyt of creep, provides fuctions like
+telling when creep dies
+givig creep more flexible behavior
+*/
 var CreepWrapper = /** @class */ (function (_super) {
     __extends(CreepWrapper, _super);
     function CreepWrapper(name, room) {
-        var _this = _super.call(this, name, Consts_1.CREEP_TYPE) || this;
+        var _this = _super.call(this, name, GameObjectConsts_1.CREEP_TYPE) || this;
         _this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map();
         _this.m_Behavior = null;
@@ -39,39 +44,32 @@ var CreepWrapper = /** @class */ (function (_super) {
     }
     CreepWrapper.prototype.LoadTypes = function () {
         if (CreepWrapper.behavior_types.size === 0) {
-            CreepWrapper.behavior_types.set(CreepTypes_1.HARVEST_TYPE, new HarvestBehavior_1.HarvestBehavior());
-            CreepWrapper.behavior_types.set(CreepTypes_1.BUILDER_TYPE, new BuildBehavior_1.BuildBehavior());
-            CreepWrapper.behavior_types.set(CreepTypes_1.DEFENDER_TYPE, new DefendBehavior_1.DefendBehavior());
-            CreepWrapper.behavior_types.set(CreepTypes_1.UPGRADER_TYPE, new UpgradeBehavior_1.UpgradeBehavior());
+            CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.HARVEST_BEHAVIOR, new HarvestBehavior_1.HarvestBehavior());
+            CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.BUILDER_BEHAVIOR, new BuildBehavior_1.BuildBehavior());
+            CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.DEFENDER_BEHAVIOR, new DefendBehavior_1.DefendBehavior());
+            CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.UPGRADER_BEHAVIOR, new UpgradeBehavior_1.UpgradeBehavior());
         }
     };
     CreepWrapper.prototype.SendRemoveNameSignal = function () {
-        var _a;
-        var filter = function (sender, other) {
-            var is_right = false;
-            var creeper = signal.from;
-            var type = other.SignalRecieverType();
-            var id = other.SignalRecieverID();
-            if (type === Consts_1.COLONY_TYPE && id === creeper.GetRoomName()) {
-                is_right = true;
-            }
-            return is_right;
-        };
-        var task = (_a = this.m_Behavior) === null || _a === void 0 ? void 0 : _a.SignalTask();
-        if (!task) {
-            console.log("remove name method");
-            task = function (sender, reciever) {
-                var creep = sender.from;
-                reciever.RemoveFromMemory(creep.GetName());
-                return true;
-            };
-        }
         var signal = {
             from: this,
-            data: this.m_Room.GetName(),
-            method: task
+            data: { name: this.GetName() },
+            filter: function (sender, other) {
+                var is_right = false;
+                var creeper = sender.from;
+                var type = other.SignalRecieverType();
+                var id = other.SignalRecieverID();
+                if (type === GameObjectConsts_1.COLONY_TYPE && id === creeper.GetRoomName()) {
+                    is_right = true;
+                }
+                return is_right;
+            },
+            method: function (sender, reciever) {
+                reciever.RemoveFromMemory(sender.data.name);
+                return true;
+            }
         };
-        SignalManager_1.SignalManager.Inst().SendSignal(signal, filter);
+        SignalManager_1.SignalManager.Inst().SendSignal(signal);
     };
     CreepWrapper.prototype.OnLoad = function () {
         this.LoadTypes();
@@ -83,18 +81,11 @@ var CreepWrapper = /** @class */ (function (_super) {
                 this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
             }
         }
-        else {
-            var data = HardDrive_1.HardDrive.Read(this.m_Creep_name);
-            var behavior = data.type;
-            if (behavior) {
-                this.m_Behavior = CreepWrapper.behavior_types.get(behavior);
-            }
-        }
     };
     CreepWrapper.prototype.OnRun = function () {
         if (this.m_Creep && this.m_Behavior) {
             this.m_Behavior.Load(this.m_Creep);
-            this.m_Behavior.Behavior(this.m_Creep, this.m_Room);
+            this.m_Behavior.Run(this.m_Creep, this.m_Room);
             this.m_Behavior.Save(this.m_Creep);
         }
         else {
@@ -110,7 +101,17 @@ var CreepWrapper = /** @class */ (function (_super) {
         }
     };
     CreepWrapper.prototype.OnInvasion = function () {
-        this.m_Behavior = CreepWrapper.behavior_types.get(CreepTypes_1.DEFENDER_TYPE);
+        this.m_Behavior = CreepWrapper.behavior_types.get(CreepBehaviorConsts_1.DEFENDER_BEHAVIOR);
+    };
+    CreepWrapper.prototype.OnSignal = function (signal) {
+        var ret = true;
+        if (signal.method) {
+            ret = signal.method(signal, this);
+        }
+        else if (this.m_Behavior) {
+            ret = this.m_Behavior.Signal(signal, this);
+        }
+        return ret;
     };
     CreepWrapper.prototype.SetBehavior = function (new_type) {
         this.LoadTypes();

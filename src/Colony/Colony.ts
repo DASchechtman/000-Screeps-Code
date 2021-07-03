@@ -1,14 +1,16 @@
-import { COLONY_TYPE } from "../Consts";
+import { COLONY_TYPE, CREEP_TYPE } from "../Constants/GameObjectConsts";
 import { CreepBuilder } from "../Creep/CreepBuilder";
-import { DEFENDER_TYPE, HARVEST_TYPE } from "../Creep/CreepTypes";
+import { DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { CreepWrapper } from "../Creep/CreepWrapper";
 import { Stack } from "../DataStructures/Stack";
-import { HardDrive, JsonObj } from "../Disk/HardDrive";
+import { HardDrive } from "../Disk/HardDrive";
 import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
-import { Filter, Method, Signal, SignalManager } from "../Signals/SignalManager";
+import { SignalManager } from "../Signals/SignalManager";
 import { CreepTypeQueue } from "./CreepTypeQueue";
 import { CreepTypeTracker } from "./CreepTypeTracker";
+import { JsonObj, Signal } from "../CompilerTyping/Interfaces";
+import { send } from "process";
 
 export class Colony extends GameObject {
 
@@ -42,11 +44,44 @@ export class Colony extends GameObject {
         if (data[this.m_Data_key]) {
             this.m_Creeps_list[this.m_Data_key] = data[this.m_Data_key]
         }
-        else if(!this.m_Creeps_list[this.m_Data_key]) {
+        else if (!this.m_Creeps_list[this.m_Data_key]) {
             this.m_Creeps_list[this.m_Data_key] = new Array<string>()
         }
 
         return this.m_Creeps_list[this.m_Data_key] as Array<string>
+    }
+
+    private SpawnWorkerOrDefender(type: number, name: string) {
+        let creation
+
+        const energy = this.m_Room.GetEnergyCapacity()
+
+        if (type === DEFENDER_BEHAVIOR) {
+            let defender_body = CreepBuilder.BuildScalableDefender(energy)
+            creation = this.m_Colony_queen?.spawnCreep(defender_body, name)
+        }
+        else {
+            let worker_body = CreepBuilder.BuildScalableWorker(energy)
+            creation = this.m_Colony_queen?.spawnCreep(worker_body, name)
+        }
+
+        return creation
+    }
+
+    private CreateCreep(name: string, type: number): CreepWrapper {
+        const creep = new CreepWrapper(name, this.m_Room)
+        creep.SetBehavior(type)
+        return creep
+    }
+
+    private PushCreepAndNameToLists(creep: CreepWrapper): void {
+        this.m_Creeps.push(creep)
+        this.GetCreepNames().push(creep.GetName())
+    }
+
+    private UpdateData(): void {
+        this.m_Creeps_count++
+        this.m_Creep_types.Pop()
     }
 
     private SpawnCreep(): void {
@@ -55,28 +90,12 @@ export class Colony extends GameObject {
 
         if (type !== null) {
             const name = `creep-${Date.now()}`
-            let creation
-
-            const energy = this.m_Room.GetEnergyCapacity()
-            let body_type: Array<BodyPartConstant> = CreepBuilder.WORKER_BODY
-
-            if (type === DEFENDER_TYPE) {
-                body_type = CreepBuilder.DEFENDER_BODY
-                let defender_body = CreepBuilder.BuildScalableDefender(energy)
-                creation = this.m_Colony_queen?.spawnCreep(defender_body, name)
-            }
-            else {
-                let worker_body = CreepBuilder.BuildScalableWorker(energy)
-                creation = this.m_Colony_queen?.spawnCreep(worker_body, name)
-            }
+            const creation = this.SpawnWorkerOrDefender(type, name)
 
             if (creation === OK) {
-                this.GetCreepNames().push(name)
-                this.m_Creeps_count++
-                const creep_wrap = new CreepWrapper(name, this.m_Room)
-                creep_wrap.SetBehavior(type)
-                this.m_Creep_types.Pop()
-                this.m_Creeps.push(creep_wrap)
+                const creep_wrap = this.CreateCreep(name, type)
+                this.PushCreepAndNameToLists(creep_wrap)
+                this.UpdateData()
                 this.m_Type_tracker.Add(creep_wrap.GetBehavior(), creep_wrap.GetName())
             }
         }
@@ -90,36 +109,39 @@ export class Colony extends GameObject {
 
         for (let level of creep_levels) {
             const count = this.m_Type_tracker.GetLevelCount(level)
-            console.log(`count: ${count}`)
+
             if (count > 0) {
                 const names = this.m_Type_tracker.GetNamesByLevel(level)
-                console.log(`level: ${level}`)
-                
-                const filter: Filter = (sender, other): boolean => {
-                    return other.SignalRecieverID() === names[0]
-                }
 
                 const signal: Signal = {
                     from: this,
-                    data: null,
+                    data: {
+                        obj_type: CREEP_TYPE,
+                        creep_type: HARVEST_BEHAVIOR,
+                        name: names[0]
+                    },
+                    filter: (sender, other): boolean => {
+                        const is_creep = other.SignalRecieverType() === sender.data.obj_type
+                        const same_name = other.SignalRecieverID() === sender.data.name
+                        return is_creep && same_name
+                    },
                     method: (sender, reciever): boolean => {
                         const creep = (reciever as CreepWrapper)
                         this.m_Type_tracker.Remove(creep.GetBehavior(), creep.GetName())
-                        creep.SetBehavior(HARVEST_TYPE)
+                        creep.SetBehavior(sender.data.creep_type as number)
                         this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName())
-                        console.log("converting to harvester")
                         return true;
                     }
                 }
 
-                SignalManager.Inst().SendSignal(signal, filter)
-                
+                SignalManager.Inst().SendSignal(signal)
+
                 break
             }
         }
     }
 
-    OnLoad(): void {
+    private OnLoadCreeps(): void {
         const creep_names = this.GetCreepNames()
 
         for (var creep_name of creep_names) {
@@ -129,7 +151,14 @@ export class Colony extends GameObject {
                 this.m_Creeps_count++
             }
         }
+    }
 
+    private OnLoadStructs(): void {
+
+    }
+
+    OnLoad(): void {
+        this.OnLoadCreeps()
     }
 
     OnRun(): void {
@@ -139,8 +168,8 @@ export class Colony extends GameObject {
                 this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName())
             }
 
-            const harvester_count = this.m_Type_tracker.GetTypeCount(HARVEST_TYPE)
-            const max = this.m_Type_queue.GetMax(HARVEST_TYPE)
+            const harvester_count = this.m_Type_tracker.GetTypeCount(HARVEST_BEHAVIOR)
+            const max = this.m_Type_queue.GetMax(HARVEST_BEHAVIOR)
 
             if (max !== -1 && harvester_count < max) {
                 this.ConvertToHarvester()

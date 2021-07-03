@@ -41,24 +41,24 @@ def EditText(text_file):
         
     return edit_output
 
-def WriteFile(text_file, file_name):
-    path = "./js"
-
-    if not os.path.exists(path):
-        os.mkdir(path)
+def WriteFile(text_file, file_name, path_to):
     
-    with open(f"{path}/{file_name}", "w") as f:
+    with open(f"{path_to}/{file_name}", "w") as f:
         f.writelines(text_file)
 
 
-def CopyFiles(path):
-    for (dirpath, dirnames, filenames) in os.walk(path):
+def CopyFiles(path_from, path_to):
+    for (dirpath, dirnames, filenames) in os.walk(path_from):
         for name in filenames:
-            path = f"{dirpath}/{name}"
-            file_text = ReadFile(path)
+            file_path = f"{dirpath}/{name}"
+            file_text = ReadFile(file_path)
             changed_text = EditText(file_text)
-            WriteFile(changed_text, name)
+            WriteFile(changed_text, name, path_to)
     print(f"total number of lines: {lines_total}")
 
 if __name__ == "__main__":
-    CopyFiles("./dist")
+    path_to = "./js"
+    path_from = "./dist"
+    if not os.path.exists(path_to):
+        os.mkdir(path_to)
+    CopyFiles(path_from, path_to)

@@ -1,5 +1,6 @@
 import { EventManager } from "./Events/EventManager";
-import { Signal, SignalManager } from "./Signals/SignalManager";
+import { Signal } from "./CompilerTyping/Interfaces";
+import { SignalManager } from "./Signals/SignalManager";
 
 export abstract class GameObject {
     private m_Id: string
@@ -23,7 +24,11 @@ export abstract class GameObject {
     SignalRecieverType(): number { return this.m_Type }
 
     OnSignal(signal: Signal): boolean {
-        return signal.method(signal, this);
+        let ret = true
+        if (signal.method) {
+            ret = signal.method(signal, this)
+        }
+        return ret
     }
 
     OnReceivedSignal(signal: Signal): void {
