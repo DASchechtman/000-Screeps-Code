@@ -4,17 +4,19 @@ exports.GameObject = void 0;
 var EventManager_1 = require("./Events/EventManager");
 var SignalManager_1 = require("./Signals/SignalManager");
 var GameObject = /** @class */ (function () {
-    function GameObject(id, type) {
+    function GameObject(id, type, max_signals) {
+        if (max_signals === void 0) { max_signals = 100; }
         this.m_Id = id;
         this.m_Type = type;
         EventManager_1.EventManager.Inst().Add(this);
-        SignalManager_1.SignalManager.Inst().Add(this);
+        SignalManager_1.SignalManager.Inst().Add(this, max_signals);
     }
     // event manager functions below
     GameObject.prototype.OnLoad = function () { };
     GameObject.prototype.OnRun = function () { };
     GameObject.prototype.OnSave = function () { };
     GameObject.prototype.OnInvasion = function () { };
+    GameObject.prototype.OnRepair = function () { };
     // signal manager functions below
     GameObject.prototype.SignalRecieverID = function () { return this.m_Id; };
     GameObject.prototype.SignalRecieverType = function () { return this.m_Type; };

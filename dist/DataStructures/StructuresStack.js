@@ -4,75 +4,71 @@ exports.StructuresStack = void 0;
 var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
 var StructuresStack = /** @class */ (function () {
     function StructuresStack() {
-        this.HIGH_PRIORITY = 0;
-        this.MED_PRIORITY = 1;
-        this.LOW_PRIORITY = 2;
-        this.m_Timed_indexes = new Array();
-        this.m_Indexes = new Array();
-        this.m_Timed_stack = this.InitStack();
-        this.m_Others_stack = this.InitStack();
+        this.stack = new Array();
     }
-    StructuresStack.prototype.InitStack = function () {
-        var stack = new Array();
-        stack[this.HIGH_PRIORITY] = new Array();
-        stack[this.MED_PRIORITY] = new Array();
-        stack[this.LOW_PRIORITY] = new Array();
-        return stack;
-    };
-    StructuresStack.prototype.GetPriorityLevel = function (struct) {
-        var level;
-        var five_percent = .05;
-        var seventy_percent = .7;
-        var max_health = struct.GetMaxHealth();
-        var cur_health = struct.GetCurHealth();
-        if (cur_health < max_health * five_percent) {
-            level = this.HIGH_PRIORITY;
-        }
-        else if (cur_health < max_health * seventy_percent) {
-            level = this.MED_PRIORITY;
+    StructuresStack.prototype.GetFirstElement = function () {
+        var structure = null;
+        var struct_index = 0;
+        var group = this.stack[0];
+        var element = group === null || group === void 0 ? void 0 : group.array[0];
+        if (group && element) {
+            structure = element;
         }
         else {
-            level = this.LOW_PRIORITY;
+            struct_index = -1;
         }
-        return level;
+        return [structure, struct_index];
+    };
+    StructuresStack.prototype.PushToStack = function (struct, index) {
+        if (struct.SignalRecieverType() === GameObjectConsts_1.TIMED_STRUCTURE_TYPE) {
+            index.array.unshift(struct);
+        }
+        else {
+            index.array.push(struct);
+        }
+    };
+    StructuresStack.prototype.CreateIndex = function (struct, index_in_stack) {
+        var new_index = {
+            index: struct.GetCurHealth(),
+            array: new Array()
+        };
+        this.stack.splice(index_in_stack, 0, new_index);
+        this.PushToStack(struct, this.stack[index_in_stack]);
     };
     StructuresStack.prototype.Add = function (struct) {
-        var level = this.GetPriorityLevel(struct);
-        var struct_index = struct.GetCurHealth();
-        if (struct.SignalRecieverType() === GameObjectConsts_1.TIMED_STRUCTURE_TYPE) {
-            if (this.m_Timed_stack[level].length === 0) {
-                this.m_Timed_indexes[level] = struct_index;
-            }
-            this.m_Timed_stack[level][struct_index] = struct;
+        if (this.stack.length === 0) {
+            this.CreateIndex(struct, 0);
         }
         else {
-            if (this.m_Others_stack[level].length === 0) {
-                this.m_Indexes[level] = struct_index;
+            var stack_index = 0;
+            while (stack_index < this.stack.length) {
+                var el = this.stack[stack_index];
+                if (struct.GetCurHealth() <= el.index) {
+                    break;
+                }
+                stack_index++;
             }
-            this.m_Others_stack[level][struct_index] = struct;
-        }
-    };
-    StructuresStack.prototype.Pop = function () {
-        var level_list = [
-            this.HIGH_PRIORITY,
-            this.MED_PRIORITY,
-            this.LOW_PRIORITY
-        ];
-        var ret;
-        for (var _i = 0, level_list_1 = level_list; _i < level_list_1.length; _i++) {
-            var level = level_list_1[_i];
-            var start_index = this.m_Timed_indexes[level];
-            ret = this.m_Timed_stack[level][start_index];
-            if (!ret) {
-                start_index = this.m_Indexes[level];
-                ret = this.m_Others_stack[level][start_index];
-                break;
+            if (stack_index === this.stack.length) {
+                this.CreateIndex(struct, stack_index - 1);
+            }
+            else if (this.stack[stack_index].index === struct.GetCurHealth()) {
+                this.PushToStack(struct, this.stack[stack_index]);
             }
             else {
-                break;
+                this.CreateIndex(struct, stack_index);
             }
         }
-        return ret;
+    };
+    StructuresStack.prototype.Peek = function () {
+        return this.GetFirstElement()[0];
+    };
+    StructuresStack.prototype.Pop = function () {
+        var list = this.GetFirstElement();
+        var struct = list[0];
+        if (list[1] > -1) {
+            this.stack[list[1]].array.splice(0, 1);
+        }
+        return struct;
     };
     return StructuresStack;
 }());

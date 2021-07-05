@@ -25,12 +25,6 @@ var TimedStructureWrapper = /** @class */ (function (_super) {
         var x = _this.m_Cur_health;
         return _this;
     }
-    TimedStructureWrapper.prototype.OnLoad = function () {
-    };
-    TimedStructureWrapper.prototype.OnRun = function () {
-    };
-    TimedStructureWrapper.prototype.OnSave = function () {
-    };
     return TimedStructureWrapper;
 }(StructureWrapper_1.StructureWrapper));
 exports.TimedStructureWrapper = TimedStructureWrapper;

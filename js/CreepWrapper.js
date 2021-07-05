@@ -25,6 +25,7 @@ var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var DefendBehavior_1 = require("./DefendBehavior");
 var HarvestBehavior_1 = require("./HarvestBehavior");
 var UpgradeBehavior_1 = require("./UpgradeBehavior");
+var RepairBehavior_1 = require("./RepairBehavior");
 /*
 Class meant to extend functionaliyt of creep, provides fuctions like
 telling when creep dies
@@ -48,6 +49,7 @@ var CreepWrapper = /** @class */ (function (_super) {
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.BUILDER_BEHAVIOR, new BuildBehavior_1.BuildBehavior());
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.DEFENDER_BEHAVIOR, new DefendBehavior_1.DefendBehavior());
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.UPGRADER_BEHAVIOR, new UpgradeBehavior_1.UpgradeBehavior());
+            CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.REPAIR_BEHAVIOR, new RepairBehavior_1.RepairBehavior());
         }
     };
     CreepWrapper.prototype.SendRemoveNameSignal = function () {

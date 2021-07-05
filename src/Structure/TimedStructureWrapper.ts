@@ -7,16 +7,4 @@ export class TimedStructureWrapper<T extends StructureConstant> extends Structur
         super(struct_id, TIMED_STRUCTURE_TYPE)
         const x = this.m_Cur_health
     }
-
-    OnLoad(): void {
-
-    }
-
-    OnRun(): void {
-
-    }
-
-    OnSave(): void {
-        
-    }
 }

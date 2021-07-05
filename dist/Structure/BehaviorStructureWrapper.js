@@ -26,12 +26,6 @@ var BehaviorStructureWrapper = /** @class */ (function (_super) {
         var r = (_a = _this.m_Struct) === null || _a === void 0 ? void 0 : _a.room.name;
         return _this;
     }
-    BehaviorStructureWrapper.prototype.OnLoad = function () {
-    };
-    BehaviorStructureWrapper.prototype.OnRun = function () {
-    };
-    BehaviorStructureWrapper.prototype.OnSave = function () {
-    };
     return BehaviorStructureWrapper;
 }(StructureWrapper_1.StructureWrapper));
 exports.BehaviorStructureWrapper = BehaviorStructureWrapper;

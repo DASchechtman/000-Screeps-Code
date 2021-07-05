@@ -12,10 +12,11 @@ var SignalManager = /** @class */ (function () {
         }
         return SignalManager.inst;
     };
-    SignalManager.prototype.Add = function (entity) {
+    SignalManager.prototype.Add = function (entity, max_accepted_signals) {
         var signal_entity = {
             reciever: entity,
-            signals: new Stack_1.Stack()
+            signals: new Stack_1.Stack(),
+            max_signals: max_accepted_signals
         };
         this.members.set(entity, signal_entity);
     };
@@ -25,7 +26,9 @@ var SignalManager = /** @class */ (function () {
             var entry = entries_1[_i];
             var key = entry[0];
             var value = entry[1];
-            if (signal.filter(signal, key)) {
+            var cur_size = value.signals.Size();
+            var max_size = value.max_signals;
+            if (signal.filter(signal, key) && cur_size < max_size) {
                 value.signals.Push(signal);
                 var cur_signal = value.signals.Peek();
                 if (cur_signal) {

@@ -6,11 +6,12 @@ import { RoomWrapper } from "../Room/RoomWrapper";
 import { SignalManager } from "../Signals/SignalManager";
 import { BuildBehavior } from "./Behaviors/BuildBehavior";
 import { CreepBehavior } from "./Behaviors/CreepBehavior";
-import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
+import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, REPAIR_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { DefendBehavior } from "./Behaviors/DefendBehavior";
 import { HarvestBehavior } from "./Behaviors/HarvestBehavior";
 import { UpgradeBehavior } from "./Behaviors/UpgradeBehavior";
 import { Signal } from "../CompilerTyping/Interfaces";
+import { RepairBehavior } from "./Behaviors/RepairBehavior";
 
 /* 
 Class meant to extend functionaliyt of creep, provides fuctions like
@@ -43,6 +44,7 @@ export class CreepWrapper extends GameObject {
             CreepWrapper.behavior_types.set(BUILDER_BEHAVIOR, new BuildBehavior())
             CreepWrapper.behavior_types.set(DEFENDER_BEHAVIOR, new DefendBehavior())
             CreepWrapper.behavior_types.set(UPGRADER_BEHAVIOR, new UpgradeBehavior())
+            CreepWrapper.behavior_types.set(REPAIR_BEHAVIOR, new RepairBehavior())
         }
     }
 

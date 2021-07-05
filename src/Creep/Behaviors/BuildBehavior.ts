@@ -1,15 +1,18 @@
+import { JsonObj } from "../../CompilerTyping/Interfaces";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class BuildBehavior extends CreepBehavior {
     
-    private m_Can_build = false
+    private m_Data: JsonObj = {}
 
     Load(creep: Creep): void {
-        const data = HardDrive.Read(creep.name)
-        const cur_state = Boolean(data.behavior)
-        this.m_Can_build = this.UpdateWorkState(creep, cur_state)
+        const behavior = this.GetBehavior(creep)
+        const cur_state = Boolean(behavior?.can_build)
+        this.m_Data = {
+            can_build: this.UpdateWorkState(creep, cur_state)
+        }
     }
 
     Run(creep: Creep, room: RoomWrapper): void {
@@ -19,7 +22,7 @@ export class BuildBehavior extends CreepBehavior {
             const build_site = sites[0]
             const source = room.GetSources()[0]
 
-            if (this.m_Can_build) {
+            if (this.m_Data.can_build) {
                 this.Build(creep, build_site)
             }
             else {
@@ -34,7 +37,7 @@ export class BuildBehavior extends CreepBehavior {
 
     Save(creep: Creep): void {
         const data = HardDrive.Read(creep.name)
-        data.behavior = this.m_Can_build
+        data.behavior = this.m_Data
         HardDrive.Write(creep.name, data)
     }
 

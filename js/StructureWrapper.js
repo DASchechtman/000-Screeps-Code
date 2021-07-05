@@ -16,18 +16,17 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StructureWrapper = void 0;
+var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var GameObjectConsts_1 = require("./GameObjectConsts");
 var GameObject_1 = require("./GameObject");
+var SignalManager_1 = require("./SignalManager");
 var StructureWrapper = /** @class */ (function (_super) {
     __extends(StructureWrapper, _super);
     function StructureWrapper(struct_id, type) {
-        var _this = this;
-        if (typeof type === 'number') {
-            _this = _super.call(this, struct_id, type) || this;
-        }
-        else {
-            _this = _super.call(this, struct_id, GameObjectConsts_1.STRUCTURE_TYPE) || this;
-        }
+        if (type === void 0) { type = GameObjectConsts_1.STRUCTURE_TYPE; }
+        var _this = 
+        //console.log(`setting type of struct: ${type}`)
+        _super.call(this, struct_id, type) || this;
         _this.m_Struct_id = struct_id;
         _this.m_Struct = Game.getObjectById(_this.m_Struct_id);
         _this.m_Cur_health = 0;
@@ -39,16 +38,32 @@ var StructureWrapper = /** @class */ (function (_super) {
         return _this;
     }
     StructureWrapper.prototype.OnLoad = function () {
-    };
-    StructureWrapper.prototype.OnRun = function () {
-    };
-    StructureWrapper.prototype.OnSave = function () {
+        if (this.m_Cur_health < this.m_Max_health) {
+            //console.log("sending singal")
+            var signal = {
+                from: this,
+                data: {},
+                filter: function (sender, reciever) {
+                    var type = reciever.SignalRecieverType();
+                    var ret = false;
+                    if (type === GameObjectConsts_1.CREEP_TYPE) {
+                        var creep = reciever;
+                        ret = (creep.GetBehavior() === CreepBehaviorConsts_1.REPAIR_BEHAVIOR);
+                    }
+                    return ret;
+                }
+            };
+            SignalManager_1.SignalManager.Inst().SendSignal(signal);
+        }
     };
     StructureWrapper.prototype.GetCurHealth = function () {
         return this.m_Cur_health;
     };
     StructureWrapper.prototype.GetMaxHealth = function () {
         return this.m_Max_health;
+    };
+    StructureWrapper.prototype.GetStructure = function () {
+        return this.m_Struct;
     };
     return StructureWrapper;
 }(GameObject_1.GameObject));

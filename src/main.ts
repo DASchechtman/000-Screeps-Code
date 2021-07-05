@@ -1,4 +1,5 @@
 import { Colony } from "./Colony/Colony";
+import { LOAD_EVENT, RUN_EVENT, SAVE_EVENT } from "./Constants/EventConsts";
 import { EventManager } from "./Events/EventManager";
 
 class Main {
@@ -11,15 +12,15 @@ class Main {
     }
 
     Load(): void {
-        EventManager.Inst().Notify(EventManager.LOAD_EVENT)
+        EventManager.Inst().Notify(LOAD_EVENT)
     }
 
     Run(): void {
-        EventManager.Inst().Notify(EventManager.RUN_EVENT)
+        EventManager.Inst().Notify(RUN_EVENT)
     }
 
     Save(): void {
-        EventManager.Inst().Notify(EventManager.SAVE_EVENT)
+        EventManager.Inst().Notify(SAVE_EVENT)
     }
 }
 

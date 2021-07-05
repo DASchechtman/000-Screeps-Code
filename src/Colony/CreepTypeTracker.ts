@@ -1,4 +1,4 @@
-import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts"
+import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, REPAIR_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts"
 import { CreepType, CreepTypeCollection } from "../CompilerTyping/Interfaces"
 
 export class CreepTypeTracker {
@@ -32,7 +32,8 @@ export class CreepTypeTracker {
                 level = CreepTypeTracker.LEVEL_TWO
                 break
             }
-            case BUILDER_BEHAVIOR: {
+            case BUILDER_BEHAVIOR: 
+            case REPAIR_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_THREE
                 break
             }

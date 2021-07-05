@@ -12,9 +12,11 @@ var CreepBehavior = /** @class */ (function () {
         return false;
     };
     CreepBehavior.prototype.MoveTo = function (result, creep, location) {
-        if (result === ERR_NOT_IN_RANGE) {
+        var perform = result === ERR_NOT_IN_RANGE;
+        if (perform) {
             creep.moveTo(location);
         }
+        return !perform;
     };
     CreepBehavior.prototype.Harvest = function (creep, source) {
         this.MoveTo(creep.harvest(source), creep, source);
@@ -31,6 +33,9 @@ var CreepBehavior = /** @class */ (function () {
             state = true;
         }
         return state;
+    };
+    CreepBehavior.prototype.GetBehavior = function (creep) {
+        return HardDrive_1.HardDrive.Read(creep.name).behavior;
     };
     return CreepBehavior;
 }());

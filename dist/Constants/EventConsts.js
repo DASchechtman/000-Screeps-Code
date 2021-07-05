@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.REPAIR_EVENT = exports.INVASION_EVENT = exports.CREEP_CREATE_EVENT = exports.CREEP_DEATH_EVENT = exports.RUN_EVENT = exports.LOAD_EVENT = exports.SAVE_EVENT = void 0;
+exports.SAVE_EVENT = 0;
+exports.LOAD_EVENT = 1;
+exports.RUN_EVENT = 2;
+exports.CREEP_DEATH_EVENT = 3;
+exports.CREEP_CREATE_EVENT = 4;
+exports.INVASION_EVENT = 5;
+exports.REPAIR_EVENT = 6;

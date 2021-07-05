@@ -7,16 +7,4 @@ export class BehaviorStructureWrapper<T extends StructureConstant> extends Struc
         super(struct_id, BEHAVIOR_STRUCTURE_TYPE)
         const r = this.m_Struct?.room.name
     }
-
-    OnLoad(): void {
-
-    }
-
-    OnRun(): void {
-
-    }
-
-    OnSave(): void {
-        
-    }
 }

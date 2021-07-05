@@ -27,6 +27,9 @@ var RoomWrapper_1 = require("../Room/RoomWrapper");
 var SignalManager_1 = require("../Signals/SignalManager");
 var CreepTypeQueue_1 = require("./CreepTypeQueue");
 var CreepTypeTracker_1 = require("./CreepTypeTracker");
+var StructureWrapper_1 = require("../Structure/StructureWrapper");
+var TimedStructureWrapper_1 = require("../Structure/TimedStructureWrapper");
+var BehaviorStructureWrapper_1 = require("../Structure/BehaviorStructureWrapper");
 var Colony = /** @class */ (function (_super) {
     __extends(Colony, _super);
     function Colony(room_name) {
@@ -82,7 +85,7 @@ var Colony = /** @class */ (function (_super) {
     };
     Colony.prototype.SpawnCreep = function () {
         var type = this.m_Creep_types.Peek();
-        if (type !== null) {
+        if (typeof type === 'number') {
             var name_1 = "creep-" + Date.now();
             var creation = this.SpawnWorkerOrDefender(type, name_1);
             if (creation === OK) {
@@ -118,6 +121,7 @@ var Colony = /** @class */ (function (_super) {
                     },
                     method: function (sender, reciever) {
                         var creep = reciever;
+                        HardDrive_1.HardDrive.Erase(creep.GetName());
                         _this.m_Type_tracker.Remove(creep.GetBehavior(), creep.GetName());
                         creep.SetBehavior(sender.data.creep_type);
                         _this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName());
@@ -142,9 +146,30 @@ var Colony = /** @class */ (function (_super) {
         }
     };
     Colony.prototype.OnLoadStructs = function () {
+        var structs = this.m_Room.GetAllNonHostileStructs();
+        for (var _i = 0, structs_1 = structs; _i < structs_1.length; _i++) {
+            var s = structs_1[_i];
+            switch (s.structureType) {
+                case STRUCTURE_ROAD:
+                case STRUCTURE_RAMPART: {
+                    new TimedStructureWrapper_1.TimedStructureWrapper(s.id);
+                    break;
+                }
+                case STRUCTURE_TOWER:
+                case STRUCTURE_LINK: {
+                    new BehaviorStructureWrapper_1.BehaviorStructureWrapper(s.id);
+                    break;
+                }
+                default: {
+                    new StructureWrapper_1.StructureWrapper(s.id);
+                    break;
+                }
+            }
+        }
     };
     Colony.prototype.OnLoad = function () {
         this.OnLoadCreeps();
+        this.OnLoadStructs();
     };
     Colony.prototype.OnRun = function () {
         if (this.m_Colony_queen) {

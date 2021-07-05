@@ -4,29 +4,31 @@ import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
 
 export class UpgradeBehavior extends CreepBehavior {
-    private m_Should_upgrade: boolean | null = null
+    private m_Data: JsonObj = {}
 
     Load(creep: Creep): void {
-        const data = HardDrive.Read(creep.name)
-        const cur_state = Boolean(data.behavior)
-        this.m_Should_upgrade = this.UpdateWorkState(creep, cur_state)
+        const behavior = this.GetBehavior(creep)
+        const cur_state = Boolean(behavior?.can_upgrade)
+        this.m_Data = {
+            can_upgrade: this.UpdateWorkState(creep, cur_state)
+        }
     }
 
     Run(creep: Creep, room: RoomWrapper): void {
         const controller = room.GetOwnedStructures<StructureController>(STRUCTURE_CONTROLLER)[0]
         const source = room.GetSources()[0]
         
-        if (this.m_Should_upgrade === true) {
+        if (this.m_Data.can_upgrade === true) {
             this.Upgrade(creep, controller)
         }
-        else if (this.m_Should_upgrade === false) {
+        else if (this.m_Data.can_upgrade === false) {
             this.Harvest(creep, source)
         }
     }
 
     Save(creep: Creep): void {
         const data = HardDrive.Read(creep.name) as JsonObj
-        data.behavior = this.m_Should_upgrade
+        data.behavior = this.m_Data
         HardDrive.Write(creep.name, data)
     }
 

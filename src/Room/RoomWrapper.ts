@@ -152,6 +152,33 @@ export class RoomWrapper {
         return this.GetStructures<T>(struct_type, map)
     }
 
+    GetAllNonHostileStructs(filter?: (struct: Structure<any>) => boolean) {
+        const struct_type_keys = [
+            ObjectsInRoom.MY_STRUCTS,
+            ObjectsInRoom.UNOWNED_STRUCTS
+        ]
+
+        const structs = new Array<Structure<any>>()
+
+        for(let key of struct_type_keys) {
+            this.m_Room_objects.GetMap(key)?.forEach((value, key) => {
+                for(let id of value) {
+                    const struct_id = id as Id<any>
+                    const room_struct = Game.getObjectById(struct_id)
+
+                    const is_filter = room_struct && filter && filter(room_struct)
+                    const isnt_filter = room_struct && filter === undefined
+
+                    if (is_filter || isnt_filter) {
+                        structs.push(room_struct)
+                    }
+                }
+            })
+        }
+
+        return structs
+    }
+
     GetConstructionSites(): ConstructionSite[] {
         return this.GetResource<ConstructionSite>(ObjectsInRoom.MY_CONSTRUCTION_SITES)
     }

@@ -1,24 +1,25 @@
-import { STRUCTURE_TYPE } from "../Constants/GameObjectConsts";
+import { Signal } from "../CompilerTyping/Interfaces";
+import { REPAIR_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
+import { CREEP_TYPE, STRUCTURE_TYPE } from "../Constants/GameObjectConsts";
+import { CreepWrapper } from "../Creep/CreepWrapper";
 import { GameObject } from "../GameObject";
+import { SignalManager } from "../Signals/SignalManager";
 
-type S<T extends StructureConstant> = Structure<T>
+
 
 export class StructureWrapper<T extends StructureConstant> extends GameObject {
 
-    protected m_Struct_id: Id<S<T>>
+    protected m_Struct_id: Id<Structure<T>>
     protected m_Struct: Structure<T> | null
     protected m_Cur_health: number
     protected m_Max_health: number
 
-    constructor(struct_id: string, type?: number) {
-        if (typeof type === 'number') {
-            super(struct_id, type)
-        }
-        else {
-            super(struct_id, STRUCTURE_TYPE)
-        }
+    constructor(struct_id: string, type: number = STRUCTURE_TYPE) {
+        //console.log(`setting type of struct: ${type}`)
+        super(struct_id, type)
         
-        this.m_Struct_id = struct_id as Id<S<T>>
+        
+        this.m_Struct_id = struct_id as Id<Structure<T>>
         this.m_Struct = Game.getObjectById(this.m_Struct_id)
 
         this.m_Cur_health = 0
@@ -31,15 +32,26 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
     }
 
     OnLoad(): void {
+        if (this.m_Cur_health < this.m_Max_health) {
+            //console.log("sending singal")
+            const signal: Signal = {
+                from: this,
+                data: {},
+                filter: (sender, reciever): boolean => {
+                    const type = reciever.SignalRecieverType()
+                    let ret = false
 
-    }
+                    if (type === CREEP_TYPE) {
+                        const creep = reciever as CreepWrapper
+                        ret = (creep.GetBehavior() === REPAIR_BEHAVIOR)
+                    }
 
-    OnRun(): void {
+                    return ret
+                }
+            }
 
-    }
-
-    OnSave(): void {
-
+            SignalManager.Inst().SendSignal(signal)
+        }
     }
 
     GetCurHealth(): number {
@@ -48,5 +60,9 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
 
     GetMaxHealth(): number {
         return this.m_Max_health
+    }
+
+    GetStructure(): Structure<T> | null {
+        return this.m_Struct
     }
 }

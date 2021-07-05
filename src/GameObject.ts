@@ -5,11 +5,11 @@ import { SignalManager } from "./Signals/SignalManager";
 export abstract class GameObject {
     private m_Id: string
     private m_Type: number
-    constructor(id: string, type: number) {
+    constructor(id: string, type: number, max_signals: number = 100) {
         this.m_Id = id
         this.m_Type = type
         EventManager.Inst().Add(this)
-        SignalManager.Inst().Add(this)
+        SignalManager.Inst().Add(this, max_signals)
     }
 
     // event manager functions below
@@ -18,6 +18,7 @@ export abstract class GameObject {
     OnSave(): void {}
 
     OnInvasion(): void {}
+    OnRepair(): void {}
 
     // signal manager functions below
     SignalRecieverID(): string { return this.m_Id}

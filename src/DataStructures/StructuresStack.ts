@@ -1,102 +1,97 @@
+import { StructStackIndex } from "../CompilerTyping/Interfaces"
 import { TIMED_STRUCTURE_TYPE } from "../Constants/GameObjectConsts"
 import { StructureWrapper } from "../Structure/StructureWrapper"
 
-type StructuresArray = Array<Array<StructureWrapper<any>>>
-
 export class StructuresStack {
-    private readonly HIGH_PRIORITY: number
-    private readonly MED_PRIORITY: number
-    private readonly LOW_PRIORITY: number
 
-    private m_Timed_stack: StructuresArray
-    private m_Others_stack: StructuresArray
-
-    private m_Timed_indexes: Array<number>
-    private m_Indexes: Array<number>
-
-    constructor() {
-        this.HIGH_PRIORITY = 0
-        this.MED_PRIORITY = 1
-        this.LOW_PRIORITY = 2
-
-        this.m_Timed_indexes = new Array()
-        this.m_Indexes = new Array()
-
-        this.m_Timed_stack = this.InitStack()
-        this.m_Others_stack = this.InitStack()
+    private stack: Array<StructStackIndex>
+    
+    constructor() {    
+        this.stack = new Array()
     }
 
-    private InitStack(): StructuresArray {
-        let stack: StructuresArray = new Array()
-        stack[this.HIGH_PRIORITY] = new Array()
-        stack[this.MED_PRIORITY] = new Array()
-        stack[this.LOW_PRIORITY] = new Array()
-        return stack
-    }
+    private GetFirstElement(): Array<StructureWrapper<any> | number | null> {
+        let structure: StructureWrapper<any> | null = null
+        let struct_index = 0
 
-    private GetPriorityLevel(struct: StructureWrapper<any>): number {
-        let level
+        const group = this.stack[0]
+        const element = group?.array[0]
 
-        const five_percent = .05
-        const seventy_percent = .7
-
-        const max_health = struct.GetMaxHealth()
-        const cur_health = struct.GetCurHealth()
-
-        if (cur_health < max_health * five_percent) {
-            level = this.HIGH_PRIORITY
-        }
-        else if (cur_health < max_health * seventy_percent) {
-            level = this.MED_PRIORITY
+        if (group && element) {
+            structure = element
         }
         else {
-            level = this.LOW_PRIORITY
+            struct_index = -1
         }
 
-        return level
+        return [structure, struct_index]
     }
 
-    Add(struct: StructureWrapper<any>) {
-        const level = this.GetPriorityLevel(struct)
-        const struct_index = struct.GetCurHealth()
-
+    private PushToStack(struct: StructureWrapper<any>, index: StructStackIndex): void {
+ 
         if (struct.SignalRecieverType() === TIMED_STRUCTURE_TYPE) {
-            if (this.m_Timed_stack[level].length === 0) {
-                this.m_Timed_indexes[level] = struct_index
-            }
-            this.m_Timed_stack[level][struct_index] = struct
+            index.array.unshift(struct)
         }
         else {
-            if (this.m_Others_stack[level].length === 0) {
-                this.m_Indexes[level] = struct_index
-            }
-            this.m_Others_stack[level][struct_index] = struct
+            index.array.push(struct)
         }
     }
 
-    Pop(): StructureWrapper<any> | undefined {
-        const level_list = [
-            this.HIGH_PRIORITY,
-            this.MED_PRIORITY,
-            this.LOW_PRIORITY
-        ]
+    private CreateIndex(struct: StructureWrapper<any>, index_in_stack: number): void {
+        const new_index: StructStackIndex = {
+            index: struct.GetCurHealth(),
+            array: new Array()
+        }
 
-        let ret: StructureWrapper<any> | undefined
+        this.stack.splice(index_in_stack, 0 , new_index)
+        this.PushToStack(struct, this.stack[index_in_stack])
+    }
 
-        for(let level of level_list) {
-            let start_index = this.m_Timed_indexes[level]
-            ret = this.m_Timed_stack[level][start_index]
+    Add(struct: StructureWrapper<any>): void {
 
-            if (!ret) {
-                start_index = this.m_Indexes[level]
-                ret = this.m_Others_stack[level][start_index]
-                break
+        if (this.stack.length === 0) {
+            this.CreateIndex(struct, 0)
+        }
+        else {
+            let stack_index = 0
+            while(stack_index < this.stack.length) {
+                const el = this.stack[stack_index]
+                if (struct.GetCurHealth() <= el.index) {
+                    break
+                }
+                stack_index++
+            }
+
+            if (stack_index === this.stack.length) {
+                this.CreateIndex(struct, stack_index-1)
+            }
+            else if (this.stack[stack_index].index === struct.GetCurHealth()) {
+                this.PushToStack(struct, this.stack[stack_index])
             }
             else {
-                break
+                this.CreateIndex(struct, stack_index)
             }
+
+            
+        }
+        
+
+        
+    }
+
+    Peek(): StructureWrapper<any> | null {
+        return this.GetFirstElement()[0] as StructureWrapper<any> | null
+    }
+
+    Pop(): StructureWrapper<any> | null {
+        const list = this.GetFirstElement()
+        const struct = list[0] as StructureWrapper<any> | null
+
+
+        if (list[1] as number > -1) {
+            this.stack[list[1] as number].array.splice(0, 1)
         }
 
-        return ret
+        return struct
     }
 } 

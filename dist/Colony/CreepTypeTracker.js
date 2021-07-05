@@ -21,7 +21,8 @@ var CreepTypeTracker = /** @class */ (function () {
                 level = CreepTypeTracker.LEVEL_TWO;
                 break;
             }
-            case CreepBehaviorConsts_1.BUILDER_BEHAVIOR: {
+            case CreepBehaviorConsts_1.BUILDER_BEHAVIOR:
+            case CreepBehaviorConsts_1.REPAIR_BEHAVIOR: {
                 level = CreepTypeTracker.LEVEL_THREE;
                 break;
             }

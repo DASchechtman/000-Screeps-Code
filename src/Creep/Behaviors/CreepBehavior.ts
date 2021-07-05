@@ -1,6 +1,6 @@
 import { HardDrive } from "../../Disk/HardDrive";
 import { GameObject } from "../../GameObject";
-import { Signal } from "../../CompilerTyping/Interfaces";
+import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 
 
@@ -21,11 +21,13 @@ export abstract class CreepBehavior {
         result: ScreepsReturnCode,
         creep: Creep,
         location: RoomPosition | {pos: RoomPosition}
-        ): void 
+        ): boolean 
     {
-        if (result === ERR_NOT_IN_RANGE) {
+        let perform = result === ERR_NOT_IN_RANGE
+        if (perform) {
             creep.moveTo(location)
         }
+        return !perform
     }
 
     protected Harvest(creep: Creep, source: Source): void {
@@ -47,5 +49,9 @@ export abstract class CreepBehavior {
         }
 
         return state
+    }
+
+    protected GetBehavior(creep: Creep): JsonObj {
+        return HardDrive.Read(creep.name).behavior as JsonObj
     }
 }

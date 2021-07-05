@@ -1,6 +1,12 @@
 import { Stack } from "../DataStructures/Stack";
 import { GameObject } from "../GameObject";
+import { StructureWrapper } from "../Structure/StructureWrapper";
 import { Filter, JsonType, Method } from "./Types";
+
+export interface StructStackIndex {
+    index: number,
+    array: Array<StructureWrapper<any>>
+}
 
 export interface CreepType {
     creep_type: number,
@@ -33,4 +39,5 @@ export interface Signal {
 export interface SignalReciever {
     reciever: GameObject
     signals: Stack<Signal>
+    max_signals: number
 }

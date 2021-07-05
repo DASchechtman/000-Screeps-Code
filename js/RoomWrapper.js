@@ -120,6 +120,30 @@ var RoomWrapper = /** @class */ (function () {
         var map = this.m_Room_objects.GetMap(key);
         return this.GetStructures(struct_type, map);
     };
+    RoomWrapper.prototype.GetAllNonHostileStructs = function (filter) {
+        var _a;
+        var struct_type_keys = [
+            ObjectsInRoom_1.ObjectsInRoom.MY_STRUCTS,
+            ObjectsInRoom_1.ObjectsInRoom.UNOWNED_STRUCTS
+        ];
+        var structs = new Array();
+        for (var _i = 0, struct_type_keys_1 = struct_type_keys; _i < struct_type_keys_1.length; _i++) {
+            var key = struct_type_keys_1[_i];
+            (_a = this.m_Room_objects.GetMap(key)) === null || _a === void 0 ? void 0 : _a.forEach(function (value, key) {
+                for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+                    var id = value_1[_i];
+                    var struct_id = id;
+                    var room_struct = Game.getObjectById(struct_id);
+                    var is_filter = room_struct && filter && filter(room_struct);
+                    var isnt_filter = room_struct && filter === undefined;
+                    if (is_filter || isnt_filter) {
+                        structs.push(room_struct);
+                    }
+                }
+            });
+        }
+        return structs;
+    };
     RoomWrapper.prototype.GetConstructionSites = function () {
         return this.GetResource(ObjectsInRoom_1.ObjectsInRoom.MY_CONSTRUCTION_SITES);
     };

@@ -31,11 +31,10 @@ var HarvestBehavior = /** @class */ (function (_super) {
         return _this;
     }
     HarvestBehavior.prototype.Load = function (creep) {
-        var _a, _b;
-        var data = HardDrive_1.HardDrive.Read(creep.name);
-        var cur_state = Boolean((_a = data.behavior) === null || _a === void 0 ? void 0 : _a.full);
+        var behavior = this.GetBehavior(creep);
+        var cur_state = Boolean(behavior === null || behavior === void 0 ? void 0 : behavior.full);
         this.m_Data = {
-            id: String((_b = data.behavior) === null || _b === void 0 ? void 0 : _b.id),
+            id: String(behavior === null || behavior === void 0 ? void 0 : behavior.id),
             full: this.UpdateWorkState(creep, cur_state)
         };
     };

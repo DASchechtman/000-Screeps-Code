@@ -22,27 +22,29 @@ var UpgradeBehavior = /** @class */ (function (_super) {
     __extends(UpgradeBehavior, _super);
     function UpgradeBehavior() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.m_Should_upgrade = null;
+        _this.m_Data = {};
         return _this;
     }
     UpgradeBehavior.prototype.Load = function (creep) {
-        var data = HardDrive_1.HardDrive.Read(creep.name);
-        var cur_state = Boolean(data.behavior);
-        this.m_Should_upgrade = this.UpdateWorkState(creep, cur_state);
+        var behavior = this.GetBehavior(creep);
+        var cur_state = Boolean(behavior === null || behavior === void 0 ? void 0 : behavior.can_upgrade);
+        this.m_Data = {
+            can_upgrade: this.UpdateWorkState(creep, cur_state)
+        };
     };
     UpgradeBehavior.prototype.Run = function (creep, room) {
         var controller = room.GetOwnedStructures(STRUCTURE_CONTROLLER)[0];
         var source = room.GetSources()[0];
-        if (this.m_Should_upgrade === true) {
+        if (this.m_Data.can_upgrade === true) {
             this.Upgrade(creep, controller);
         }
-        else if (this.m_Should_upgrade === false) {
+        else if (this.m_Data.can_upgrade === false) {
             this.Harvest(creep, source);
         }
     };
     UpgradeBehavior.prototype.Save = function (creep) {
         var data = HardDrive_1.HardDrive.Read(creep.name);
-        data.behavior = this.m_Should_upgrade;
+        data.behavior = this.m_Data;
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     UpgradeBehavior.prototype.Upgrade = function (creep, controller) {

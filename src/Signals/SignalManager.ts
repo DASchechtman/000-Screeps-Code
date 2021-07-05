@@ -18,10 +18,11 @@ export class SignalManager {
         return SignalManager.inst
     }
 
-    Add(entity: GameObject): void {
+    Add(entity: GameObject, max_accepted_signals: number): void {
         const signal_entity: SignalReciever = {
             reciever: entity,
-            signals: new Stack()
+            signals: new Stack(),
+            max_signals: max_accepted_signals
         }
         this.members.set(entity, signal_entity)
     }
@@ -31,7 +32,9 @@ export class SignalManager {
         for (let entry of entries) {
             const key = entry[0]
             const value = entry[1]
-            if (signal.filter(signal, key)) {
+            const cur_size = value.signals.Size()
+            const max_size = value.max_signals
+            if (signal.filter(signal, key) && cur_size < max_size) {
                 value.signals.Push(signal)
                 const cur_signal = value.signals.Peek()
                 if (cur_signal) {

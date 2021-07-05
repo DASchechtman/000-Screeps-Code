@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventManager = void 0;
+var EventConsts_1 = require("./EventConsts");
 var EventManager = /** @class */ (function () {
     function EventManager() {
         this.observers_list = new Array();
@@ -23,32 +24,30 @@ var EventManager = /** @class */ (function () {
         while (i < this.observers_list.length) {
             var observer = this.observers_list[i];
             switch (event_type) {
-                case EventManager.SAVE_EVENT: {
+                case EventConsts_1.SAVE_EVENT: {
                     observer.OnSave();
                     break;
                 }
-                case EventManager.LOAD_EVENT: {
+                case EventConsts_1.LOAD_EVENT: {
                     observer.OnLoad();
                     break;
                 }
-                case EventManager.RUN_EVENT: {
+                case EventConsts_1.RUN_EVENT: {
                     observer.OnRun();
                     break;
                 }
-                case EventManager.INVASION_EVENT: {
+                case EventConsts_1.INVASION_EVENT: {
                     observer.OnInvasion();
+                    break;
+                }
+                case EventConsts_1.REPAIR_EVENT: {
+                    observer.OnRepair();
                     break;
                 }
             }
             i++;
         }
     };
-    EventManager.SAVE_EVENT = 0;
-    EventManager.LOAD_EVENT = 1;
-    EventManager.RUN_EVENT = 2;
-    EventManager.CREEP_DEATH_EVENT = 3;
-    EventManager.CREEP_CREATE_EVENT = 4;
-    EventManager.INVASION_EVENT = 5;
     EventManager.instance = null;
     return EventManager;
 }());

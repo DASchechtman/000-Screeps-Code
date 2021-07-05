@@ -8,10 +8,10 @@ export class HarvestBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
 
     Load(creep: Creep): void {
-        const data = HardDrive.Read(creep.name)
-        const cur_state = Boolean((data.behavior as JsonObj)?.full)
+        const behavior = this.GetBehavior(creep)
+        const cur_state = Boolean(behavior?.full)
         this.m_Data = {
-            id: String((data.behavior as JsonObj)?.id),
+            id: String(behavior?.id),
             full: this.UpdateWorkState(creep, cur_state)
         }
     }
@@ -35,7 +35,7 @@ export class HarvestBehavior extends CreepBehavior {
 
     Save(creep: Creep): void {
         const save_data = HardDrive.Read(creep.name)
-        save_data.behavior = this.m_Data  
+        save_data.behavior = this.m_Data
         HardDrive.Write(creep.name, save_data)
     }
 

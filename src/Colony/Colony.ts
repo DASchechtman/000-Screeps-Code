@@ -1,6 +1,6 @@
 import { COLONY_TYPE, CREEP_TYPE } from "../Constants/GameObjectConsts";
 import { CreepBuilder } from "../Creep/CreepBuilder";
-import { DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
+import { DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, REPAIR_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { CreepWrapper } from "../Creep/CreepWrapper";
 import { Stack } from "../DataStructures/Stack";
 import { HardDrive } from "../Disk/HardDrive";
@@ -11,6 +11,9 @@ import { CreepTypeQueue } from "./CreepTypeQueue";
 import { CreepTypeTracker } from "./CreepTypeTracker";
 import { JsonObj, Signal } from "../CompilerTyping/Interfaces";
 import { send } from "process";
+import { StructureWrapper } from "../Structure/StructureWrapper";
+import { TimedStructureWrapper } from "../Structure/TimedStructureWrapper";
+import { BehaviorStructureWrapper } from "../Structure/BehaviorStructureWrapper";
 
 export class Colony extends GameObject {
 
@@ -88,7 +91,7 @@ export class Colony extends GameObject {
         const type = this.m_Creep_types.Peek()
 
 
-        if (type !== null) {
+        if (typeof type === 'number') {
             const name = `creep-${Date.now()}`
             const creation = this.SpawnWorkerOrDefender(type, name)
 
@@ -127,6 +130,7 @@ export class Colony extends GameObject {
                     },
                     method: (sender, reciever): boolean => {
                         const creep = (reciever as CreepWrapper)
+                        HardDrive.Erase(creep.GetName())
                         this.m_Type_tracker.Remove(creep.GetBehavior(), creep.GetName())
                         creep.SetBehavior(sender.data.creep_type as number)
                         this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName())
@@ -154,11 +158,31 @@ export class Colony extends GameObject {
     }
 
     private OnLoadStructs(): void {
+        const structs = this.m_Room.GetAllNonHostileStructs()
 
+        for (let s of structs) {
+            switch(s.structureType) {
+                case STRUCTURE_ROAD:
+                case STRUCTURE_RAMPART: {
+                    new TimedStructureWrapper(s.id)
+                    break
+                }
+                case STRUCTURE_TOWER:
+                case STRUCTURE_LINK: {
+                    new BehaviorStructureWrapper(s.id)
+                    break
+                }
+                default: {
+                    new StructureWrapper(s.id)
+                    break
+                }
+            }
+        }
     }
 
     OnLoad(): void {
         this.OnLoadCreeps()
+        this.OnLoadStructs()
     }
 
     OnRun(): void {
