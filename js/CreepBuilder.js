@@ -42,8 +42,8 @@ var CreepBuilder = /** @class */ (function () {
         }
         return cost;
     };
-    CreepBuilder.BuildScalable = function (energy_cost, body) {
-        var build_cost = 1200;
+    CreepBuilder.BuildScalable = function (energy_cost, body, build_cost) {
+        if (build_cost === void 0) { build_cost = 1200; }
         if (energy_cost < build_cost) {
             build_cost = energy_cost;
         }
@@ -79,7 +79,7 @@ var CreepBuilder = /** @class */ (function () {
         return this.BuildScalable(avalible_energy, CreepBuilder.WORKER_BODY);
     };
     CreepBuilder.BuildScalableDefender = function (avalible_energy) {
-        return this.BuildScalable(avalible_energy, CreepBuilder.DEFENDER_BODY);
+        return this.BuildScalable(avalible_energy, CreepBuilder.DEFENDER_BODY, 1800);
     };
     CreepBuilder.WORKER_BODY = [WORK, MOVE, CARRY, MOVE];
     CreepBuilder.DEFENDER_BODY = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH];

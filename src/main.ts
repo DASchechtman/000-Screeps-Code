@@ -11,16 +11,48 @@ class Main {
 
     }
 
+    private GetEventName(event: number): string {
+        let name: string = ""
+
+        switch(event) {
+            case LOAD_EVENT: {
+                name = "LOAD"
+                break
+            }
+            case RUN_EVENT: {
+                name = "RUN"
+                break
+            }
+            case SAVE_EVENT: {
+                name = "SAVE"
+                break
+            }
+        }
+
+        return name
+    }
+
+    private Execute(event: number, show_stats: boolean=false) {
+        const event_name = this.GetEventName(event)
+        if (show_stats) {
+            console.log(`cpu used before ${event_name}: ${Game.cpu.getUsed()}`)
+        }
+        EventManager.Inst().Notify(event)
+        if (show_stats) {
+            console.log(`cpu used after ${event_name}: ${Game.cpu.getUsed()}`)
+        }
+    }
+
     Load(): void {
-        EventManager.Inst().Notify(LOAD_EVENT)
+       this.Execute(LOAD_EVENT, true)
     }
 
     Run(): void {
-        EventManager.Inst().Notify(RUN_EVENT)
+        this.Execute(RUN_EVENT, true)
     }
 
     Save(): void {
-        EventManager.Inst().Notify(SAVE_EVENT)
+        this.Execute(SAVE_EVENT, true)
     }
 }
 

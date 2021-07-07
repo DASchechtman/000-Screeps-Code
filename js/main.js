@@ -9,14 +9,43 @@ var Main = /** @class */ (function () {
             new Colony_1.Colony(room);
         }
     }
+    Main.prototype.GetEventName = function (event) {
+        var name = "";
+        switch (event) {
+            case EventConsts_1.LOAD_EVENT: {
+                name = "LOAD";
+                break;
+            }
+            case EventConsts_1.RUN_EVENT: {
+                name = "RUN";
+                break;
+            }
+            case EventConsts_1.SAVE_EVENT: {
+                name = "SAVE";
+                break;
+            }
+        }
+        return name;
+    };
+    Main.prototype.Execute = function (event, show_stats) {
+        if (show_stats === void 0) { show_stats = false; }
+        var event_name = this.GetEventName(event);
+        if (show_stats) {
+            console.log("cpu used before " + event_name + ": " + Game.cpu.getUsed());
+        }
+        EventManager_1.EventManager.Inst().Notify(event);
+        if (show_stats) {
+            console.log("cpu used after " + event_name + ": " + Game.cpu.getUsed());
+        }
+    };
     Main.prototype.Load = function () {
-        EventManager_1.EventManager.Inst().Notify(EventConsts_1.LOAD_EVENT);
+        this.Execute(EventConsts_1.LOAD_EVENT, true);
     };
     Main.prototype.Run = function () {
-        EventManager_1.EventManager.Inst().Notify(EventConsts_1.RUN_EVENT);
+        this.Execute(EventConsts_1.RUN_EVENT, true);
     };
     Main.prototype.Save = function () {
-        EventManager_1.EventManager.Inst().Notify(EventConsts_1.SAVE_EVENT);
+        this.Execute(EventConsts_1.SAVE_EVENT, true);
     };
     return Main;
 }());

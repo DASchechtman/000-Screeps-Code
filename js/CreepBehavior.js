@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreepBehavior = void 0;
 var HardDrive_1 = require("./HardDrive");
+var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var CreepBehavior = /** @class */ (function () {
     function CreepBehavior() {
     }
@@ -33,7 +34,7 @@ var CreepBehavior = /** @class */ (function () {
         return move;
     };
     CreepBehavior.prototype.Harvest = function (creep, source) {
-        if (!this.MoveTo(1, creep, source)) {
+        if (!this.MoveTo(CreepBehaviorConsts_1.HARVEST_DISTANCE, creep, source)) {
             creep.harvest(source);
         }
     };

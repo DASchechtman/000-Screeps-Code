@@ -56,19 +56,24 @@ var Colony = /** @class */ (function (_super) {
         }
         return this.m_Creeps_list[this.m_Data_key];
     };
-    Colony.prototype.SpawnWorkerOrDefender = function (type, name) {
+    Colony.prototype.SpawnCreep = function (type, name) {
         var _a, _b;
-        var creation;
-        var energy = this.m_Room.GetEnergyCapacity();
+        var created = false;
+        var energy_capactiy = this.m_Room.GetEnergyCapacity();
+        var energy_stored = this.m_Room.GetEnergyStored();
+        var body;
         if (type === CreepBehaviorConsts_1.DEFENDER_BEHAVIOR) {
-            var defender_body = CreepBuilder_1.CreepBuilder.BuildScalableDefender(energy);
-            creation = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawnCreep(defender_body, name);
+            body = CreepBuilder_1.CreepBuilder.BuildScalableDefender(energy_capactiy);
         }
         else {
-            var worker_body = CreepBuilder_1.CreepBuilder.BuildScalableWorker(energy);
-            creation = (_b = this.m_Colony_queen) === null || _b === void 0 ? void 0 : _b.spawnCreep(worker_body, name);
+            body = CreepBuilder_1.CreepBuilder.BuildScalableWorker(energy_capactiy);
         }
-        return creation;
+        var body_energy_cost = CreepBuilder_1.CreepBuilder.GetBodyCost(body);
+        if (body_energy_cost <= energy_stored && !((_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawning)) {
+            (_b = this.m_Colony_queen) === null || _b === void 0 ? void 0 : _b.spawnCreep(body, name);
+            created = true;
+        }
+        return created;
     };
     Colony.prototype.CreateCreep = function (name, type) {
         var creep = new CreepWrapper_1.CreepWrapper(name, this.m_Room);
@@ -83,12 +88,12 @@ var Colony = /** @class */ (function (_super) {
         this.m_Creeps_count++;
         this.m_Creep_types.Pop();
     };
-    Colony.prototype.SpawnCreep = function () {
+    Colony.prototype.SpawnColonyMember = function () {
         var type = this.m_Creep_types.Peek();
         if (typeof type === 'number') {
             var name_1 = "creep-" + Date.now();
-            var creation = this.SpawnWorkerOrDefender(type, name_1);
-            if (creation === OK) {
+            var spawned = this.SpawnCreep(type, name_1);
+            if (spawned) {
                 var creep_wrap = this.CreateCreep(name_1, type);
                 this.PushCreepAndNameToLists(creep_wrap);
                 this.UpdateData();
@@ -184,7 +189,7 @@ var Colony = /** @class */ (function (_super) {
             }
             this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
             if (this.m_Creep_types.Size() > 0) {
-                this.SpawnCreep();
+                this.SpawnColonyMember();
             }
         }
     };

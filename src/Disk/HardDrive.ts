@@ -1,6 +1,7 @@
 import { JsonObj } from "../CompilerTyping/Interfaces"
 
 export class HardDrive {
+    private static disk_data: any | null = null
     static Write(identifier: string, data: JsonObj): void {
         let disk = JSON.parse(RawMemory.get())
         disk[identifier] = data

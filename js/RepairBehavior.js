@@ -16,6 +16,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RepairBehavior = void 0;
+var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var StructuresStack_1 = require("./StructuresStack");
 var HardDrive_1 = require("./HardDrive");
 var CreepBehavior_1 = require("./CreepBehavior");
@@ -77,7 +78,7 @@ var RepairBehavior = /** @class */ (function (_super) {
         return true;
     };
     RepairBehavior.prototype.Repair = function (creep, struct) {
-        if (!this.MoveTo(3, creep, struct)) {
+        if (!this.MoveTo(CreepBehaviorConsts_1.REPAIR_DISTANCE, creep, struct)) {
             creep.repair(struct);
             this.IncCounter();
         }

@@ -23,6 +23,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HarvestBehavior = void 0;
 var HardDrive_1 = require("./HardDrive");
 var CreepBehavior_1 = require("./CreepBehavior");
+var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var HarvestBehavior = /** @class */ (function (_super) {
     __extends(HarvestBehavior, _super);
     function HarvestBehavior() {
@@ -84,7 +85,7 @@ var HarvestBehavior = /** @class */ (function (_super) {
         return container;
     };
     HarvestBehavior.prototype.DepositToContainer = function (creep, container) {
-        if (!this.MoveTo(1, creep, container)) {
+        if (!this.MoveTo(CreepBehaviorConsts_1.TRANSFER_DISTANCE, creep, container)) {
             creep.transfer(container, RESOURCE_ENERGY);
         }
     };

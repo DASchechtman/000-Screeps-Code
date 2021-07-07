@@ -16,6 +16,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DefendBehavior = void 0;
+var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 var HardDrive_1 = require("./HardDrive");
 var CreepBehavior_1 = require("./CreepBehavior");
 var DefendBehavior = /** @class */ (function (_super) {
@@ -29,7 +30,7 @@ var DefendBehavior = /** @class */ (function (_super) {
     DefendBehavior.prototype.Save = function (creep) { };
     DefendBehavior.prototype.Run = function (creep, room) {
         var hostile_creeps = room.GetHostileCreeps();
-        if (hostile_creeps.length > 0 && !this.MoveTo(1, creep, hostile_creeps[0])) {
+        if (hostile_creeps.length > 0 && !this.MoveTo(CreepBehaviorConsts_1.ATTACK_DISTANCE, creep, hostile_creeps[0])) {
             creep.moveTo(hostile_creeps[0]);
         }
         else if (hostile_creeps.length === 0) {

@@ -5,7 +5,6 @@ var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
 var ObjectsInRoom_1 = require("./ObjectsInRoom");
 var RoomWrapper = /** @class */ (function () {
     function RoomWrapper(room_name) {
-        this.m_Avalible_energy = null;
         this.m_Name = room_name;
         this.m_Room_objects = new ObjectsInRoom_1.ObjectsInRoom();
         this.LoadRoomResources();
@@ -18,7 +17,6 @@ var RoomWrapper = /** @class */ (function () {
             var construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES);
             var my_creeps = room.find(FIND_MY_CREEPS);
             var hostile_creeps = room.find(FIND_HOSTILE_CREEPS);
-            this.m_Avalible_energy = room.energyCapacityAvailable;
             for (var _i = 0, found_structs_1 = found_structs; _i < found_structs_1.length; _i++) {
                 var struct = found_structs_1[_i];
                 struct.id;
@@ -157,11 +155,20 @@ var RoomWrapper = /** @class */ (function () {
         return this.GetResource(ObjectsInRoom_1.ObjectsInRoom.HOSTILE_CREEPS);
     };
     RoomWrapper.prototype.GetEnergyCapacity = function () {
+        var room = Game.rooms[this.m_Name];
         var total_energy = -1;
-        if (this.m_Avalible_energy !== null) {
-            total_energy = this.m_Avalible_energy;
+        if (room) {
+            total_energy = room.energyCapacityAvailable;
         }
         return total_energy;
+    };
+    RoomWrapper.prototype.GetEnergyStored = function () {
+        var room = Game.rooms[this.m_Name];
+        var stored_energy = -1;
+        if (room) {
+            stored_energy = room.energyAvailable;
+        }
+        return stored_energy;
     };
     RoomWrapper.prototype.GetName = function () {
         return this.m_Name;

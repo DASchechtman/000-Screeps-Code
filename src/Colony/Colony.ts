@@ -54,21 +54,29 @@ export class Colony extends GameObject {
         return this.m_Creeps_list[this.m_Data_key] as Array<string>
     }
 
-    private SpawnWorkerOrDefender(type: number, name: string) {
-        let creation
+    private SpawnCreep(type: number, name: string): boolean {
+        let created = false
 
-        const energy = this.m_Room.GetEnergyCapacity()
+        const energy_capactiy = this.m_Room.GetEnergyCapacity()
+        const energy_stored = this.m_Room.GetEnergyStored()
+
+        let body: Array<BodyPartConstant>
 
         if (type === DEFENDER_BEHAVIOR) {
-            let defender_body = CreepBuilder.BuildScalableDefender(energy)
-            creation = this.m_Colony_queen?.spawnCreep(defender_body, name)
+            body = CreepBuilder.BuildScalableDefender(energy_capactiy)
         }
         else {
-            let worker_body = CreepBuilder.BuildScalableWorker(energy)
-            creation = this.m_Colony_queen?.spawnCreep(worker_body, name)
+            body = CreepBuilder.BuildScalableWorker(energy_capactiy)
         }
 
-        return creation
+        const body_energy_cost = CreepBuilder.GetBodyCost(body)
+
+        if (body_energy_cost <= energy_stored && !this.m_Colony_queen?.spawning) {
+            this.m_Colony_queen?.spawnCreep(body, name)
+            created = true
+        }
+        
+        return created
     }
 
     private CreateCreep(name: string, type: number): CreepWrapper {
@@ -87,15 +95,15 @@ export class Colony extends GameObject {
         this.m_Creep_types.Pop()
     }
 
-    private SpawnCreep(): void {
+    private SpawnColonyMember(): void {
         const type = this.m_Creep_types.Peek()
 
 
         if (typeof type === 'number') {
             const name = `creep-${Date.now()}`
-            const creation = this.SpawnWorkerOrDefender(type, name)
+            const spawned = this.SpawnCreep(type, name)
 
-            if (creation === OK) {
+            if (spawned) {
                 const creep_wrap = this.CreateCreep(name, type)
                 this.PushCreepAndNameToLists(creep_wrap)
                 this.UpdateData()
@@ -202,7 +210,7 @@ export class Colony extends GameObject {
             this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker)
 
             if (this.m_Creep_types.Size() > 0) {
-                this.SpawnCreep()
+                this.SpawnColonyMember()
             }
         }
     }

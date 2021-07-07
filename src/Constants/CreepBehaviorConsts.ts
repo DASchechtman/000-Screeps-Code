@@ -11,3 +11,4 @@ export const RANGED_ATTACK_DISTANCE = 3
 export const ATTACK_DISTANCE = 1
 export const TRANSFER_DISTANCE = 1
 export const HARVEST_DISTANCE = 1
+export const CHANGE_SIGN_DISTANCE = 1

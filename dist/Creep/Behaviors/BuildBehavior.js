@@ -16,6 +16,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BuildBehavior = void 0;
+var CreepBehaviorConsts_1 = require("../../Constants/CreepBehaviorConsts");
 var HardDrive_1 = require("../../Disk/HardDrive");
 var CreepBehavior_1 = require("./CreepBehavior");
 var BuildBehavior = /** @class */ (function (_super) {
@@ -61,7 +62,7 @@ var BuildBehavior = /** @class */ (function (_super) {
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     BuildBehavior.prototype.Build = function (creep, build_site) {
-        if (!this.MoveTo(3, creep, build_site)) {
+        if (!this.MoveTo(CreepBehaviorConsts_1.BUILD_DISTANCE, creep, build_site)) {
             creep.build(build_site);
         }
     };

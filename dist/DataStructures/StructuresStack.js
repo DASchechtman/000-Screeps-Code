@@ -5,13 +5,12 @@ var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
 var StructuresStack = /** @class */ (function () {
     function StructuresStack() {
         this.m_Stack = new Map();
-        this.m_Lowest_key = null;
+        this.m_Lowest_key = -1;
     }
     StructuresStack.prototype.GetFirstElement = function () {
         var structure = null;
         var start_index = -1;
-        var low_key_is_num = typeof this.m_Lowest_key === 'number';
-        if (low_key_is_num && this.m_Stack.has(this.m_Lowest_key)) {
+        if (this.m_Stack.has(this.m_Lowest_key)) {
             var index = this.m_Stack.get(this.m_Lowest_key);
             if (index.array.length > 0) {
                 structure = index.array[0];
@@ -37,18 +36,18 @@ var StructuresStack = /** @class */ (function () {
         this.PushToStack(struct, this.m_Stack.get(new_index.index));
     };
     StructuresStack.prototype.Add = function (struct) {
+        var key = struct.GetCurHealth();
         if (this.m_Stack.size === 0) {
-            this.m_Lowest_key = struct.GetCurHealth();
+            this.m_Lowest_key = key;
             this.CreateIndex(struct);
         }
         else {
-            var key = struct.GetCurHealth();
             if (this.m_Stack.has(key)) {
                 this.PushToStack(struct, this.m_Stack.get(key));
             }
             else {
-                if (struct.GetCurHealth() < this.m_Lowest_key) {
-                    this.m_Lowest_key = struct.GetCurHealth();
+                if (key < this.m_Lowest_key) {
+                    this.m_Lowest_key = key;
                 }
                 this.CreateIndex(struct);
             }

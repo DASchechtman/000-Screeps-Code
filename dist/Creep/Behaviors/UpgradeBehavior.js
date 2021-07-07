@@ -18,6 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpgradeBehavior = void 0;
 var HardDrive_1 = require("../../Disk/HardDrive");
 var CreepBehavior_1 = require("./CreepBehavior");
+var CreepBehaviorConsts_1 = require("../../Constants/CreepBehaviorConsts");
 var UpgradeBehavior = /** @class */ (function (_super) {
     __extends(UpgradeBehavior, _super);
     function UpgradeBehavior() {
@@ -48,8 +49,23 @@ var UpgradeBehavior = /** @class */ (function (_super) {
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     UpgradeBehavior.prototype.Upgrade = function (creep, controller) {
-        if (!this.MoveTo(3, creep, controller)) {
-            creep.upgradeController(controller);
+        var _a;
+        var dist = CreepBehaviorConsts_1.UPGRADE_DISTANCE;
+        var change_sign = false;
+        var shield = "\uD83D\uDEE1\uFE0F";
+        var cross_swords = "\u2694\uFE0F";
+        var msg = shield + " This room is under the protection of the DAS colony. " + cross_swords;
+        if (((_a = controller.sign) === null || _a === void 0 ? void 0 : _a.text) !== msg) {
+            dist = CreepBehaviorConsts_1.CHANGE_SIGN_DISTANCE;
+            change_sign = true;
+        }
+        if (!this.MoveTo(dist, creep, controller)) {
+            if (change_sign) {
+                creep.signController(controller, msg);
+            }
+            else {
+                creep.upgradeController(controller);
+            }
         }
     };
     return UpgradeBehavior;
