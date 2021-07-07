@@ -48,7 +48,9 @@ var UpgradeBehavior = /** @class */ (function (_super) {
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     UpgradeBehavior.prototype.Upgrade = function (creep, controller) {
-        this.MoveTo(creep.upgradeController(controller), creep, controller);
+        if (!this.MoveTo(3, creep, controller)) {
+            creep.upgradeController(controller);
+        }
     };
     return UpgradeBehavior;
 }(CreepBehavior_1.CreepBehavior));

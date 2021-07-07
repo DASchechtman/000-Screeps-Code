@@ -33,7 +33,9 @@ export class UpgradeBehavior extends CreepBehavior {
     }
 
     Upgrade(creep: Creep, controller: StructureController) {
-        this.MoveTo(creep.upgradeController(controller), creep, controller)
+        if (!this.MoveTo(3, creep, controller)) {
+            creep.upgradeController(controller)
+        }
     }
 
 }

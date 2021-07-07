@@ -81,7 +81,7 @@ var CreepBuilder = /** @class */ (function () {
     CreepBuilder.BuildScalableDefender = function (avalible_energy) {
         return this.BuildScalable(avalible_energy, CreepBuilder.DEFENDER_BODY);
     };
-    CreepBuilder.WORKER_BODY = [WORK, MOVE, CARRY, ATTACK];
+    CreepBuilder.WORKER_BODY = [WORK, MOVE, CARRY, MOVE];
     CreepBuilder.DEFENDER_BODY = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH];
     return CreepBuilder;
 }());

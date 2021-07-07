@@ -10,21 +10,34 @@ export class StructuresStack {
         this.stack = new Array()
     }
 
-    private GetFirstElement(): Array<StructureWrapper<any> | number | null> {
+    private GetFirstElement(): {struct: StructureWrapper<any> | null, index: number} {
+
+        const SortLowestToHighestIndex = (struct_a: StructStackIndex, struct_b: StructStackIndex) => {
+            let sort_order = 0
+            if (struct_a.index < struct_b.index) {
+                sort_order = -1
+            }
+            else if (struct_a.index > struct_b.index) {
+                sort_order = 1
+            }
+            return sort_order
+        }
+
+        this.stack.sort(SortLowestToHighestIndex)
+
         let structure: StructureWrapper<any> | null = null
-        let struct_index = 0
+        let start_index = -1
 
-        const group = this.stack[0]
-        const element = group?.array[0]
-
-        if (group && element) {
-            structure = element
+        const stack_has_indexes = this.stack.length > 0
+        if (stack_has_indexes) {
+            const index_has_elements = this.stack[0].array.length > 0
+            if (index_has_elements) {
+                structure = this.stack[0].array[0]
+                start_index = 0
+            }
         }
-        else {
-            struct_index = -1
-        }
 
-        return [structure, struct_index]
+        return { struct: structure, index: start_index }
     }
 
     private PushToStack(struct: StructureWrapper<any>, index: StructStackIndex): void {
@@ -53,43 +66,34 @@ export class StructuresStack {
             this.CreateIndex(struct, 0)
         }
         else {
-            let stack_index = 0
-            while(stack_index < this.stack.length) {
-                const el = this.stack[stack_index]
-                if (struct.GetCurHealth() <= el.index) {
+            let added = false
+            for(let i = 0; i < this.stack.length; i++) {
+                const index = this.stack[i]
+                if (struct.GetCurHealth() === index.index) {
+                    this.PushToStack(struct, index)
+                    added = true
                     break
                 }
-                stack_index++
             }
 
-            if (stack_index === this.stack.length) {
-                this.CreateIndex(struct, stack_index-1)
+            if (!added) {
+                this.CreateIndex(struct, this.stack.length-1)
             }
-            else if (this.stack[stack_index].index === struct.GetCurHealth()) {
-                this.PushToStack(struct, this.stack[stack_index])
-            }
-            else {
-                this.CreateIndex(struct, stack_index)
-            }
-
-            
         }
-        
-
         
     }
 
     Peek(): StructureWrapper<any> | null {
-        return this.GetFirstElement()[0] as StructureWrapper<any> | null
+        return this.GetFirstElement().struct
     }
 
     Pop(): StructureWrapper<any> | null {
-        const list = this.GetFirstElement()
-        const struct = list[0] as StructureWrapper<any> | null
+        const first_el_obj = this.GetFirstElement()
+        const struct = first_el_obj.struct
 
 
-        if (list[1] as number > -1) {
-            this.stack[list[1] as number].array.splice(0, 1)
+        if (first_el_obj.index > -1) {
+            this.stack[first_el_obj.index].array.shift()
         }
 
         return struct

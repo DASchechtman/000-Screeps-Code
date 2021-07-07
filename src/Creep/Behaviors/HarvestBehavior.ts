@@ -74,8 +74,9 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     private DepositToContainer(creep: Creep, container: Container) {
-        const res = creep.transfer(container, RESOURCE_ENERGY)
-        this.MoveTo(res, creep, container)
+        if (!this.MoveTo(1, creep, container)) {
+            creep.transfer(container, RESOURCE_ENERGY)
+        }
     }
 
     private GetEnergySource(creep: Creep): Source | null {

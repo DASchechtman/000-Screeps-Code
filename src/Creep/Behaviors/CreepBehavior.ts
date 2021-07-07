@@ -2,6 +2,7 @@ import { HardDrive } from "../../Disk/HardDrive";
 import { GameObject } from "../../GameObject";
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
+import { RoomPos } from "../../CompilerTyping/Types";
 
 
 export abstract class CreepBehavior {
@@ -17,21 +18,39 @@ export abstract class CreepBehavior {
         return false
     }
 
-    protected MoveTo(
-        result: ScreepsReturnCode,
-        creep: Creep,
-        location: RoomPosition | {pos: RoomPosition}
-        ): boolean 
-    {
-        let perform = result === ERR_NOT_IN_RANGE
-        if (perform) {
-            creep.moveTo(location)
+    protected MoveTo(distance: number, creep: Creep, location: RoomPos) {
+
+        let pos_x: number
+        let pos_y: number
+
+        if (location instanceof RoomPosition) {
+
+            pos_x = location.x
+            pos_y = location.y
         }
-        return !perform
+        else {
+            pos_x = location.pos.x
+            pos_y = location.pos.y            
+        }
+
+        const abs_x = Math.abs(creep.pos.x - pos_x)
+        const abs_y = Math.abs(creep.pos.y - pos_y)
+
+        const move_x = abs_x > distance 
+        const move_y = abs_y > distance
+        const move = move_x || move_y
+
+        if (move) {
+            creep.moveTo(pos_x, pos_y)
+        }
+
+        return move
     }
 
     protected Harvest(creep: Creep, source: Source): void {
-        this.MoveTo(creep.harvest(source), creep, source)
+        if (!this.MoveTo(1, creep, source)) {
+            creep.harvest(source)
+        }
     }
 
     protected UpdateWorkState(creep: Creep, cur_state: boolean): boolean {

@@ -84,8 +84,9 @@ var HarvestBehavior = /** @class */ (function (_super) {
         return container;
     };
     HarvestBehavior.prototype.DepositToContainer = function (creep, container) {
-        var res = creep.transfer(container, RESOURCE_ENERGY);
-        this.MoveTo(res, creep, container);
+        if (!this.MoveTo(1, creep, container)) {
+            creep.transfer(container, RESOURCE_ENERGY);
+        }
     };
     HarvestBehavior.prototype.GetEnergySource = function (creep) {
         var source_id = this.m_Data.id;

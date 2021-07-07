@@ -11,15 +11,31 @@ var CreepBehavior = /** @class */ (function () {
     CreepBehavior.prototype.Signal = function (signal, creep) {
         return false;
     };
-    CreepBehavior.prototype.MoveTo = function (result, creep, location) {
-        var perform = result === ERR_NOT_IN_RANGE;
-        if (perform) {
-            creep.moveTo(location);
+    CreepBehavior.prototype.MoveTo = function (distance, creep, location) {
+        var pos_x;
+        var pos_y;
+        if (location instanceof RoomPosition) {
+            pos_x = location.x;
+            pos_y = location.y;
         }
-        return !perform;
+        else {
+            pos_x = location.pos.x;
+            pos_y = location.pos.y;
+        }
+        var abs_x = Math.abs(creep.pos.x - pos_x);
+        var abs_y = Math.abs(creep.pos.y - pos_y);
+        var move_x = abs_x > distance;
+        var move_y = abs_y > distance;
+        var move = move_x || move_y;
+        if (move) {
+            creep.moveTo(pos_x, pos_y);
+        }
+        return move;
     };
     CreepBehavior.prototype.Harvest = function (creep, source) {
-        this.MoveTo(creep.harvest(source), creep, source);
+        if (!this.MoveTo(1, creep, source)) {
+            creep.harvest(source);
+        }
     };
     CreepBehavior.prototype.UpdateWorkState = function (creep, cur_state) {
         var resource_type = RESOURCE_ENERGY;

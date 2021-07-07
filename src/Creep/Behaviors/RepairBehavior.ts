@@ -72,7 +72,8 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     private Repair(creep: Creep, struct: Structure<any>) {
-        if (this.MoveTo(creep.repair(struct), creep, struct)) {
+        if (!this.MoveTo(3, creep, struct)) {
+            creep.repair(struct)
             this.IncCounter()
         }
     }
@@ -89,9 +90,7 @@ export class RepairBehavior extends CreepBehavior {
         let id: Id<any> = this.m_Data.id as Id<any>
 
         if (this.m_Data.new_id) {
-            console.log("setting id")
             const struct_wrapper = this.m_Struct_Stack.Pop()
-            console.log(struct_wrapper)
 
             if (struct_wrapper) {
                 const new_id = String(struct_wrapper.GetStructure()?.id)
@@ -99,7 +98,6 @@ export class RepairBehavior extends CreepBehavior {
                 id = new_id as Id<any>
             }
 
-            console.log(`id is set to: ${id}`)
             this.m_Data.new_id = false
         }
 

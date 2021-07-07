@@ -24,9 +24,7 @@ var StructureWrapper = /** @class */ (function (_super) {
     __extends(StructureWrapper, _super);
     function StructureWrapper(struct_id, type) {
         if (type === void 0) { type = GameObjectConsts_1.STRUCTURE_TYPE; }
-        var _this = 
-        //console.log(`setting type of struct: ${type}`)
-        _super.call(this, struct_id, type) || this;
+        var _this = _super.call(this, struct_id, type) || this;
         _this.m_Struct_id = struct_id;
         _this.m_Struct = Game.getObjectById(_this.m_Struct_id);
         _this.m_Cur_health = 0;
@@ -39,7 +37,6 @@ var StructureWrapper = /** @class */ (function (_super) {
     }
     StructureWrapper.prototype.OnLoad = function () {
         if (this.m_Cur_health < this.m_Max_health) {
-            //console.log("sending singal")
             var signal = {
                 from: this,
                 data: {},

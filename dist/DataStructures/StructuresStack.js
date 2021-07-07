@@ -7,17 +7,28 @@ var StructuresStack = /** @class */ (function () {
         this.stack = new Array();
     }
     StructuresStack.prototype.GetFirstElement = function () {
+        var SortLowestToHighestIndex = function (struct_a, struct_b) {
+            var sort_order = 0;
+            if (struct_a.index < struct_b.index) {
+                sort_order = -1;
+            }
+            else if (struct_a.index > struct_b.index) {
+                sort_order = 1;
+            }
+            return sort_order;
+        };
+        this.stack.sort(SortLowestToHighestIndex);
         var structure = null;
-        var struct_index = 0;
-        var group = this.stack[0];
-        var element = group === null || group === void 0 ? void 0 : group.array[0];
-        if (group && element) {
-            structure = element;
+        var start_index = -1;
+        var stack_has_indexes = this.stack.length > 0;
+        if (stack_has_indexes) {
+            var index_has_elements = this.stack[0].array.length > 0;
+            if (index_has_elements) {
+                structure = this.stack[0].array[0];
+                start_index = 0;
+            }
         }
-        else {
-            struct_index = -1;
-        }
-        return [structure, struct_index];
+        return { struct: structure, index: start_index };
     };
     StructuresStack.prototype.PushToStack = function (struct, index) {
         if (struct.SignalRecieverType() === GameObjectConsts_1.TIMED_STRUCTURE_TYPE) {
@@ -40,33 +51,28 @@ var StructuresStack = /** @class */ (function () {
             this.CreateIndex(struct, 0);
         }
         else {
-            var stack_index = 0;
-            while (stack_index < this.stack.length) {
-                var el = this.stack[stack_index];
-                if (struct.GetCurHealth() <= el.index) {
+            var added = false;
+            for (var i = 0; i < this.stack.length; i++) {
+                var index = this.stack[i];
+                if (struct.GetCurHealth() === index.index) {
+                    this.PushToStack(struct, index);
+                    added = true;
                     break;
                 }
-                stack_index++;
             }
-            if (stack_index === this.stack.length) {
-                this.CreateIndex(struct, stack_index - 1);
-            }
-            else if (this.stack[stack_index].index === struct.GetCurHealth()) {
-                this.PushToStack(struct, this.stack[stack_index]);
-            }
-            else {
-                this.CreateIndex(struct, stack_index);
+            if (!added) {
+                this.CreateIndex(struct, this.stack.length - 1);
             }
         }
     };
     StructuresStack.prototype.Peek = function () {
-        return this.GetFirstElement()[0];
+        return this.GetFirstElement().struct;
     };
     StructuresStack.prototype.Pop = function () {
-        var list = this.GetFirstElement();
-        var struct = list[0];
-        if (list[1] > -1) {
-            this.stack[list[1]].array.splice(0, 1);
+        var first_el_obj = this.GetFirstElement();
+        var struct = first_el_obj.struct;
+        if (first_el_obj.index > -1) {
+            this.stack[first_el_obj.index].array.shift();
         }
         return struct;
     };

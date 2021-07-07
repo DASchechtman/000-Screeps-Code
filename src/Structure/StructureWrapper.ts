@@ -15,7 +15,6 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
     protected m_Max_health: number
 
     constructor(struct_id: string, type: number = STRUCTURE_TYPE) {
-        //console.log(`setting type of struct: ${type}`)
         super(struct_id, type)
         
         
@@ -33,7 +32,6 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
 
     OnLoad(): void {
         if (this.m_Cur_health < this.m_Max_health) {
-            //console.log("sending singal")
             const signal: Signal = {
                 from: this,
                 data: {},

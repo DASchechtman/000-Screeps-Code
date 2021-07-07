@@ -28,19 +28,25 @@ var BuildBehavior = /** @class */ (function (_super) {
     BuildBehavior.prototype.Load = function (creep) {
         var behavior = this.GetBehavior(creep);
         var cur_state = Boolean(behavior === null || behavior === void 0 ? void 0 : behavior.can_build);
+        var source_id = String(behavior === null || behavior === void 0 ? void 0 : behavior.id);
         this.m_Data = {
-            can_build: this.UpdateWorkState(creep, cur_state)
+            can_build: this.UpdateWorkState(creep, cur_state),
+            id: source_id
         };
     };
     BuildBehavior.prototype.Run = function (creep, room) {
         var sites = room.GetConstructionSites();
         if (sites.length > 0) {
             var build_site = sites[0];
-            var source = room.GetSources()[0];
+            var source = Game.getObjectById(this.m_Data.id);
+            if (!source) {
+                source = build_site.pos.findClosestByPath(FIND_SOURCES);
+            }
             if (this.m_Data.can_build) {
                 this.Build(creep, build_site);
             }
-            else {
+            else if (source) {
+                this.m_Data.id = source.id;
                 this.Harvest(creep, source);
             }
         }
@@ -55,7 +61,9 @@ var BuildBehavior = /** @class */ (function (_super) {
         HardDrive_1.HardDrive.Write(creep.name, data);
     };
     BuildBehavior.prototype.Build = function (creep, build_site) {
-        this.MoveTo(creep.build(build_site), creep, build_site);
+        if (!this.MoveTo(3, creep, build_site)) {
+            creep.build(build_site);
+        }
     };
     return BuildBehavior;
 }(CreepBehavior_1.CreepBehavior));

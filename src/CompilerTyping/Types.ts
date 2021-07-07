@@ -1,3 +1,4 @@
+import exp from "constants"
 import { GameObject } from "../GameObject"
 import { Signal } from "./Interfaces"
 
@@ -18,3 +19,5 @@ export type JsonType = (
 )
 
 export type Method = Filter
+
+export type RoomPos = RoomPosition | {pos: RoomPosition}

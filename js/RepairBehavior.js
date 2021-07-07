@@ -77,7 +77,8 @@ var RepairBehavior = /** @class */ (function (_super) {
         return true;
     };
     RepairBehavior.prototype.Repair = function (creep, struct) {
-        if (this.MoveTo(creep.repair(struct), creep, struct)) {
+        if (!this.MoveTo(3, creep, struct)) {
+            creep.repair(struct);
             this.IncCounter();
         }
     };
@@ -92,15 +93,12 @@ var RepairBehavior = /** @class */ (function (_super) {
         var _a;
         var id = this.m_Data.id;
         if (this.m_Data.new_id) {
-            console.log("setting id");
             var struct_wrapper = this.m_Struct_Stack.Pop();
-            console.log(struct_wrapper);
             if (struct_wrapper) {
                 var new_id = String((_a = struct_wrapper.GetStructure()) === null || _a === void 0 ? void 0 : _a.id);
                 this.m_Data.id = new_id;
                 id = new_id;
             }
-            console.log("id is set to: " + id);
             this.m_Data.new_id = false;
         }
         return id;

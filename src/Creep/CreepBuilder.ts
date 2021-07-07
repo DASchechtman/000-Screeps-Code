@@ -1,5 +1,5 @@
 export class CreepBuilder {
-    public static readonly WORKER_BODY = [WORK, MOVE, CARRY, ATTACK]
+    public static readonly WORKER_BODY = [WORK, MOVE, CARRY, MOVE]
     public static readonly DEFENDER_BODY = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH]
 
     private static GetEnergyConst(part: BodyPartConstant) {

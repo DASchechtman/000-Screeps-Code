@@ -13,12 +13,12 @@ export class DefendBehavior extends CreepBehavior {
     Run(creep: Creep, room: RoomWrapper): void {
         const hostile_creeps = room.GetHostileCreeps()
 
-        const res = creep.attack(hostile_creeps[0])
+        
 
-        if(res === ERR_NOT_IN_RANGE) {
+        if(hostile_creeps.length > 0 && !this.MoveTo(1, creep, hostile_creeps[0])) {
             creep.moveTo(hostile_creeps[0])
         }
-        else {
+        else if (hostile_creeps.length === 0) {
             creep.suicide()
         }
     }
