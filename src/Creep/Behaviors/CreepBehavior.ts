@@ -3,6 +3,7 @@ import { GameObject } from "../../GameObject";
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { RoomPos } from "../../CompilerTyping/Types";
+import { HARVEST_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 
 
 export abstract class CreepBehavior {
@@ -48,7 +49,7 @@ export abstract class CreepBehavior {
     }
 
     protected Harvest(creep: Creep, source: Source): void {
-        if (!this.MoveTo(1, creep, source)) {
+        if (!this.MoveTo(HARVEST_DISTANCE, creep, source)) {
             creep.harvest(source)
         }
     }

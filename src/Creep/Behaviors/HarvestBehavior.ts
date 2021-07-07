@@ -3,6 +3,7 @@ import { JsonObj } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { Container } from "../../CompilerTyping/Types";
 import { CreepBehavior } from "./CreepBehavior";
+import { TRANSFER_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 
 export class HarvestBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
@@ -74,7 +75,7 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     private DepositToContainer(creep: Creep, container: Container) {
-        if (!this.MoveTo(1, creep, container)) {
+        if (!this.MoveTo(TRANSFER_DISTANCE, creep, container)) {
             creep.transfer(container, RESOURCE_ENERGY)
         }
     }

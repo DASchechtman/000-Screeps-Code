@@ -1,4 +1,5 @@
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
+import { REPAIR_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 import { StructuresStack } from "../../DataStructures/StructuresStack";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
@@ -72,7 +73,7 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     private Repair(creep: Creep, struct: Structure<any>) {
-        if (!this.MoveTo(3, creep, struct)) {
+        if (!this.MoveTo(REPAIR_DISTANCE, creep, struct)) {
             creep.repair(struct)
             this.IncCounter()
         }

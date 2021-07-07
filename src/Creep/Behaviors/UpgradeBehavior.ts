@@ -2,6 +2,7 @@ import { HardDrive } from "../../Disk/HardDrive";
 import { JsonObj } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
+import { UPGRADE_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 
 export class UpgradeBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
@@ -33,7 +34,7 @@ export class UpgradeBehavior extends CreepBehavior {
     }
 
     Upgrade(creep: Creep, controller: StructureController) {
-        if (!this.MoveTo(3, creep, controller)) {
+        if (!this.MoveTo(UPGRADE_DISTANCE, creep, controller)) {
             creep.upgradeController(controller)
         }
     }

@@ -1,4 +1,5 @@
 import { JsonObj } from "../../CompilerTyping/Interfaces";
+import { BUILD_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
@@ -49,7 +50,7 @@ export class BuildBehavior extends CreepBehavior {
     }
 
     private Build(creep: Creep, build_site: ConstructionSite): void {
-        if (!this.MoveTo(3, creep, build_site)) {
+        if (!this.MoveTo(BUILD_DISTANCE, creep, build_site)) {
             creep.build(build_site)
         }
     }

@@ -4,28 +4,18 @@ exports.StructuresStack = void 0;
 var GameObjectConsts_1 = require("./GameObjectConsts");
 var StructuresStack = /** @class */ (function () {
     function StructuresStack() {
-        this.stack = new Array();
+        this.m_Stack = new Map();
+        this.m_Lowest_key = null;
     }
     StructuresStack.prototype.GetFirstElement = function () {
-        var SortLowestToHighestIndex = function (struct_a, struct_b) {
-            var sort_order = 0;
-            if (struct_a.index < struct_b.index) {
-                sort_order = -1;
-            }
-            else if (struct_a.index > struct_b.index) {
-                sort_order = 1;
-            }
-            return sort_order;
-        };
-        this.stack.sort(SortLowestToHighestIndex);
         var structure = null;
         var start_index = -1;
-        var stack_has_indexes = this.stack.length > 0;
-        if (stack_has_indexes) {
-            var index_has_elements = this.stack[0].array.length > 0;
-            if (index_has_elements) {
-                structure = this.stack[0].array[0];
-                start_index = 0;
+        var low_key_is_num = typeof this.m_Lowest_key === 'number';
+        if (low_key_is_num && this.m_Stack.has(this.m_Lowest_key)) {
+            var index = this.m_Stack.get(this.m_Lowest_key);
+            if (index.array.length > 0) {
+                structure = index.array[0];
+                start_index = this.m_Lowest_key;
             }
         }
         return { struct: structure, index: start_index };
@@ -38,30 +28,29 @@ var StructuresStack = /** @class */ (function () {
             index.array.push(struct);
         }
     };
-    StructuresStack.prototype.CreateIndex = function (struct, index_in_stack) {
+    StructuresStack.prototype.CreateIndex = function (struct) {
         var new_index = {
             index: struct.GetCurHealth(),
             array: new Array()
         };
-        this.stack.splice(index_in_stack, 0, new_index);
-        this.PushToStack(struct, this.stack[index_in_stack]);
+        this.m_Stack.set(new_index.index, new_index);
+        this.PushToStack(struct, this.m_Stack.get(new_index.index));
     };
     StructuresStack.prototype.Add = function (struct) {
-        if (this.stack.length === 0) {
-            this.CreateIndex(struct, 0);
+        if (this.m_Stack.size === 0) {
+            this.m_Lowest_key = struct.GetCurHealth();
+            this.CreateIndex(struct);
         }
         else {
-            var added = false;
-            for (var i = 0; i < this.stack.length; i++) {
-                var index = this.stack[i];
-                if (struct.GetCurHealth() === index.index) {
-                    this.PushToStack(struct, index);
-                    added = true;
-                    break;
-                }
+            var key = struct.GetCurHealth();
+            if (this.m_Stack.has(key)) {
+                this.PushToStack(struct, this.m_Stack.get(key));
             }
-            if (!added) {
-                this.CreateIndex(struct, this.stack.length - 1);
+            else {
+                if (struct.GetCurHealth() < this.m_Lowest_key) {
+                    this.m_Lowest_key = struct.GetCurHealth();
+                }
+                this.CreateIndex(struct);
             }
         }
     };
@@ -69,10 +58,11 @@ var StructuresStack = /** @class */ (function () {
         return this.GetFirstElement().struct;
     };
     StructuresStack.prototype.Pop = function () {
+        var _a;
         var first_el_obj = this.GetFirstElement();
         var struct = first_el_obj.struct;
         if (first_el_obj.index > -1) {
-            this.stack[first_el_obj.index].array.shift();
+            (_a = this.m_Stack.get(first_el_obj.index)) === null || _a === void 0 ? void 0 : _a.array.shift();
         }
         return struct;
     };

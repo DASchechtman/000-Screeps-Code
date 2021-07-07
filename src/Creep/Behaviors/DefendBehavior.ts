@@ -1,3 +1,4 @@
+import { ATTACK_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
@@ -15,7 +16,7 @@ export class DefendBehavior extends CreepBehavior {
 
         
 
-        if(hostile_creeps.length > 0 && !this.MoveTo(1, creep, hostile_creeps[0])) {
+        if(hostile_creeps.length > 0 && !this.MoveTo(ATTACK_DISTANCE, creep, hostile_creeps[0])) {
             creep.moveTo(hostile_creeps[0])
         }
         else if (hostile_creeps.length === 0) {
