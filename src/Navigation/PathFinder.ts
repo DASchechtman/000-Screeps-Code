@@ -63,13 +63,18 @@ import { InRoomGrid } from "./PathGrid";
 // }
 
 export class InRoomPathFinder {
+    private static m_Room_grids: Map<string, InRoomGrid>
+
     private m_Grid: InRoomGrid | null = null
     private m_Searched_nodes: Array<Point>
     private m_Node_maps: Map<GridNode, GridNode>
+    
 
     constructor() {
         this.m_Searched_nodes = new Array()
         this.m_Node_maps = new Map()
+
+        InRoomPathFinder.m_Room_grids = new Map()
     }
 
     private GetPoint(obj: RoomPos) {
@@ -262,15 +267,7 @@ export class InRoomPathFinder {
         return path
     }
 
-    private ShowPaths(x: number, y: number) {
-        const room = Game.rooms['sim']
-
-        if (room) {
-            room.createConstructionSite(x, y, STRUCTURE_ROAD)
-        }
-    }
-
-    private GetNextNodeInPath(
+    private CalculatePath(
         cur_node: GridNode,
         dest: Point,
         range: number,
@@ -329,9 +326,11 @@ export class InRoomPathFinder {
         return path
     }
 
-    MoveTo(creep: Creep, obj: RoomPos, dist: number = 1) {
+    MoveTo(creep: Creep, obj: RoomPos, dist: number = 1): boolean {
         const obj_point = this.GetPoint(obj)
         const creep_point = this.GetPoint(creep)
+
+        let moved = false
 
         if (!creep.pos.inRangeTo(obj_point.x, obj_point.y, dist)) {
 
@@ -347,13 +346,17 @@ export class InRoomPathFinder {
 
             const data = HardDrive.Read(creep.name)
 
-            if (!data.path || (data.path as Array<DirectionConstant>).length === 0) {
-                if (!this.m_Grid) {
-                    this.m_Grid = new InRoomGrid(creep.room.name)
+            const path_array = data.path as Array<DirectionConstant>
+
+            if (path_array === undefined || path_array.length === 0) {
+                const grid_key = creep.room.name
+                if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
+                    InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
                 }
-                data.path = this.GetNextNodeInPath(start_node, obj_point, dist, creep)
+                this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
+                data.path = this.CalculatePath(start_node, obj_point, dist, creep)
                 dir = data.path as Array<DirectionConstant>
-                HardDrive.Write(creep.name, data)
+                
             }
             else {
                 dir = data.path as Array<DirectionConstant>
@@ -365,9 +368,13 @@ export class InRoomPathFinder {
 
                 if (ret === OK) {
                     dir.shift()
+                    moved = true
+                    HardDrive.Write(creep.name, data)
                 }
             }
 
         }
+
+        return moved
     }
 }

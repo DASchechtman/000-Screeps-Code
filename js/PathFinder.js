@@ -53,6 +53,7 @@ class InRoomPathFinder {
         this.m_Grid = null;
         this.m_Searched_nodes = new Array();
         this.m_Node_maps = new Map();
+        InRoomPathFinder.m_Room_grids = new Map();
     }
     GetPoint(obj) {
         let x = obj.pos.x;
@@ -214,13 +215,7 @@ class InRoomPathFinder {
         }
         return path;
     }
-    ShowPaths(x, y) {
-        const room = Game.rooms['sim'];
-        if (room) {
-            room.createConstructionSite(x, y, STRUCTURE_ROAD);
-        }
-    }
-    GetNextNodeInPath(cur_node, dest, range, creep, steps = 10) {
+    CalculatePath(cur_node, dest, range, creep, steps = 10) {
         var _a, _b;
         debugger;
         let path = new Array();
@@ -263,6 +258,7 @@ class InRoomPathFinder {
     MoveTo(creep, obj, dist = 1) {
         const obj_point = this.GetPoint(obj);
         const creep_point = this.GetPoint(creep);
+        let moved = false;
         if (!creep.pos.inRangeTo(obj_point.x, obj_point.y, dist)) {
             const start_node = {
                 G: 0,
@@ -272,13 +268,15 @@ class InRoomPathFinder {
             };
             let dir;
             const data = HardDrive_1.HardDrive.Read(creep.name);
-            if (!data.path || data.path.length === 0) {
-                if (!this.m_Grid) {
-                    this.m_Grid = new PathGrid_1.InRoomGrid(creep.room.name);
+            const path_array = data.path;
+            if (path_array === undefined || path_array.length === 0) {
+                const grid_key = creep.room.name;
+                if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
+                    InRoomPathFinder.m_Room_grids.set(grid_key, new PathGrid_1.InRoomGrid(grid_key));
                 }
-                data.path = this.GetNextNodeInPath(start_node, obj_point, dist, creep);
+                this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key);
+                data.path = this.CalculatePath(start_node, obj_point, dist, creep);
                 dir = data.path;
-                HardDrive_1.HardDrive.Write(creep.name, data);
             }
             else {
                 dir = data.path;
@@ -287,9 +285,12 @@ class InRoomPathFinder {
                 const ret = creep.move(dir[0]);
                 if (ret === OK) {
                     dir.shift();
+                    moved = true;
+                    HardDrive_1.HardDrive.Write(creep.name, data);
                 }
             }
         }
+        return moved;
     }
 }
 exports.InRoomPathFinder = InRoomPathFinder;

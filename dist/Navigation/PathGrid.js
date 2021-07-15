@@ -18,6 +18,20 @@ class InRoomGrid {
         this.m_Grid_y = 24;
         this.InitGrid();
     }
+    GetRoadOnTile(x, y, original_val) {
+        var _a;
+        const room = Game.rooms[this.m_Room_name];
+        if (room) {
+            const objects_at_point = room.lookAt(x, y);
+            for (let object of objects_at_point) {
+                if (((_a = object.structure) === null || _a === void 0 ? void 0 : _a.structureType) === STRUCTURE_ROAD) {
+                    original_val = Enums_1.TerrainTypes.ROAD_TERRAIN;
+                    break;
+                }
+            }
+        }
+        return original_val;
+    }
     GetTerrainAt(x, y) {
         const room = Game.rooms[this.m_Room_name];
         let tile_type = -1;
@@ -36,10 +50,11 @@ class InRoomGrid {
                 break;
             }
         }
+        tile_type = this.GetRoadOnTile(x, y, tile_type);
         return tile_type;
     }
     AreNoObsticalsAtPoint(x, y) {
-        var _a;
+        var _a, _b;
         const room = Game.rooms[this.m_Room_name];
         let no_blocks = true;
         const obsticals_at_pos = room.lookAt(x, y);
@@ -58,6 +73,10 @@ class InRoomGrid {
             }
             for (let st of obstical_struct_types) {
                 if (((_a = thing.structure) === null || _a === void 0 ? void 0 : _a.structureType) === st) {
+                    no_blocks = false;
+                    break;
+                }
+                else if (((_b = thing.constructionSite) === null || _b === void 0 ? void 0 : _b.structureType) === st) {
                     no_blocks = false;
                     break;
                 }

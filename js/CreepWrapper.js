@@ -122,5 +122,9 @@ class CreepWrapper extends GameObject_1.GameObject {
     MakeReadyToRun() {
         this.m_Ready_to_run = true;
     }
+    GetPos() {
+        var _a;
+        return (_a = this.m_Creep) === null || _a === void 0 ? void 0 : _a.pos;
+    }
 }
 exports.CreepWrapper = CreepWrapper;

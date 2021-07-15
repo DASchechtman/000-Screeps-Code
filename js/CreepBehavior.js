@@ -13,23 +13,11 @@ class CreepBehavior {
         return false;
     }
     MoveTo(distance, creep, location) {
-        var _a, _b, _c, _d;
-        let x = (_b = (_a = location) === null || _a === void 0 ? void 0 : _a.pos) === null || _b === void 0 ? void 0 : _b.x;
-        let y = (_d = (_c = location) === null || _c === void 0 ? void 0 : _c.pos) === null || _d === void 0 ? void 0 : _d.y;
-        if (!x) {
-            x = location.x;
-        }
-        if (!y) {
-            y = location.y;
-        }
-        const out_of_range = !creep.pos.inRangeTo(x, y, distance);
-        if (out_of_range) {
-            const p = new PathFinder_1.InRoomPathFinder();
-            CpuTimer_1.CpuTimer.Start();
-            p.MoveTo(creep, location, distance);
-            CpuTimer_1.CpuTimer.End("time taken to move");
-        }
-        return out_of_range;
+        const p = new PathFinder_1.InRoomPathFinder();
+        CpuTimer_1.CpuTimer.Start();
+        const moved = p.MoveTo(creep, location, distance);
+        CpuTimer_1.CpuTimer.End("time taken to move");
+        return moved;
     }
     Harvest(creep, source) {
         if (!this.MoveTo(CreepBehaviorConsts_1.HARVEST_DISTANCE, creep, source)) {

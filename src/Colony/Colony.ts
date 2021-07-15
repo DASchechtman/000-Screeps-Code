@@ -209,6 +209,17 @@ export class Colony extends GameObject {
 
             for (let creep of this.m_Creeps) {
                 this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName())
+                const pos = creep.GetPos()
+
+                if (pos) {
+                    const room = Game.rooms[this.m_Room.GetName()]
+
+                    const terrain = room.getTerrain().get(pos.x, pos.y)
+
+                    if (terrain === TERRAIN_MASK_SWAMP) {
+                        room.createConstructionSite(pos.x, pos.y, STRUCTURE_ROAD)
+                    }
+                }
             }
 
             const harvester_count = this.m_Type_tracker.GetTypeCount(HARVEST_BEHAVIOR)

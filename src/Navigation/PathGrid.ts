@@ -40,7 +40,24 @@ export class InRoomGrid {
         this.InitGrid()
     }
 
-     GetTerrainAt(x: number, y: number): number {
+    private GetRoadOnTile(x: number, y: number, original_val: number): number {
+        const room = Game.rooms[this.m_Room_name]
+
+        if (room) {
+            const objects_at_point = room.lookAt(x, y)
+
+            for (let object of objects_at_point) {
+                if (object.structure?.structureType === STRUCTURE_ROAD) {
+                    original_val = TerrainTypes.ROAD_TERRAIN
+                    break
+                }
+            }
+        }
+
+        return original_val
+    }
+
+    GetTerrainAt(x: number, y: number): number {
 
         const room = Game.rooms[this.m_Room_name]
 
@@ -61,6 +78,8 @@ export class InRoomGrid {
                 break
             }
         }
+
+        tile_type = this.GetRoadOnTile(x, y, tile_type)
 
         return tile_type
     }
@@ -87,6 +106,10 @@ export class InRoomGrid {
             }
             for (let st of obstical_struct_types) {
                 if (thing.structure?.structureType === st) {
+                    no_blocks = false
+                    break
+                }
+                else if (thing.constructionSite?.structureType === st) {
                     no_blocks = false
                     break
                 }

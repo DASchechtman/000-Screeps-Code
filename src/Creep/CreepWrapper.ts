@@ -153,4 +153,8 @@ export class CreepWrapper extends GameObject {
     MakeReadyToRun(): void {
         this.m_Ready_to_run = true
     }
+
+    GetPos(): RoomPosition | undefined{
+        return this.m_Creep?.pos
+    }
 }
