@@ -21,6 +21,7 @@ var HardDrive = /** @class */ (function () {
         delete disk[identifier];
         RawMemory.set(JSON.stringify(disk));
     };
+    HardDrive.disk_data = null;
     return HardDrive;
 }());
 exports.HardDrive = HardDrive;
