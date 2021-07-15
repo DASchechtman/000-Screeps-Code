@@ -1,28 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventManager = void 0;
-var EventConsts_1 = require("./EventConsts");
-var EventManager = /** @class */ (function () {
-    function EventManager() {
+const EventConsts_1 = require("./EventConsts");
+class EventManager {
+    constructor() {
         this.observers_list = new Array();
     }
-    EventManager.Inst = function () {
+    static Inst() {
         if (!this.instance) {
             this.instance = new EventManager();
         }
         return this.instance;
-    };
-    EventManager.prototype.Add = function (observer) {
+    }
+    Add(observer) {
         this.observers_list.push(observer);
-    };
-    EventManager.prototype.Remove = function (observer) {
-        var index = this.observers_list.indexOf(observer);
+    }
+    Remove(observer) {
+        const index = this.observers_list.indexOf(observer);
         delete this.observers_list[index];
-    };
-    EventManager.prototype.Notify = function (event_type) {
-        var i = 0;
+    }
+    Notify(event_type) {
+        let i = 0;
         while (i < this.observers_list.length) {
-            var observer = this.observers_list[i];
+            const observer = this.observers_list[i];
             switch (event_type) {
                 case EventConsts_1.SAVE_EVENT: {
                     observer.OnSave();
@@ -47,8 +47,7 @@ var EventManager = /** @class */ (function () {
             }
             i++;
         }
-    };
-    EventManager.instance = null;
-    return EventManager;
-}());
+    }
+}
 exports.EventManager = EventManager;
+EventManager.instance = null;

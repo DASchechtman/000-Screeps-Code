@@ -1,26 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HardDrive = void 0;
-var HardDrive = /** @class */ (function () {
-    function HardDrive() {
+class HardDrive {
+    static LoadData() {
+        if (HardDrive.disk_data === null) {
+            try {
+                HardDrive.disk_data = JSON.parse(RawMemory.get());
+            }
+            catch (_a) {
+                HardDrive.disk_data = {};
+            }
+        }
+        return HardDrive.disk_data;
     }
-    HardDrive.Write = function (identifier, data) {
-        var disk = JSON.parse(RawMemory.get());
+    static Write(identifier, data) {
+        let disk = this.LoadData();
         disk[identifier] = data;
-        RawMemory.set(JSON.stringify(disk));
-    };
-    HardDrive.Read = function (identifier) {
-        var data = JSON.parse(RawMemory.get())[identifier];
+    }
+    static Read(identifier) {
+        let data = this.LoadData()[identifier];
         if (!data) {
             data = {};
         }
         return data;
-    };
-    HardDrive.Erase = function (identifier) {
-        var disk = JSON.parse(RawMemory.get());
+    }
+    static Erase(identifier) {
+        let disk = this.LoadData();
         delete disk[identifier];
-        RawMemory.set(JSON.stringify(disk));
-    };
-    return HardDrive;
-}());
+    }
+    static CommitChanges() {
+        if (HardDrive.disk_data !== null) {
+            RawMemory.set(JSON.stringify(HardDrive.disk_data));
+        }
+    }
+}
 exports.HardDrive = HardDrive;
+HardDrive.disk_data = null;

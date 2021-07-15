@@ -1,50 +1,32 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StructureWrapper = void 0;
-var CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
-var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
-var GameObject_1 = require("../GameObject");
-var SignalManager_1 = require("../Signals/SignalManager");
-var StructureWrapper = /** @class */ (function (_super) {
-    __extends(StructureWrapper, _super);
-    function StructureWrapper(struct_id, type) {
-        if (type === void 0) { type = GameObjectConsts_1.STRUCTURE_TYPE; }
-        var _this = _super.call(this, struct_id, type) || this;
-        _this.m_Struct_id = struct_id;
-        _this.m_Struct = Game.getObjectById(_this.m_Struct_id);
-        _this.m_Cur_health = 0;
-        _this.m_Max_health = 0;
-        if (_this.m_Struct) {
-            _this.m_Cur_health = _this.m_Struct.hits;
-            _this.m_Max_health = _this.m_Struct.hitsMax;
+const CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
+const GameObjectConsts_1 = require("../Constants/GameObjectConsts");
+const GameObject_1 = require("../GameObject");
+const SignalManager_1 = require("../Signals/SignalManager");
+class StructureWrapper extends GameObject_1.GameObject {
+    constructor(struct_id, type = GameObjectConsts_1.STRUCTURE_TYPE) {
+        super(struct_id, type);
+        this.m_Struct_id = struct_id;
+        this.m_Struct = Game.getObjectById(this.m_Struct_id);
+        this.m_Cur_health = 0;
+        this.m_Max_health = 0;
+        if (this.m_Struct) {
+            this.m_Cur_health = this.m_Struct.hits;
+            this.m_Max_health = this.m_Struct.hitsMax;
         }
-        return _this;
     }
-    StructureWrapper.prototype.OnLoad = function () {
+    OnLoad() {
         if (this.m_Cur_health < this.m_Max_health) {
-            var signal = {
+            const signal = {
                 from: this,
                 data: {},
-                filter: function (sender, reciever) {
-                    var type = reciever.SignalRecieverType();
-                    var ret = false;
+                filter: (sender, reciever) => {
+                    const type = reciever.SignalRecieverType();
+                    let ret = false;
                     if (type === GameObjectConsts_1.CREEP_TYPE) {
-                        var creep = reciever;
+                        const creep = reciever;
                         ret = (creep.GetBehavior() === CreepBehaviorConsts_1.REPAIR_BEHAVIOR);
                     }
                     return ret;
@@ -52,16 +34,15 @@ var StructureWrapper = /** @class */ (function (_super) {
             };
             SignalManager_1.SignalManager.Inst().SendSignal(signal);
         }
-    };
-    StructureWrapper.prototype.GetCurHealth = function () {
+    }
+    GetCurHealth() {
         return this.m_Cur_health;
-    };
-    StructureWrapper.prototype.GetMaxHealth = function () {
+    }
+    GetMaxHealth() {
         return this.m_Max_health;
-    };
-    StructureWrapper.prototype.GetStructure = function () {
+    }
+    GetStructure() {
         return this.m_Struct;
-    };
-    return StructureWrapper;
-}(GameObject_1.GameObject));
+    }
+}
 exports.StructureWrapper = StructureWrapper;

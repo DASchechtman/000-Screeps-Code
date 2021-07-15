@@ -30,9 +30,16 @@ export class StructuresStack {
     }
 
     private PushToStack(struct: StructureWrapper<any>, index: StructStackIndex): void {
+        const is_timed = struct.SignalRecieverType() === TIMED_STRUCTURE_TYPE
+        const is_rampart = struct.GetStructure()?.structureType === STRUCTURE_RAMPART
  
-        if (struct.SignalRecieverType() === TIMED_STRUCTURE_TYPE) {
+        if (is_timed && is_rampart) {
             index.array.unshift(struct)
+            index.timed_defense_index++
+        }
+        else if (is_timed) {
+            const insert_index = index.timed_defense_index
+            index.array.splice(insert_index, 0, struct)
         }
         else {
             index.array.push(struct)
@@ -42,6 +49,7 @@ export class StructuresStack {
     private CreateIndex(struct: StructureWrapper<any>): void {
         const new_index: StructStackIndex = {
             index: struct.GetCurHealth(),
+            timed_defense_index: 0,
             array: new Array()
         }
 

@@ -2,14 +2,26 @@ import { JsonObj } from "../CompilerTyping/Interfaces"
 
 export class HardDrive {
     private static disk_data: any | null = null
+
+    private static LoadData(): any {
+        if (HardDrive.disk_data === null) {
+            try {
+                HardDrive.disk_data = JSON.parse(RawMemory.get())
+            }
+            catch {
+                HardDrive.disk_data = {}
+            }
+        }
+        return HardDrive.disk_data
+    }
+
     static Write(identifier: string, data: JsonObj): void {
-        let disk = JSON.parse(RawMemory.get())
+        let disk = this.LoadData()
         disk[identifier] = data
-        RawMemory.set(JSON.stringify(disk))
     }
 
     static Read(identifier: string): JsonObj {
-        let data: JsonObj = JSON.parse(RawMemory.get())[identifier]
+        let data: JsonObj = this.LoadData()[identifier]
         if (!data) {
             data = {}
         }
@@ -17,8 +29,13 @@ export class HardDrive {
     }
 
     static Erase(identifier: string): void {
-        let disk = JSON.parse(RawMemory.get())
+        let disk = this.LoadData()
         delete disk[identifier]
-        RawMemory.set(JSON.stringify(disk))
+    }
+
+    static CommitChanges(): void {
+        if (HardDrive.disk_data !== null) {
+            RawMemory.set(JSON.stringify(HardDrive.disk_data))
+        }
     }
 }

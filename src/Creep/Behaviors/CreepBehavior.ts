@@ -2,8 +2,11 @@ import { HardDrive } from "../../Disk/HardDrive";
 import { GameObject } from "../../GameObject";
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
-import { RoomPos } from "../../CompilerTyping/Types";
+import { RoomPos, RoomPosObj } from "../../CompilerTyping/Types";
 import { HARVEST_DISTANCE } from "../../Constants/CreepBehaviorConsts";
+import { InRoomPathFinder } from "../../Navigation/PathFinder";
+import { cpuUsage } from "process";
+import { CpuTimer } from "../../CpuTimer";
 
 
 export abstract class CreepBehavior {
@@ -21,31 +24,27 @@ export abstract class CreepBehavior {
 
     protected MoveTo(distance: number, creep: Creep, location: RoomPos) {
 
-        let pos_x: number
-        let pos_y: number
+        let x: number | undefined = (location as RoomPosObj)?.pos?.x
+        let y: number | undefined = (location as RoomPosObj)?.pos?.y
 
-        if (location instanceof RoomPosition) {
-
-            pos_x = location.x
-            pos_y = location.y
-        }
-        else {
-            pos_x = location.pos.x
-            pos_y = location.pos.y            
+        if(!x) {
+            x = (location as RoomPosition).x
         }
 
-        const abs_x = Math.abs(creep.pos.x - pos_x)
-        const abs_y = Math.abs(creep.pos.y - pos_y)
-
-        const move_x = abs_x > distance 
-        const move_y = abs_y > distance
-        const move = move_x || move_y
-
-        if (move) {
-            creep.moveTo(pos_x, pos_y)
+        if (!y) {
+            y = (location as RoomPosition).y
         }
 
-        return move
+        const out_of_range = !creep.pos.inRangeTo(x, y, distance)
+
+        if (out_of_range) {
+            const p = new InRoomPathFinder()
+            CpuTimer.Start()
+            p.MoveTo(creep, location, distance)
+            CpuTimer.End("time taken to move")
+        }
+
+        return out_of_range
     }
 
     protected Harvest(creep: Creep, source: Source): void {

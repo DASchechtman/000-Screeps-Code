@@ -4,91 +4,108 @@ import { ObjectsInRoom } from "./ObjectsInRoom";
 export class RoomWrapper {
     private m_Name: string
     private m_Room_objects: ObjectsInRoom
+    private m_Room: Room | null
 
     constructor(room_name: string) {
         this.m_Name = room_name;
+        this.m_Room = Game.rooms[room_name]
 
         this.m_Room_objects = new ObjectsInRoom()
-
-        this.LoadRoomResources()
     }
 
-    private LoadRoomResources(): void {
+    private LoadStructs(key: number, type: StructureConstant, id: string): void {
+        this.m_Room_objects.AddMap(key, type, id)
+    }
 
-        const room = Game.rooms[this.m_Name];
+    private LoadResources(key: number, id: string) {
+        this.m_Room_objects.AddArray(key, id)
+    }
 
-        if (room) {
-            const found_structs = room.find(FIND_STRUCTURES)
-            const sources = room.find(FIND_SOURCES)
-            const construction_sites = room.find(FIND_MY_CONSTRUCTION_SITES)
-            const my_creeps = room.find(FIND_MY_CREEPS)
-            const hostile_creeps = room.find(FIND_HOSTILE_CREEPS)
+    private LoadOwnedStructs(): void {
+        const struct = this.m_Room?.find(FIND_MY_STRUCTURES)
 
-            for (var struct of found_structs) {
-                struct.id
-                const type = struct.structureType
-
-                if (this.IsOwned(struct)) {
-                    const key = ObjectsInRoom.MY_STRUCTS
-                    this.m_Room_objects.AddMap(key, type, struct.id)
-                }
-                else if (this.IsHostile(struct)) {
-                    const key = ObjectsInRoom.HOSTILE_STRUCTS
-                    this.m_Room_objects.AddMap(key, type, struct.id)
-                }
-                else {
-                    const key = ObjectsInRoom.UNOWNED_STRUCTS
-                    this.m_Room_objects.AddMap(key, type, struct.id)
-                }
-            }
-
-            for (var energy of sources) {
-                const key = ObjectsInRoom.SOURCES
-                this.m_Room_objects.AddArray(key, energy.id)
-            }
-
-            for (var site of construction_sites) {
-                const key = ObjectsInRoom.MY_CONSTRUCTION_SITES
-                this.m_Room_objects.AddArray(key, site.id)
-            }
-
-            for (var creep of my_creeps) {
-                const key = ObjectsInRoom.MY_CREEPS
-                this.m_Room_objects.AddArray(key, creep.id)
-            }
-
-            for (var hostile_creep of hostile_creeps) {
-                const key = ObjectsInRoom.HOSTILE_CREEPS
-                this.m_Room_objects.AddArray(key, hostile_creep.id)
+        if (struct) {
+            for (let s of struct) {
+                this.LoadStructs(ObjectsInRoom.MY_STRUCTS, s.structureType, s.id)
             }
         }
+    }
+
+    private LoadHostileStructs() {
+        const structs = this.m_Room?.find(FIND_HOSTILE_STRUCTURES)
+
+        if (structs) {
+            for (let hs of structs) {
+                this.LoadStructs(ObjectsInRoom.HOSTILE_STRUCTS, hs.structureType, hs.id)
+            }
+        }
+    }
+
+    private LoadUnownedStructs() {
+        const structs = this.m_Room?.find(FIND_STRUCTURES)
+        if (structs) {
+            for (let uos of structs) {
+                if (!uos) {
+                    console.log("found null struct")
+                } else {
+                if (!this.IsOwned(uos) && !this.IsHostile(uos)) {
+                    this.LoadStructs(ObjectsInRoom.UNOWNED_STRUCTS, uos.structureType, uos.id)
+                }
+            }
+            }
+        }
+    }
+
+    private LoadSources() {
+        const sources = this.m_Room?.find(FIND_SOURCES)
+        if (sources) {
+            for (let energy of sources) {
+                this.LoadResources(ObjectsInRoom.SOURCES, energy.id)
+            }
+        }
+    }
+
+    private LoadConstructionSites() {
+        const sites = this.m_Room?.find(FIND_MY_CONSTRUCTION_SITES)
+        if (sites) {
+            for (let site of sites) {
+                this.LoadResources(ObjectsInRoom.MY_CONSTRUCTION_SITES, site.id)
+            }
+        }
+    }
+
+    private LoadMyCreeps() {
+        const creeps = this.m_Room?.find(FIND_MY_CREEPS)
+        if (creeps) {
+            for (let creep of creeps) {
+                this.LoadResources(ObjectsInRoom.MY_CREEPS, creep.id)
+            }
+        }
+    }
+
+    private LoadHostileCreeps() {
+        const hostile_creeps = this.m_Room?.find(FIND_HOSTILE_CREEPS)
+        if (hostile_creeps) {
+            for (let creep of hostile_creeps) {
+                this.LoadResources(ObjectsInRoom.HOSTILE_CREEPS, creep.id)
+            }
+        }
+    }
+
+    private GetOwnerName(struct: Structure): string | undefined {
+        return (struct as OwnedStructure).owner?.username
     }
 
     private IsOwned(struct: Structure): boolean {
-        let is_owned = false;
-
-        if (
-            struct instanceof OwnedStructure
-            && Owner === struct.owner!!.username
-        ) {
-            is_owned = true;
-
-        }
-        return is_owned;
+        const struct_owner = this.GetOwnerName(struct)
+        const string_type = typeof struct_owner === 'string'
+        return Boolean(string_type && struct_owner === Owner)
     }
 
     private IsHostile(struct: Structure): boolean {
-        let is_hostile = false;
-
-        if (
-            struct instanceof OwnedStructure
-            && Owner !== struct.owner!!.username
-        ) {
-
-        }
-
-        return is_hostile
-
+        const struct_owner = this.GetOwnerName(struct)
+        const string_type = typeof struct_owner === 'string'
+        return Boolean(string_type && struct_owner !== Owner)
     }
 
     private GetStructures<T>(struct_type: string, map: Map<string, Array<string>> | undefined): T[] {
@@ -134,18 +151,27 @@ export class RoomWrapper {
 
     GetOwnedStructures<T>(struct_type: string): T[] {
         const key = ObjectsInRoom.MY_STRUCTS
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadOwnedStructs()
+        }
         const map = this.m_Room_objects.GetMap(key)
         return this.GetStructures<T>(struct_type, map)
     }
 
     GetHostileStructures<T>(struct_type: string): T[] {
         const key = ObjectsInRoom.HOSTILE_STRUCTS
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadHostileStructs()
+        }
         const map = this.m_Room_objects.GetMap(key)
         return this.GetStructures<T>(struct_type, map)
     }
 
     GetUnownedStructures<T>(struct_type: string): T[] {
         const key = ObjectsInRoom.UNOWNED_STRUCTS
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadUnownedStructs()
+        }
         const map = this.m_Room_objects.GetMap(key)
         return this.GetStructures<T>(struct_type, map)
     }
@@ -158,9 +184,21 @@ export class RoomWrapper {
 
         const structs = new Array<Structure<any>>()
 
-        for(let key of struct_type_keys) {
+        for (let key of struct_type_keys) {
+            if (!this.m_Room_objects.Has(key)) {
+                switch(key) {
+                    case ObjectsInRoom.MY_STRUCTS: {
+                        this.LoadOwnedStructs()
+                        break
+                    }
+                    case ObjectsInRoom.UNOWNED_STRUCTS: {
+                        this.LoadUnownedStructs()
+                        break
+                    }
+                }
+            }
             this.m_Room_objects.GetMap(key)?.forEach((value, key) => {
-                for(let id of value) {
+                for (let id of value) {
                     const struct_id = id as Id<any>
                     const room_struct = Game.getObjectById(struct_id)
 
@@ -178,19 +216,35 @@ export class RoomWrapper {
     }
 
     GetConstructionSites(): ConstructionSite[] {
-        return this.GetResource<ConstructionSite>(ObjectsInRoom.MY_CONSTRUCTION_SITES)
+        const key = ObjectsInRoom.MY_CONSTRUCTION_SITES
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadConstructionSites()
+        }
+        return this.GetResource<ConstructionSite>(key)
     }
 
     GetSources(): Source[] {
-        return this.GetResource<Source>(ObjectsInRoom.SOURCES)
+        const key = ObjectsInRoom.SOURCES
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadSources()
+        }
+        return this.GetResource<Source>(key)
     }
 
     GetMyCreeps(): Creep[] {
-        return this.GetResource<Creep>(ObjectsInRoom.MY_CREEPS)
+        const key = ObjectsInRoom.MY_CREEPS
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadMyCreeps()
+        }
+        return this.GetResource<Creep>(key)
     }
 
     GetHostileCreeps(): Creep[] {
-        return this.GetResource<Creep>(ObjectsInRoom.HOSTILE_CREEPS)
+        const key = ObjectsInRoom.HOSTILE_CREEPS
+        if (!this.m_Room_objects.Has(key)) {
+            this.LoadHostileCreeps()
+        }
+        return this.GetResource<Creep>(key)
     }
 
     GetEnergyCapacity(): number {

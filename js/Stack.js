@@ -1,39 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Stack = void 0;
-var Stack = /** @class */ (function () {
-    function Stack() {
+class Stack {
+    constructor() {
         this.m_Stack = new Array();
     }
-    Stack.prototype.AccessIndex = function () {
+    AccessIndex() {
         return 0;
-    };
-    Stack.prototype.Push = function (el) {
+    }
+    Push(el) {
         this.m_Stack.push(el);
-    };
-    Stack.prototype.Peek = function () {
-        var item = null;
+    }
+    Peek() {
+        let item = null;
         if (this.m_Stack.length > 0) {
-            var index = this.AccessIndex();
+            const index = this.AccessIndex();
             item = this.m_Stack[index];
         }
         return item;
-    };
-    Stack.prototype.Pop = function () {
-        var item = null;
+    }
+    Pop() {
+        let item = null;
         if (this.m_Stack.length > 0) {
-            var index = this.AccessIndex();
+            const index = this.AccessIndex();
             item = this.m_Stack[index];
             this.m_Stack.splice(index, 1);
         }
         return item;
-    };
-    Stack.prototype.Size = function () {
+    }
+    Size() {
         return this.m_Stack.length;
-    };
-    Stack.prototype.Clear = function () {
+    }
+    Clear() {
         this.m_Stack = new Array();
-    };
-    return Stack;
-}());
+    }
+}
 exports.Stack = Stack;

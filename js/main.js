@@ -1,16 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Colony_1 = require("./Colony");
-var EventConsts_1 = require("./EventConsts");
-var EventManager_1 = require("./EventManager");
-var Main = /** @class */ (function () {
-    function Main() {
+const Colony_1 = require("./Colony");
+const EventConsts_1 = require("./EventConsts");
+const HardDrive_1 = require("./HardDrive");
+const EventManager_1 = require("./EventManager");
+class Main {
+    constructor() {
         for (var room in Game.rooms) {
             new Colony_1.Colony(room);
         }
     }
-    Main.prototype.GetEventName = function (event) {
-        var name = "";
+    GetEventName(event) {
+        let name = "";
         switch (event) {
             case EventConsts_1.LOAD_EVENT: {
                 name = "LOAD";
@@ -26,29 +27,28 @@ var Main = /** @class */ (function () {
             }
         }
         return name;
-    };
-    Main.prototype.Execute = function (event, show_stats) {
-        if (show_stats === void 0) { show_stats = false; }
-        var event_name = this.GetEventName(event);
+    }
+    Execute(event, show_stats = false) {
+        const event_name = this.GetEventName(event);
         if (show_stats) {
-            console.log("cpu used before " + event_name + ": " + Game.cpu.getUsed());
+            console.log(`cpu used before ${event_name}: ${Game.cpu.getUsed()}`);
         }
         EventManager_1.EventManager.Inst().Notify(event);
         if (show_stats) {
-            console.log("cpu used after " + event_name + ": " + Game.cpu.getUsed());
+            console.log(`cpu used after ${event_name}: ${Game.cpu.getUsed()}`);
         }
-    };
-    Main.prototype.Load = function () {
-        this.Execute(EventConsts_1.LOAD_EVENT, true);
-    };
-    Main.prototype.Run = function () {
-        this.Execute(EventConsts_1.RUN_EVENT, true);
-    };
-    Main.prototype.Save = function () {
-        this.Execute(EventConsts_1.SAVE_EVENT, true);
-    };
-    return Main;
-}());
+    }
+    Load() {
+        this.Execute(EventConsts_1.LOAD_EVENT);
+    }
+    Run() {
+        this.Execute(EventConsts_1.RUN_EVENT);
+    }
+    Save() {
+        this.Execute(EventConsts_1.SAVE_EVENT);
+        HardDrive_1.HardDrive.CommitChanges();
+    }
+}
 var tick = new Main();
 tick.Load();
 tick.Run();

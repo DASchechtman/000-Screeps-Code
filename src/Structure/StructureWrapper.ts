@@ -1,6 +1,7 @@
 import { Signal } from "../CompilerTyping/Interfaces";
 import { REPAIR_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { CREEP_TYPE, STRUCTURE_TYPE } from "../Constants/GameObjectConsts";
+import { CpuTimer } from "../CpuTimer";
 import { CreepWrapper } from "../Creep/CreepWrapper";
 import { GameObject } from "../GameObject";
 import { SignalManager } from "../Signals/SignalManager";
@@ -47,7 +48,6 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
                     return ret
                 }
             }
-
             SignalManager.Inst().SendSignal(signal)
         }
     }

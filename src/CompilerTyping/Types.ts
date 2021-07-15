@@ -20,4 +20,6 @@ export type JsonType = (
 
 export type Method = Filter
 
-export type RoomPos = RoomPosition | {pos: RoomPosition}
+export type RoomPosObj = {pos: RoomPosition}
+
+export type RoomPos = RoomPosition | RoomPosObj

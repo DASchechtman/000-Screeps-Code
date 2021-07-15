@@ -1,48 +1,46 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreepBehavior = void 0;
-var HardDrive_1 = require("./HardDrive");
-var CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
-var CreepBehavior = /** @class */ (function () {
-    function CreepBehavior() {
-    }
-    CreepBehavior.prototype.ClearDiskData = function (creep) {
+const HardDrive_1 = require("./HardDrive");
+const CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
+const PathFinder_1 = require("./PathFinder");
+const CpuTimer_1 = require("./CpuTimer");
+class CreepBehavior {
+    ClearDiskData(creep) {
         HardDrive_1.HardDrive.Erase(creep.name);
-    };
-    CreepBehavior.prototype.Signal = function (signal, creep) {
+    }
+    Signal(signal, creep) {
         return false;
-    };
-    CreepBehavior.prototype.MoveTo = function (distance, creep, location) {
-        var pos_x;
-        var pos_y;
-        if (location instanceof RoomPosition) {
-            pos_x = location.x;
-            pos_y = location.y;
+    }
+    MoveTo(distance, creep, location) {
+        var _a, _b, _c, _d;
+        let x = (_b = (_a = location) === null || _a === void 0 ? void 0 : _a.pos) === null || _b === void 0 ? void 0 : _b.x;
+        let y = (_d = (_c = location) === null || _c === void 0 ? void 0 : _c.pos) === null || _d === void 0 ? void 0 : _d.y;
+        if (!x) {
+            x = location.x;
         }
-        else {
-            pos_x = location.pos.x;
-            pos_y = location.pos.y;
+        if (!y) {
+            y = location.y;
         }
-        var abs_x = Math.abs(creep.pos.x - pos_x);
-        var abs_y = Math.abs(creep.pos.y - pos_y);
-        var move_x = abs_x > distance;
-        var move_y = abs_y > distance;
-        var move = move_x || move_y;
-        if (move) {
-            creep.moveTo(pos_x, pos_y);
+        const out_of_range = !creep.pos.inRangeTo(x, y, distance);
+        if (out_of_range) {
+            const p = new PathFinder_1.InRoomPathFinder();
+            CpuTimer_1.CpuTimer.Start();
+            p.MoveTo(creep, location, distance);
+            CpuTimer_1.CpuTimer.End("time taken to move");
         }
-        return move;
-    };
-    CreepBehavior.prototype.Harvest = function (creep, source) {
+        return out_of_range;
+    }
+    Harvest(creep, source) {
         if (!this.MoveTo(CreepBehaviorConsts_1.HARVEST_DISTANCE, creep, source)) {
             creep.harvest(source);
         }
-    };
-    CreepBehavior.prototype.UpdateWorkState = function (creep, cur_state) {
-        var resource_type = RESOURCE_ENERGY;
-        var used_cap = creep.store.getUsedCapacity(resource_type);
-        var max_cap = creep.store.getCapacity(resource_type);
-        var state = cur_state;
+    }
+    UpdateWorkState(creep, cur_state) {
+        const resource_type = RESOURCE_ENERGY;
+        const used_cap = creep.store.getUsedCapacity(resource_type);
+        const max_cap = creep.store.getCapacity(resource_type);
+        let state = cur_state;
         if (used_cap === 0) {
             state = false;
         }
@@ -50,10 +48,9 @@ var CreepBehavior = /** @class */ (function () {
             state = true;
         }
         return state;
-    };
-    CreepBehavior.prototype.GetBehavior = function (creep) {
+    }
+    GetBehavior(creep) {
         return HardDrive_1.HardDrive.Read(creep.name).behavior;
-    };
-    return CreepBehavior;
-}());
+    }
+}
 exports.CreepBehavior = CreepBehavior;

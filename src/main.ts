@@ -1,6 +1,10 @@
+import { cpuUsage } from "process";
 import { Colony } from "./Colony/Colony";
 import { LOAD_EVENT, RUN_EVENT, SAVE_EVENT } from "./Constants/EventConsts";
+import { CpuTimer } from "./CpuTimer";
+import { HardDrive } from "./Disk/HardDrive";
 import { EventManager } from "./Events/EventManager";
+import { Output } from "./Output/Output";
 
 class Main {
     
@@ -44,15 +48,16 @@ class Main {
     }
 
     Load(): void {
-       this.Execute(LOAD_EVENT, true)
+       this.Execute(LOAD_EVENT)
     }
 
     Run(): void {
-        this.Execute(RUN_EVENT, true)
+        this.Execute(RUN_EVENT)
     }
 
     Save(): void {
-        this.Execute(SAVE_EVENT, true)
+        this.Execute(SAVE_EVENT)
+        HardDrive.CommitChanges()
     }
 }
 

@@ -12,6 +12,7 @@ import { HarvestBehavior } from "./Behaviors/HarvestBehavior";
 import { UpgradeBehavior } from "./Behaviors/UpgradeBehavior";
 import { Signal } from "../CompilerTyping/Interfaces";
 import { RepairBehavior } from "./Behaviors/RepairBehavior";
+import { CpuTimer } from "../CpuTimer";
 
 /* 
 Class meant to extend functionaliyt of creep, provides fuctions like
@@ -27,6 +28,7 @@ export class CreepWrapper extends GameObject {
     private m_Cur_type: number
     private m_Room: RoomWrapper
     private m_Creep: Creep | undefined
+    private m_Ready_to_run: boolean
 
     constructor(name: string, room: RoomWrapper) {
         super(name, CREEP_TYPE)
@@ -36,6 +38,7 @@ export class CreepWrapper extends GameObject {
         this.m_Room = room
         this.m_Creep = Game.creeps[name]
         this.m_Cur_type = -1
+        this.m_Ready_to_run = false
     }
 
     private LoadTypes(): void {
@@ -86,15 +89,17 @@ export class CreepWrapper extends GameObject {
     }
 
     OnRun(): void {
-        if (this.m_Creep && this.m_Behavior) {
+        debugger
+        if (this.m_Creep && this.m_Behavior && this.m_Ready_to_run) {
             this.m_Behavior.Load(this.m_Creep)
             this.m_Behavior.Run(this.m_Creep, this.m_Room)
             this.m_Behavior.Save(this.m_Creep)
         }
-        else {
+        else if(!this.m_Creep)  {
             HardDrive.Erase(this.m_Creep_name)
             this.SendRemoveNameSignal()
         }
+        
     }
 
     OnSave(): void {
@@ -143,5 +148,9 @@ export class CreepWrapper extends GameObject {
 
     HasBehavior(): boolean {
         return Boolean(this.m_Behavior)
+    }
+
+    MakeReadyToRun(): void {
+        this.m_Ready_to_run = true
     }
 }
