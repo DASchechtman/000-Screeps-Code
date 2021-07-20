@@ -4,5 +4,5 @@ Screeps-Info.json
 #directories
 /node_modules
 /.vscode
-/dist 
-/js 
+/dist
+/js
