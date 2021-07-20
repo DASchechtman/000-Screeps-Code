@@ -2,56 +2,40 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PriorityStructuresStack = void 0;
 const GameObjectConsts_1 = require("../Constants/GameObjectConsts");
-const StructuresStack_1 = require("./StructuresStack");
+const PriorityQueue_1 = require("./PriorityQueue");
 class PriorityStructuresStack {
     constructor() {
-        this.m_Regulare_structs = new StructuresStack_1.StructuresStack();
-        this.m_Timed_structs = new StructuresStack_1.StructuresStack();
-        this.m_Timed_defense_structs = new StructuresStack_1.StructuresStack();
-    }
-    GetStructStack(struct) {
-        var _a;
-        let ret = this.m_Regulare_structs;
-        const is_timed = struct.SignalRecieverType() === GameObjectConsts_1.TIMED_STRUCTURE_TYPE;
-        const low_health = struct.GetCurHealth() < struct.GetMaxHealth() * .03;
-        const is_rampart = ((_a = struct.GetStructure()) === null || _a === void 0 ? void 0 : _a.structureType) === STRUCTURE_RAMPART;
-        if (is_timed && low_health) {
-            if (is_rampart) {
-                ret = this.m_Timed_defense_structs;
+        const sort_func = function (el) {
+            const regular_struct = 1;
+            const timed_struct = .99;
+            const struct_health_percentage = el.GetCurHealth() / el.GetMaxHealth();
+            let sort_val = regular_struct + struct_health_percentage;
+            if (el.SignalRecieverType() === GameObjectConsts_1.TIMED_STRUCTURE_TYPE) {
+                sort_val = timed_struct + struct_health_percentage;
             }
-            else {
-                ret = this.m_Timed_structs;
-            }
-        }
-        return ret;
-    }
-    GetArrayOfStacks() {
-        return [
-            this.m_Timed_defense_structs,
-            this.m_Timed_structs,
-            this.m_Regulare_structs
-        ];
+            return sort_val;
+        };
+        this.m_Queue = new PriorityQueue_1.PriorityQueue(sort_func);
     }
     GetTopElementInStack() {
-        let ret = null;
-        let stack_list = this.GetArrayOfStacks();
-        let i = 0;
-        while (!ret && i < stack_list.length) {
-            ret = stack_list[i].Peek();
-            i++;
+        let ret = this.m_Queue.Peek();
+        let i = -1;
+        if (ret) {
+            i = 0;
         }
-        return { struct: ret, stack: stack_list[i - 1] };
+        return { struct: ret, index: i };
     }
     Add(struct) {
-        const stack = this.GetStructStack(struct);
-        stack.Add(struct);
+        this.m_Queue.Push(struct);
     }
     Peek() {
         return this.GetTopElementInStack().struct;
     }
     Pop() {
         let obj = this.GetTopElementInStack();
-        obj.stack.Pop();
+        if (obj.index > -1) {
+            this.m_Queue.Pop();
+        }
         return obj.struct;
     }
 }

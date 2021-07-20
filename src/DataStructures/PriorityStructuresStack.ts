@@ -1,61 +1,44 @@
 import { TIMED_STRUCTURE_TYPE } from "../Constants/GameObjectConsts";
 import { StructureWrapper } from "../Structure/StructureWrapper";
+import { PriorityQueue } from "./PriorityQueue";
 import { StructuresStack } from "./StructuresStack";
 
 export class PriorityStructuresStack {
-    private m_Timed_defense_structs: StructuresStack
-    private m_Timed_structs: StructuresStack
-    private m_Regulare_structs: StructuresStack
+    private m_Queue: PriorityQueue<StructureWrapper<any>>
 
     constructor() {
-        this.m_Regulare_structs = new StructuresStack()
-        this.m_Timed_structs = new StructuresStack()
-        this.m_Timed_defense_structs = new StructuresStack()
+        const sort_func = function (el: StructureWrapper<any>): number {
+            const regular_struct = 1
+            const timed_struct = .99
+
+            const struct_health_percentage = el.GetCurHealth() / el.GetMaxHealth()
+            
+            let sort_val = regular_struct + struct_health_percentage
+
+            if (el.SignalRecieverType() === TIMED_STRUCTURE_TYPE) {
+                sort_val = timed_struct + struct_health_percentage
+            }
+
+            return sort_val
+        }
+        
+        this.m_Queue = new PriorityQueue(sort_func)
     }
 
-    private GetStructStack(struct: StructureWrapper<any>): StructuresStack {
-        let ret = this.m_Regulare_structs
 
-        const is_timed = struct.SignalRecieverType() === TIMED_STRUCTURE_TYPE
-        const low_health = struct.GetCurHealth() < struct.GetMaxHealth() * .03
-        const is_rampart = struct.GetStructure()?.structureType === STRUCTURE_RAMPART
+    private GetTopElementInStack(): {struct: StructureWrapper<any> | null, index: number} {
+        let ret = this.m_Queue.Peek()
+        let i = -1
 
-        if (is_timed && low_health) {
-            if (is_rampart) {
-                ret = this.m_Timed_defense_structs
-            }
-            else {
-                ret = this.m_Timed_structs
-            }
+        if(ret) {
+            i = 0
         }
 
-        return ret
-    }
-
-    private GetArrayOfStacks(): Array<StructuresStack> {
-        return [
-            this.m_Timed_defense_structs,
-            this.m_Timed_structs,
-            this.m_Regulare_structs
-        ]
-    }
-
-    private GetTopElementInStack(): {struct: StructureWrapper<any> | null, stack: StructuresStack} {
-        let ret: StructureWrapper<any> | null = null
-        let stack_list = this.GetArrayOfStacks()
-        let i = 0
-
-        while (!ret && i < stack_list.length) {
-            ret = stack_list[i].Peek()
-            i++
-        }
-
-        return {struct: ret, stack: stack_list[i-1]}
+        return {struct: ret, index: i}
     }
 
     Add(struct: StructureWrapper<any>) {
-        const stack = this.GetStructStack(struct)
-        stack.Add(struct)
+        this.m_Queue.Push(struct)
     }
 
     Peek(): StructureWrapper<any> | null {
@@ -64,7 +47,9 @@ export class PriorityStructuresStack {
 
     Pop(): StructureWrapper<any> | null {
         let obj = this.GetTopElementInStack()
-        obj.stack.Pop()
+        if (obj.index > -1) {
+            this.m_Queue.Pop()
+        }
         return obj.struct
     }
 }

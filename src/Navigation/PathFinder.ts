@@ -1,79 +1,18 @@
 import path from "path/posix";
 import { TerrainTypes } from "../CompilerTyping/Enums";
-import { GridNode, GridNodePoint, JsonObj, Point } from "../CompilerTyping/Interfaces";
+import { GridNode, GridNodePoint, JsonObj, Point, PriorityQueueSortVals } from "../CompilerTyping/Interfaces";
 import { RoomPos, RoomPosObj } from "../CompilerTyping/Types";
 import { PriorityQueue } from "../DataStructures/PriorityQueue";
 import { HardDrive } from "../Disk/HardDrive";
 import { InRoomGrid } from "./PathGrid";
 
-// while (open.Size() > 0) {
-
-//     let cur = open.Pop()!!
-//     let current: GridNode = cur
-
-//     closed.push(current)
-
-//     if (this.InRange(current.pos, dest, range)) {
-//         break
-//     }
-
-//     this.m_Grid?.SetGridPosition(current.pos.x, current.pos.y)
-
-//     const surrounding_nodes = this.GetNodesList()
-//     let closest_neighbor: GridNode = {
-//         G: Infinity,
-//         H: Infinity,
-//         F: Infinity,
-//         pos: current.pos
-//     }
-
-//     for (let node of surrounding_nodes) {
-
-//         let g_val = this.G(node.point)
-//         const was_searched = this.NodeInArray(closed, node.point)
-//         const not_walkable = g_val === this.m_Grid?.M_NOT_WALKABLE
-
-//         if (!was_searched && !not_walkable) {
-//             g_val += current.G
-//             const h_val = this.H(node.point, dest)
-//             const f_cost = g_val + h_val
-
-//             const in_open = this.NodeInArray(open.ToArray(), closest_neighbor.pos)
-//             const lower_f_cost = f_cost < closest_neighbor.F
-//             let is_lower_cost = lower_f_cost
-
-//             if (is_lower_cost || !in_open) {
-
-//                 closest_neighbor = {
-//                     G: g_val,
-//                     H: h_val,
-//                     F: f_cost,
-//                     pos: node.point,
-//                     dir: node.dir
-//                 }
-//                 current.child = closest_neighbor
-//                 closest_neighbor.parent = current
-
-//                 if (!in_open) {
-//                     open.Push(closest_neighbor)
-//                 }
-//             }
-//         }
-//     }
-// }
-
 export class InRoomPathFinder {
     private static m_Room_grids: Map<string, InRoomGrid>
 
     private m_Grid: InRoomGrid | null = null
-    private m_Searched_nodes: Array<Point>
-    private m_Node_maps: Map<GridNode, GridNode>
-    
+
 
     constructor() {
-        this.m_Searched_nodes = new Array()
-        this.m_Node_maps = new Map()
-
         InRoomPathFinder.m_Room_grids = new Map()
     }
 
@@ -151,6 +90,10 @@ export class InRoomPathFinder {
                 ret = TerrainTypes.SWAMP_TERRAIN
                 break
             }
+            case TerrainTypes.OCCUPIED_TERRAIN: {
+                ret = TerrainTypes.OCCUPIED_TERRAIN
+                break
+            }
         }
 
         return ret
@@ -160,78 +103,13 @@ export class InRoomPathFinder {
 
     private GetQueue() {
 
-        const sort_by_h = (a: GridNode, b: GridNode) => {
-            let ret = 0
-
-            if (a.H > b.H) {
-                ret = -1
-            }
-            else if (a.H < b.H) {
-                ret = 1
-            }
-
-            return ret
-        }
-
-        const sort_algo = (a: GridNode, b: GridNode) => {
-            let ret = 0
-            if (a.F > b.F) {
-                ret = 1
-            }
-            else if (a.F < b.F) {
-                ret = -1
-            }
-            else {
-                ret = sort_by_h(a, b)
-            }
-            return ret
+        const sort_algo = (el: GridNode): number => {
+            return el.F
         }
 
         const queue = new PriorityQueue<GridNode>(sort_algo)
 
         return queue
-    }
-
-    private GetDirName(d: DirectionConstant) {
-        let name = ""
-
-        switch (d) {
-            case TOP: {
-                name = 'TOP'
-                break
-            }
-            case TOP_LEFT: {
-                name = 'TOP LEFT'
-                break
-            }
-            case LEFT: {
-                name = 'LEFT'
-                break
-            }
-            case BOTTOM_LEFT: {
-                name = 'BOTTOM LEFT'
-                break
-            }
-            case BOTTOM: {
-                name = 'BOTTOM'
-                break
-            }
-            case BOTTOM_RIGHT: {
-                name = 'BOTTOM RIGHT'
-                break
-            }
-            case RIGHT: {
-                name = 'RIGHT'
-                break
-            }
-            case TOP_RIGHT: {
-                name = 'TOP RIGHT'
-                break
-            }
-
-        }
-
-        return name
     }
 
     private InRange(p1: Point, p2: Point, range: number) {
@@ -241,30 +119,41 @@ export class InRoomPathFinder {
         return r_x <= range && r_y <= range
     }
 
-    private NodeInArray(array: Array<GridNode>, p: Point) {
-        let found = false
-
-        for (let el of array) {
-            if (el.pos.x === p.x && el.pos.y === p.y) {
-                found = true
-            }
-        }
-
-        return found
-    }
-
-    private CreatePath(current: GridNode | undefined): Array<DirectionConstant> {
-        const path = new Array<DirectionConstant>()
-        debugger
+    private CreatePath(current: GridNode | null | undefined): Array<{ dir: DirectionConstant, p: Point }> {
+        const path = new Array<{ dir: DirectionConstant, p: Point }>()
+        const color_blue = "#ADD8E6"
 
         while (current) {
             if (current.dir) {
-                path.unshift(current.dir)
+                path.unshift({ dir: current.dir, p: current.pos })
             }
-            current = this.m_Node_maps.get(current)
+            this.ShowSearch(current.pos, color_blue)
+            current = current.parent
         }
 
         return path
+    }
+
+    private ShowSearch(pos: Point, color: string = "#00FF00") {
+        const vis = new RoomVisual("sim")
+        const style: CircleStyle = {
+            fill: color
+        }
+
+        vis.circle(pos.x, pos.y, style)
+    }
+
+    private AddToOpen(queue: PriorityQueue<GridNode>, map: Map<GridNode, undefined>, val: GridNode) {
+        queue.Push(val)
+        map.set(val, undefined)
+    }
+
+    private RemoveFromOpen(queue: PriorityQueue<GridNode>, map: Map<GridNode, undefined>): GridNode | null {
+        const current = queue.Pop()
+        if (current) {
+            map.delete(current)
+        }
+        return current;
     }
 
     private CalculatePath(
@@ -274,56 +163,105 @@ export class InRoomPathFinder {
         creep: Creep,
         steps: number = 10
     ) {
-        debugger
-        let path = new Array<DirectionConstant>()
+        let path = new Array<{ dir: DirectionConstant, p: Point } | null>()
 
-        const open = this.GetQueue()
-        const closed = new Array<GridNode>()
+        const open = new Map<GridNode, undefined>()
+        const close = new Map<GridNode, undefined>()
+        const queue = this.GetQueue()
+        const color_red = "#FF0000"
 
-        open.Push(cur_node)
+        this.AddToOpen(queue, open, cur_node)
+        let i = 0
+        let found = false
+        let current: GridNode | null = null
 
-        while (open.Size() > 0) {
-            let current = open.Pop()!!
-            closed.push(current)
+
+        while (queue.Size() > 0) {
+            current = this.RemoveFromOpen(queue, open)!!
+
             if (this.InRange(current.pos, dest, range)) {
-                path = this.CreatePath(current)
+                found = true
+                console.log("could find path", creep.name)
                 break
             }
-            debugger
+            else if (i === steps) {
+                console.log("couldn't find path")
+                break
+            }
+            else {
+                i++
+            }
+
+            this.ShowSearch(current.pos, color_red)
 
             this.m_Grid?.SetGridPosition(current.pos.x, current.pos.y)
             const node_list = this.GetNodesList()
 
             for (let node of node_list) {
-                let g_val = this.G(node.point)
+                const is_walkable = this.m_Grid?.IsWalkable(node.point.x, node.point.y)
 
-                if (g_val < Infinity) {
-                    g_val += current.G
+                if (is_walkable) {
+                    let g_val = this.G(node.point) + current.G
                     let h_val = this.H(node.point, dest)
                     let f_val = g_val + h_val
 
-                    const n = this.m_Grid!!.GetGridPosition(node.point.x, node.point.y)
+                    const surrounding_node = this.m_Grid!!.GetGridPosition(node.point.x, node.point.y)
+                    const is_closed = close.has(surrounding_node)
+                    const is_opened = open.has(surrounding_node)
 
-                    if (f_val < n.F && this.m_Grid?.IsWalkable(node.point.x, node.point.y)) {
 
-                        this.m_Node_maps.set(n, current)
-                        n.G = g_val
-                        n.H = h_val
-                        n.F = f_val
+                    if (g_val < surrounding_node.G) {
+                        this.ShowSearch(node.point)
 
-                        n.dir = node.dir
+                        surrounding_node.dir = node.dir
+                        surrounding_node.parent = current
 
-                        if (!this.NodeInArray(open.ToArray(), node.point)) {
-                            open.Push(n)
-                        }
+                        surrounding_node.G = g_val
+                        surrounding_node.H = h_val
+                        surrounding_node.F = f_val
+                    }
+
+                    if (!is_opened && !is_closed) {
+                        this.AddToOpen(queue, open, surrounding_node)
                     }
                 }
+            }
 
+            close.set(current, undefined)
+        }
+
+        if (!found) {
+            while (path.length < 15) {
+                path.push(null)
             }
         }
-        debugger
+        else {
+            path = this.CreatePath(current)
+        }
 
         return path
+    }
+
+    private GetPath(creep: Creep): JsonObj {
+        return HardDrive.Read(creep.name).path as JsonObj
+    }
+
+    private SavePath(creep: Creep, data: JsonObj) {
+        const save_data = HardDrive.Read(creep.name)
+        save_data.path = {
+            steps: data.steps,
+            index: data.index
+        }
+        HardDrive.Write(creep.name, save_data)
+    }
+
+    private MarkPathAsUsed(start_index: number, array: Array<{ dir: DirectionConstant, p: Point } | null>) {
+        for (let i = start_index; i < array.length; i++) {
+            const spot = array[i]
+            if (spot) {
+                this.m_Grid?.MarkSpotAsUsed(spot.p.x, spot.p.y)
+            }
+        }
     }
 
     MoveTo(creep: Creep, obj: RoomPos, dist: number = 1): boolean {
@@ -332,7 +270,7 @@ export class InRoomPathFinder {
 
         let moved = false
 
-        if (!creep.pos.inRangeTo(obj_point.x, obj_point.y, dist)) {
+        if (!this.InRange(creep_point, obj_point, dist)) {
 
 
             const start_node: GridNode = {
@@ -342,35 +280,60 @@ export class InRoomPathFinder {
                 pos: creep_point
             }
 
-            let dir
 
-            const data = HardDrive.Read(creep.name)
+            const data = this.GetPath(creep)
 
-            const path_array = data.path as Array<DirectionConstant>
+            let path_array = data?.steps as Array<DirectionConstant | null>
+            let path_index = data?.index as number
 
-            if (path_array === undefined || path_array.length === 0) {
+            const data_exists = path_array !== undefined
+
+            console.log(path_array?.length)
+            debugger
+
+            if (!path_array) {
+                path_array = new Array()
+            }
+
+            if (path_array.length === 0) {
+                debugger
                 const grid_key = creep.room.name
                 if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
                     InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
                 }
                 this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
-                data.path = this.CalculatePath(start_node, obj_point, dist, creep)
-                dir = data.path as Array<DirectionConstant>
-                
+                const num_of_search_tiles = this.m_Grid.GetNumOfWalkableTiles()
+                const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, num_of_search_tiles)
+                path_index = 0
+
+                for (let node of path_steps) {
+                    let direction: DirectionConstant | null = null
+                    if (node) {
+                        direction = node.dir
+                    }
+                    path_array.push(direction)
+                }
+
+
+                this.SavePath(creep, {
+                    index: path_index,
+                    steps: path_array
+                })
+            }
+
+            //this.MarkPathAsUsed(path_index, dir)
+
+            console.log(path_array[0])
+
+            if (path_array[0]) {
+                const ret = creep.move(path_array[0])
+                if (ret === OK) {
+                    moved = true
+                    path_array.shift()
+                }
             }
             else {
-                dir = data.path as Array<DirectionConstant>
-            }
-
-            if (dir.length > 0) {
-
-                const ret = creep.move(dir[0])
-
-                if (ret === OK) {
-                    dir.shift()
-                    moved = true
-                    HardDrive.Write(creep.name, data)
-                }
+                path_array.shift()
             }
 
         }

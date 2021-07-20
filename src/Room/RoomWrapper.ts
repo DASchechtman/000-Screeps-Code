@@ -244,7 +244,27 @@ export class RoomWrapper {
         if (!this.m_Room_objects.Has(key)) {
             this.LoadHostileCreeps()
         }
-        return this.GetResource<Creep>(key)
+        const whitelist = [
+            "Zpike"
+        ]
+        const foreign_creeps = this.GetResource<Creep>(key)
+        const hostile_creep = new Array<Creep>()
+
+        for (let creep of foreign_creeps) {
+            let is_enemy = true
+            for (let ally of whitelist) {
+                if (creep.owner.username === ally) {
+                    is_enemy = false
+                    break
+                }                
+            }
+
+            if (is_enemy) {
+                hostile_creep.push(creep)
+            }
+        }
+
+        return hostile_creep
     }
 
     GetEnergyCapacity(): number {

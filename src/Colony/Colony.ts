@@ -14,6 +14,7 @@ import { send } from "process";
 import { StructureWrapper } from "../Structure/StructureWrapper";
 import { TimedStructureWrapper } from "../Structure/TimedStructureWrapper";
 import { BehaviorStructureWrapper } from "../Structure/BehaviorStructureWrapper";
+import { CpuTimer } from "../CpuTimer";
 
 export class Colony extends GameObject {
 
@@ -56,7 +57,6 @@ export class Colony extends GameObject {
 
     private SpawnCreep(type: number, name: string): boolean {
         let created = false
-        debugger
 
         if (!this.m_Colony_queen?.spawning) {
 
@@ -99,9 +99,14 @@ export class Colony extends GameObject {
         this.GetCreepNames().push(creep.GetName())
     }
 
-    private UpdateData(): void {
+    private UpdateData(): number | null {
         this.m_Creeps_count++
-        this.m_Creep_types.Pop()
+        const behavior = this.m_Creep_types.Pop()
+        return behavior
+    }
+
+    private CreateStack(): void {
+        this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker)
     }
 
     private SpawnColonyMember(): void {
@@ -164,10 +169,18 @@ export class Colony extends GameObject {
 
     private OnLoadCreeps(): void {
         const creep_names = this.GetCreepNames()
+        this.CreateStack()
 
         for (var creep_name of creep_names) {
             if (creep_name !== this.m_Colony_queen?.spawning?.name) {
                 const wrapper = new CreepWrapper(creep_name, this.m_Room)
+                if (wrapper.GetBehavior() === -1) {
+                    const new_behavior = this.UpdateData()
+                    if (typeof new_behavior === 'number') {
+                        wrapper.SetBehavior(new_behavior)
+                        this.m_Type_tracker.Add(wrapper.GetBehavior(), wrapper.GetName())
+                    }
+                }
                 wrapper.MakeReadyToRun()
                 this.m_Creeps.push(wrapper)
                 this.m_Creeps_count++
@@ -201,7 +214,6 @@ export class Colony extends GameObject {
     OnLoad(): void {
         this.OnLoadCreeps()
         this.OnLoadStructs()
-
     }
 
     OnRun(): void {
@@ -229,13 +241,10 @@ export class Colony extends GameObject {
                 this.ConvertToHarvester()
             }
 
-            this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker)
-
             if (this.m_Creep_types.Size() > 0) {
                 this.SpawnColonyMember()
             }
         }
-
     }
 
     OnSave(): void {

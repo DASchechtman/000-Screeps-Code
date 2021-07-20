@@ -1,4 +1,5 @@
 import { INVASION_EVENT, LOAD_EVENT, REPAIR_EVENT, RUN_EVENT, SAVE_EVENT } from "../Constants/EventConsts"
+import { CpuTimer } from "../CpuTimer"
 import { GameObject } from "../GameObject"
 
 export class EventManager {

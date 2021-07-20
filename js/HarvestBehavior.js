@@ -59,7 +59,8 @@ class HarvestBehavior extends CreepBehavior_1.CreepBehavior {
     SetFreeContainer(room) {
         const spawn = room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
         const extensions = room.GetOwnedStructures(STRUCTURE_EXTENSION);
-        const free_containers = [spawn, ...extensions];
+        const towers = room.GetOwnedStructures(STRUCTURE_TOWER);
+        const free_containers = [spawn, ...extensions, ...towers];
         let container = spawn;
         for (let storage of free_containers) {
             if (storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {

@@ -71,7 +71,8 @@ export class HarvestBehavior extends CreepBehavior {
     private SetFreeContainer(room: RoomWrapper): void {
         const spawn = room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
         const extensions = room.GetOwnedStructures<StructureExtension>(STRUCTURE_EXTENSION)
-        const free_containers = [spawn, ...extensions]
+        const towers = room.GetOwnedStructures<StructureTower>(STRUCTURE_TOWER)
+        const free_containers = [spawn, ...extensions, ...towers]
 
         let container: Container = spawn
 

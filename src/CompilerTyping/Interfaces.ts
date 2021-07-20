@@ -69,3 +69,14 @@ export interface GridNodePoint {
     point: Point, 
     dir: DirectionConstant
 }
+
+export interface LinkedListNode<T> {
+    index: number
+    val?: T,
+    next?: LinkedListNode<T>,
+    prev?: LinkedListNode<T>
+}
+
+export interface PriorityQueueSortVals {
+    val: number,
+}

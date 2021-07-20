@@ -6,6 +6,7 @@ import { Signal } from "./Interfaces"
 export type Container = (
     StructureSpawn
     | StructureExtension
+    | StructureTower
 )
 
 export type Filter = (sender: Signal, other: GameObject) => boolean

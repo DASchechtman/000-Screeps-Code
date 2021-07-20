@@ -78,7 +78,7 @@ export class CreepWrapper extends GameObject {
 
     OnLoad(): void {
         this.LoadTypes()
-        if (this.m_Creep) {
+        if (this.m_Creep && this.m_Cur_type === -1) {
             const data = HardDrive.Read(this.m_Creep.name)
             const behavior = data.type
             if (typeof behavior === 'number') {
@@ -89,7 +89,6 @@ export class CreepWrapper extends GameObject {
     }
 
     OnRun(): void {
-        debugger
         if (this.m_Creep && this.m_Behavior && this.m_Ready_to_run) {
             this.m_Behavior.Load(this.m_Creep)
             this.m_Behavior.Run(this.m_Creep, this.m_Room)
@@ -99,7 +98,6 @@ export class CreepWrapper extends GameObject {
             HardDrive.Erase(this.m_Creep_name)
             this.SendRemoveNameSignal()
         }
-        
     }
 
     OnSave(): void {

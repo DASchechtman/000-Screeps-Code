@@ -5,6 +5,7 @@ const Enums_1 = require("./Enums");
 class InRoomGrid {
     constructor(room_name) {
         this.m_Grid = new Array();
+        this.m_Nodes_used = new Map();
         this.m_Room_name = room_name;
         this.M_ROAD = Enums_1.TerrainTypes.ROAD_TERRAIN;
         this.M_PLAIN = Enums_1.TerrainTypes.PLAIN_TERRAIN;
@@ -16,6 +17,7 @@ class InRoomGrid {
         this.M_BOTTOM_EDGE = 49;
         this.m_Grid_x = 24;
         this.m_Grid_y = 24;
+        this.m_Walkable_tile_num = 0;
         this.InitGrid();
     }
     GetRoadOnTile(x, y, original_val) {
@@ -31,6 +33,54 @@ class InRoomGrid {
             }
         }
         return original_val;
+    }
+    IsWalkableStructure(struct) {
+        let no_blocks = true;
+        const walkable_structs = [
+            STRUCTURE_ROAD,
+            STRUCTURE_RAMPART,
+            STRUCTURE_CONTAINER
+        ];
+        for (let st of walkable_structs) {
+            if (struct.structureType !== st) {
+                no_blocks = false;
+                break;
+            }
+            else if (struct.structureType !== st) {
+                no_blocks = false;
+                break;
+            }
+        }
+        return no_blocks;
+    }
+    IsTravelableTerrain(x, y) {
+        return this.GetTerrainAt(x, y) !== Enums_1.TerrainTypes.WALL_TERRAIN;
+    }
+    InitGrid() {
+        const room = Game.rooms[this.m_Room_name];
+        if (room) {
+            for (let x = 0; x < 50; x++) {
+                this.m_Grid.push(new Array());
+                for (let y = 0; y < 50; y++) {
+                    const node = {
+                        G: Infinity,
+                        H: Infinity,
+                        F: Infinity,
+                        pos: {
+                            x: x,
+                            y: y
+                        }
+                    };
+                    this.m_Grid[x].push(node);
+                    if (this.IsWalkable(x, y)) {
+                        this.m_Walkable_tile_num++;
+                    }
+                }
+            }
+        }
+    }
+    CoordToString(x, y) {
+        return `${x},${y}`;
     }
     GetTerrainAt(x, y) {
         const room = Game.rooms[this.m_Room_name];
@@ -51,35 +101,24 @@ class InRoomGrid {
             }
         }
         tile_type = this.GetRoadOnTile(x, y, tile_type);
+        if (this.SpotIsUsed(x, y)) {
+            tile_type = Enums_1.TerrainTypes.OCCUPIED_TERRAIN;
+        }
         return tile_type;
     }
     AreNoObsticalsAtPoint(x, y) {
-        var _a, _b;
         const room = Game.rooms[this.m_Room_name];
         let no_blocks = true;
         const obsticals_at_pos = room.lookAt(x, y);
-        const obstical_struct_types = [
-            STRUCTURE_WALL,
-            STRUCTURE_EXTENSION,
-            STRUCTURE_SPAWN,
-            STRUCTURE_CONTROLLER,
-            STRUCTURE_TOWER,
-            STRUCTURE_LINK,
-        ];
         for (let thing of obsticals_at_pos) {
             if (thing.creep) {
                 no_blocks = false;
-                break;
             }
-            for (let st of obstical_struct_types) {
-                if (((_a = thing.structure) === null || _a === void 0 ? void 0 : _a.structureType) === st) {
-                    no_blocks = false;
-                    break;
-                }
-                else if (((_b = thing.constructionSite) === null || _b === void 0 ? void 0 : _b.structureType) === st) {
-                    no_blocks = false;
-                    break;
-                }
+            else if (thing.structure) {
+                no_blocks = this.IsWalkableStructure(thing.structure);
+            }
+            else if (thing.constructionSite) {
+                no_blocks = this.IsWalkableStructure(thing.constructionSite);
             }
             if (!no_blocks) {
                 break;
@@ -87,8 +126,13 @@ class InRoomGrid {
         }
         return no_blocks;
     }
-    IsTravelableTerrain(x, y) {
-        return this.GetTerrainAt(x, y) !== Enums_1.TerrainTypes.WALL_TERRAIN;
+    MarkSpotAsUsed(x, y) {
+        const spot_string = this.CoordToString(x, y);
+        this.m_Nodes_used.set(spot_string, undefined);
+    }
+    SpotIsUsed(x, y) {
+        const spot_string = this.CoordToString(x, y);
+        return this.m_Nodes_used.has(spot_string);
     }
     IsWalkable(x, y) {
         let walkable = true;
@@ -104,26 +148,6 @@ class InRoomGrid {
             walkable = is_plain && spot_clear;
         }
         return walkable;
-    }
-    InitGrid() {
-        const room = Game.rooms[this.m_Room_name];
-        if (room) {
-            for (let x = 0; x < 50; x++) {
-                this.m_Grid.push(new Array());
-                for (let y = 0; y < 50; y++) {
-                    const node = {
-                        G: Infinity,
-                        H: Infinity,
-                        F: Infinity,
-                        pos: {
-                            x: x,
-                            y: y
-                        }
-                    };
-                    this.m_Grid[x].push(node);
-                }
-            }
-        }
     }
     GetCurGridPosition() {
         return this.m_Grid[this.m_Grid_x][this.m_Grid_y];
@@ -190,6 +214,9 @@ class InRoomGrid {
             x: x,
             y: y
         };
+    }
+    GetNumOfWalkableTiles() {
+        return this.m_Walkable_tile_num;
     }
 }
 exports.InRoomGrid = InRoomGrid;

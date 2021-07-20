@@ -4,7 +4,6 @@ exports.CreepBehavior = void 0;
 const HardDrive_1 = require("./HardDrive");
 const CreepBehaviorConsts_1 = require("./CreepBehaviorConsts");
 const PathFinder_1 = require("./PathFinder");
-const CpuTimer_1 = require("./CpuTimer");
 class CreepBehavior {
     ClearDiskData(creep) {
         HardDrive_1.HardDrive.Erase(creep.name);
@@ -14,9 +13,7 @@ class CreepBehavior {
     }
     MoveTo(distance, creep, location) {
         const p = new PathFinder_1.InRoomPathFinder();
-        CpuTimer_1.CpuTimer.Start();
         const moved = p.MoveTo(creep, location, distance);
-        CpuTimer_1.CpuTimer.End("time taken to move");
         return moved;
     }
     Harvest(creep, source) {

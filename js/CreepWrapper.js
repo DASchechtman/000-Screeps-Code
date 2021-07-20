@@ -59,7 +59,7 @@ class CreepWrapper extends GameObject_1.GameObject {
     }
     OnLoad() {
         this.LoadTypes();
-        if (this.m_Creep) {
+        if (this.m_Creep && this.m_Cur_type === -1) {
             const data = HardDrive_1.HardDrive.Read(this.m_Creep.name);
             const behavior = data.type;
             if (typeof behavior === 'number') {
@@ -69,7 +69,6 @@ class CreepWrapper extends GameObject_1.GameObject {
         }
     }
     OnRun() {
-        debugger;
         if (this.m_Creep && this.m_Behavior && this.m_Ready_to_run) {
             this.m_Behavior.Load(this.m_Creep);
             this.m_Behavior.Run(this.m_Creep, this.m_Room);

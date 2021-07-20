@@ -42,7 +42,6 @@ class Colony extends GameObject_1.GameObject {
     SpawnCreep(type, name) {
         var _a, _b;
         let created = false;
-        debugger;
         if (!((_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawning)) {
             const energy_capactiy = this.m_Room.GetEnergyCapacity();
             const energy_stored = this.m_Room.GetEnergyStored();
@@ -76,7 +75,11 @@ class Colony extends GameObject_1.GameObject {
     }
     UpdateData() {
         this.m_Creeps_count++;
-        this.m_Creep_types.Pop();
+        const behavior = this.m_Creep_types.Pop();
+        return behavior;
+    }
+    CreateStack() {
+        this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
     }
     SpawnColonyMember() {
         var _a;
@@ -130,9 +133,17 @@ class Colony extends GameObject_1.GameObject {
     OnLoadCreeps() {
         var _a, _b;
         const creep_names = this.GetCreepNames();
+        this.CreateStack();
         for (var creep_name of creep_names) {
             if (creep_name !== ((_b = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawning) === null || _b === void 0 ? void 0 : _b.name)) {
                 const wrapper = new CreepWrapper_1.CreepWrapper(creep_name, this.m_Room);
+                if (wrapper.GetBehavior() === -1) {
+                    const new_behavior = this.UpdateData();
+                    if (typeof new_behavior === 'number') {
+                        wrapper.SetBehavior(new_behavior);
+                        this.m_Type_tracker.Add(wrapper.GetBehavior(), wrapper.GetName());
+                    }
+                }
                 wrapper.MakeReadyToRun();
                 this.m_Creeps.push(wrapper);
                 this.m_Creeps_count++;
@@ -182,7 +193,6 @@ class Colony extends GameObject_1.GameObject {
             if (max !== -1 && harvester_count < max) {
                 this.ConvertToHarvester();
             }
-            this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
             if (this.m_Creep_types.Size() > 0) {
                 this.SpawnColonyMember();
             }

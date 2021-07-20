@@ -2,7 +2,7 @@ import { HardDrive } from "../../Disk/HardDrive";
 import { GameObject } from "../../GameObject";
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
-import { RoomPos, RoomPosObj } from "../../CompilerTyping/Types";
+import { RoomPos } from "../../CompilerTyping/Types";
 import { HARVEST_DISTANCE } from "../../Constants/CreepBehaviorConsts";
 import { InRoomPathFinder } from "../../Navigation/PathFinder";
 import { cpuUsage } from "process";
@@ -23,12 +23,8 @@ export abstract class CreepBehavior {
     }
 
     protected MoveTo(distance: number, creep: Creep, location: RoomPos) {
-
         const p = new InRoomPathFinder()
-        CpuTimer.Start()
         const moved = p.MoveTo(creep, location, distance)
-        CpuTimer.End("time taken to move")
-
         return moved
     }
 

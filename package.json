@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "tsc && python flatten.py",
+    "compile": "rmdir /Q/S \"./js\" && rmdir /Q/S \"./dist\" && tsc && python flatten.py",
     "upload-m": "npm run compile && grunt screeps --branch=0",
     "upload-d": "npm run compile && grunt screeps --branch=1"
   },

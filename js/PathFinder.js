@@ -5,54 +5,9 @@ const Enums_1 = require("./Enums");
 const PriorityQueue_1 = require("./PriorityQueue");
 const HardDrive_1 = require("./HardDrive");
 const PathGrid_1 = require("./PathGrid");
-// while (open.Size() > 0) {
-//     let cur = open.Pop()!!
-//     let current: GridNode = cur
-//     closed.push(current)
-//     if (this.InRange(current.pos, dest, range)) {
-//         break
-//     }
-//     this.m_Grid?.SetGridPosition(current.pos.x, current.pos.y)
-//     const surrounding_nodes = this.GetNodesList()
-//     let closest_neighbor: GridNode = {
-//         G: Infinity,
-//         H: Infinity,
-//         F: Infinity,
-//         pos: current.pos
-//     }
-//     for (let node of surrounding_nodes) {
-//         let g_val = this.G(node.point)
-//         const was_searched = this.NodeInArray(closed, node.point)
-//         const not_walkable = g_val === this.m_Grid?.M_NOT_WALKABLE
-//         if (!was_searched && !not_walkable) {
-//             g_val += current.G
-//             const h_val = this.H(node.point, dest)
-//             const f_cost = g_val + h_val
-//             const in_open = this.NodeInArray(open.ToArray(), closest_neighbor.pos)
-//             const lower_f_cost = f_cost < closest_neighbor.F
-//             let is_lower_cost = lower_f_cost
-//             if (is_lower_cost || !in_open) {
-//                 closest_neighbor = {
-//                     G: g_val,
-//                     H: h_val,
-//                     F: f_cost,
-//                     pos: node.point,
-//                     dir: node.dir
-//                 }
-//                 current.child = closest_neighbor
-//                 closest_neighbor.parent = current
-//                 if (!in_open) {
-//                     open.Push(closest_neighbor)
-//                 }
-//             }
-//         }
-//     }
-// }
 class InRoomPathFinder {
     constructor() {
         this.m_Grid = null;
-        this.m_Searched_nodes = new Array();
-        this.m_Node_maps = new Map();
         InRoomPathFinder.m_Room_grids = new Map();
     }
     GetPoint(obj) {
@@ -122,172 +77,190 @@ class InRoomPathFinder {
                 ret = Enums_1.TerrainTypes.SWAMP_TERRAIN;
                 break;
             }
+            case Enums_1.TerrainTypes.OCCUPIED_TERRAIN: {
+                ret = Enums_1.TerrainTypes.OCCUPIED_TERRAIN;
+                break;
+            }
         }
         return ret;
     }
     GetQueue() {
-        const sort_by_h = (a, b) => {
-            let ret = 0;
-            if (a.H > b.H) {
-                ret = -1;
-            }
-            else if (a.H < b.H) {
-                ret = 1;
-            }
-            return ret;
-        };
-        const sort_algo = (a, b) => {
-            let ret = 0;
-            if (a.F > b.F) {
-                ret = 1;
-            }
-            else if (a.F < b.F) {
-                ret = -1;
-            }
-            else {
-                ret = sort_by_h(a, b);
-            }
-            return ret;
+        const sort_algo = (el) => {
+            return el.F;
         };
         const queue = new PriorityQueue_1.PriorityQueue(sort_algo);
         return queue;
-    }
-    GetDirName(d) {
-        let name = "";
-        switch (d) {
-            case TOP: {
-                name = 'TOP';
-                break;
-            }
-            case TOP_LEFT: {
-                name = 'TOP LEFT';
-                break;
-            }
-            case LEFT: {
-                name = 'LEFT';
-                break;
-            }
-            case BOTTOM_LEFT: {
-                name = 'BOTTOM LEFT';
-                break;
-            }
-            case BOTTOM: {
-                name = 'BOTTOM';
-                break;
-            }
-            case BOTTOM_RIGHT: {
-                name = 'BOTTOM RIGHT';
-                break;
-            }
-            case RIGHT: {
-                name = 'RIGHT';
-                break;
-            }
-            case TOP_RIGHT: {
-                name = 'TOP RIGHT';
-                break;
-            }
-        }
-        return name;
     }
     InRange(p1, p2, range) {
         const r_x = Math.abs(p1.x - p2.x);
         const r_y = Math.abs(p1.y - p2.y);
         return r_x <= range && r_y <= range;
     }
-    NodeInArray(array, p) {
-        let found = false;
-        for (let el of array) {
-            if (el.pos.x === p.x && el.pos.y === p.y) {
-                found = true;
-            }
-        }
-        return found;
-    }
     CreatePath(current) {
         const path = new Array();
-        debugger;
+        const color_blue = "#ADD8E6";
         while (current) {
             if (current.dir) {
-                path.unshift(current.dir);
+                path.unshift({ dir: current.dir, p: current.pos });
             }
-            current = this.m_Node_maps.get(current);
+            this.ShowSearch(current.pos, color_blue);
+            current = current.parent;
         }
         return path;
+    }
+    ShowSearch(pos, color = "#00FF00") {
+        const vis = new RoomVisual("sim");
+        const style = {
+            fill: color
+        };
+        vis.circle(pos.x, pos.y, style);
+    }
+    AddToOpen(queue, map, val) {
+        queue.Push(val);
+        map.set(val, undefined);
+    }
+    RemoveFromOpen(queue, map) {
+        const current = queue.Pop();
+        if (current) {
+            map.delete(current);
+        }
+        return current;
     }
     CalculatePath(cur_node, dest, range, creep, steps = 10) {
         var _a, _b;
-        debugger;
         let path = new Array();
-        const open = this.GetQueue();
-        const closed = new Array();
-        open.Push(cur_node);
-        while (open.Size() > 0) {
-            let current = open.Pop();
-            closed.push(current);
+        const open = new Map();
+        const close = new Map();
+        const queue = this.GetQueue();
+        const color_red = "#FF0000";
+        this.AddToOpen(queue, open, cur_node);
+        let i = 0;
+        let found = false;
+        let current = null;
+        while (queue.Size() > 0) {
+            current = this.RemoveFromOpen(queue, open);
             if (this.InRange(current.pos, dest, range)) {
-                path = this.CreatePath(current);
+                found = true;
+                console.log("could find path", creep.name);
                 break;
             }
-            debugger;
+            else if (i === steps) {
+                console.log("couldn't find path");
+                break;
+            }
+            else {
+                i++;
+            }
+            this.ShowSearch(current.pos, color_red);
             (_a = this.m_Grid) === null || _a === void 0 ? void 0 : _a.SetGridPosition(current.pos.x, current.pos.y);
             const node_list = this.GetNodesList();
             for (let node of node_list) {
-                let g_val = this.G(node.point);
-                if (g_val < Infinity) {
-                    g_val += current.G;
+                const is_walkable = (_b = this.m_Grid) === null || _b === void 0 ? void 0 : _b.IsWalkable(node.point.x, node.point.y);
+                if (is_walkable) {
+                    let g_val = this.G(node.point) + current.G;
                     let h_val = this.H(node.point, dest);
                     let f_val = g_val + h_val;
-                    const n = this.m_Grid.GetGridPosition(node.point.x, node.point.y);
-                    if (f_val < n.F && ((_b = this.m_Grid) === null || _b === void 0 ? void 0 : _b.IsWalkable(node.point.x, node.point.y))) {
-                        this.m_Node_maps.set(n, current);
-                        n.G = g_val;
-                        n.H = h_val;
-                        n.F = f_val;
-                        n.dir = node.dir;
-                        if (!this.NodeInArray(open.ToArray(), node.point)) {
-                            open.Push(n);
-                        }
+                    const surrounding_node = this.m_Grid.GetGridPosition(node.point.x, node.point.y);
+                    const is_closed = close.has(surrounding_node);
+                    const is_opened = open.has(surrounding_node);
+                    if (g_val < surrounding_node.G) {
+                        this.ShowSearch(node.point);
+                        surrounding_node.dir = node.dir;
+                        surrounding_node.parent = current;
+                        surrounding_node.G = g_val;
+                        surrounding_node.H = h_val;
+                        surrounding_node.F = f_val;
+                    }
+                    if (!is_opened && !is_closed) {
+                        this.AddToOpen(queue, open, surrounding_node);
                     }
                 }
             }
+            close.set(current, undefined);
         }
-        debugger;
+        if (!found) {
+            while (path.length < 15) {
+                path.push(null);
+            }
+        }
+        else {
+            path = this.CreatePath(current);
+        }
         return path;
+    }
+    GetPath(creep) {
+        return HardDrive_1.HardDrive.Read(creep.name).path;
+    }
+    SavePath(creep, data) {
+        const save_data = HardDrive_1.HardDrive.Read(creep.name);
+        save_data.path = {
+            steps: data.steps,
+            index: data.index
+        };
+        HardDrive_1.HardDrive.Write(creep.name, save_data);
+    }
+    MarkPathAsUsed(start_index, array) {
+        var _a;
+        for (let i = start_index; i < array.length; i++) {
+            const spot = array[i];
+            if (spot) {
+                (_a = this.m_Grid) === null || _a === void 0 ? void 0 : _a.MarkSpotAsUsed(spot.p.x, spot.p.y);
+            }
+        }
     }
     MoveTo(creep, obj, dist = 1) {
         const obj_point = this.GetPoint(obj);
         const creep_point = this.GetPoint(creep);
         let moved = false;
-        if (!creep.pos.inRangeTo(obj_point.x, obj_point.y, dist)) {
+        if (!this.InRange(creep_point, obj_point, dist)) {
             const start_node = {
                 G: 0,
                 H: 0,
                 F: 0,
                 pos: creep_point
             };
-            let dir;
-            const data = HardDrive_1.HardDrive.Read(creep.name);
-            const path_array = data.path;
-            if (path_array === undefined || path_array.length === 0) {
+            const data = this.GetPath(creep);
+            let path_array = data === null || data === void 0 ? void 0 : data.steps;
+            let path_index = data === null || data === void 0 ? void 0 : data.index;
+            const data_exists = path_array !== undefined;
+            console.log(path_array === null || path_array === void 0 ? void 0 : path_array.length);
+            debugger;
+            if (!path_array) {
+                path_array = new Array();
+            }
+            if (path_array.length === 0) {
+                debugger;
                 const grid_key = creep.room.name;
                 if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
                     InRoomPathFinder.m_Room_grids.set(grid_key, new PathGrid_1.InRoomGrid(grid_key));
                 }
                 this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key);
-                data.path = this.CalculatePath(start_node, obj_point, dist, creep);
-                dir = data.path;
+                const num_of_search_tiles = this.m_Grid.GetNumOfWalkableTiles();
+                const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, num_of_search_tiles);
+                path_index = 0;
+                for (let node of path_steps) {
+                    let direction = null;
+                    if (node) {
+                        direction = node.dir;
+                    }
+                    path_array.push(direction);
+                }
+                this.SavePath(creep, {
+                    index: path_index,
+                    steps: path_array
+                });
+            }
+            //this.MarkPathAsUsed(path_index, dir)
+            console.log(path_array[0]);
+            if (path_array[0]) {
+                const ret = creep.move(path_array[0]);
+                if (ret === OK) {
+                    moved = true;
+                    path_array.shift();
+                }
             }
             else {
-                dir = data.path;
-            }
-            if (dir.length > 0) {
-                const ret = creep.move(dir[0]);
-                if (ret === OK) {
-                    dir.shift();
-                    moved = true;
-                    HardDrive_1.HardDrive.Write(creep.name, data);
-                }
+                path_array.shift();
             }
         }
         return moved;
