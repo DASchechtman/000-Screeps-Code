@@ -11,9 +11,11 @@ export class HarvestBehavior extends CreepBehavior {
     Load(creep: Creep): void {
         const behavior = this.GetBehavior(creep)
         const cur_state = Boolean(behavior?.full)
+        const free_container = String(behavior?.free_container)
         this.m_Data = {
             id: String(behavior?.id),
-            full: this.UpdateWorkState(creep, cur_state)
+            full: this.UpdateWorkState(creep, cur_state),
+            free_container: free_container
         }
     }
 
@@ -24,7 +26,16 @@ export class HarvestBehavior extends CreepBehavior {
             this.m_Data.id = source.id
 
             if (this.m_Data.full) {
-                const container = this.GetFreeContainer(room)
+                let id = this.m_Data.free_container as Id<Container>
+                let container = Game.getObjectById(id)
+
+                if (!container || container.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                    this.SetFreeContainer(room)
+                    id = this.m_Data.free_container as Id<Container>
+                    container = Game.getObjectById(id)!!
+
+                }
+
                 this.DepositToContainer(creep, container)
             }
             else {
@@ -57,10 +68,11 @@ export class HarvestBehavior extends CreepBehavior {
         return state
     }
 
-    private GetFreeContainer(room: RoomWrapper): Container {
+    private SetFreeContainer(room: RoomWrapper): void {
         const spawn = room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
         const extensions = room.GetOwnedStructures<StructureExtension>(STRUCTURE_EXTENSION)
-        const free_containers = [spawn, ...extensions]
+        const towers = room.GetOwnedStructures<StructureTower>(STRUCTURE_TOWER)
+        const free_containers = [spawn, ...extensions, ...towers]
 
         let container: Container = spawn
 
@@ -71,7 +83,7 @@ export class HarvestBehavior extends CreepBehavior {
             }
         }
 
-        return container
+        this.m_Data.free_container = container.id
     }
 
     private DepositToContainer(creep: Creep, container: Container) {

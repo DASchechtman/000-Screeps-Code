@@ -1,6 +1,6 @@
 import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { REPAIR_DISTANCE } from "../../Constants/CreepBehaviorConsts";
-import { StructuresStack } from "../../DataStructures/StructuresStack";
+import { PriorityStructuresStack } from "../../DataStructures/PriorityStructuresStack";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { StructureWrapper } from "../../Structure/StructureWrapper";
@@ -9,7 +9,7 @@ import { CreepBehavior } from "./CreepBehavior";
 export class RepairBehavior extends CreepBehavior {
 
     private m_Data: JsonObj = {}
-    private m_Struct_Stack = new StructuresStack()
+    private m_Struct_Stack = new PriorityStructuresStack()
     private m_Max_time = 10
 
     Load(creep: Creep): void {

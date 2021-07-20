@@ -7,7 +7,6 @@ export class CreepTypeQueue {
     private m_Max_types: Map<number, number>
 
     constructor(room: RoomWrapper) {
-
         const num_of_sits = room.GetConstructionSites().length
         const num_of_structs = room.GetAllNonHostileStructs((s) => {return s.hits < s.hitsMax}).length
         this.m_Max_types = new Map()

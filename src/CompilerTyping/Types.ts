@@ -6,6 +6,7 @@ import { Signal } from "./Interfaces"
 export type Container = (
     StructureSpawn
     | StructureExtension
+    | StructureTower
 )
 
 export type Filter = (sender: Signal, other: GameObject) => boolean
@@ -20,4 +21,6 @@ export type JsonType = (
 
 export type Method = Filter
 
-export type RoomPos = RoomPosition | {pos: RoomPosition}
+export type RoomPosObj = {pos: RoomPosition}
+
+export type RoomPos = RoomPosition | RoomPosObj

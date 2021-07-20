@@ -4,48 +4,28 @@ import { JsonObj, Signal } from "../../CompilerTyping/Interfaces";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { RoomPos } from "../../CompilerTyping/Types";
 import { HARVEST_DISTANCE } from "../../Constants/CreepBehaviorConsts";
+import { InRoomPathFinder } from "../../Navigation/PathFinder";
+import { cpuUsage } from "process";
+import { CpuTimer } from "../../CpuTimer";
 
 
 export abstract class CreepBehavior {
     abstract Load(creep: Creep): void
     abstract Run(creep: Creep, room: RoomWrapper): void
     abstract Save(creep: Creep): void
-    
+
     ClearDiskData(creep: Creep): void {
         HardDrive.Erase(creep.name)
     }
 
-    Signal(signal: Signal, creep: GameObject): boolean  {
+    Signal(signal: Signal, creep: GameObject): boolean {
         return false
     }
 
     protected MoveTo(distance: number, creep: Creep, location: RoomPos) {
-
-        let pos_x: number
-        let pos_y: number
-
-        if (location instanceof RoomPosition) {
-
-            pos_x = location.x
-            pos_y = location.y
-        }
-        else {
-            pos_x = location.pos.x
-            pos_y = location.pos.y            
-        }
-
-        const abs_x = Math.abs(creep.pos.x - pos_x)
-        const abs_y = Math.abs(creep.pos.y - pos_y)
-
-        const move_x = abs_x > distance 
-        const move_y = abs_y > distance
-        const move = move_x || move_y
-
-        if (move) {
-            creep.moveTo(pos_x, pos_y)
-        }
-
-        return move
+        const p = new InRoomPathFinder()
+        const moved = p.MoveTo(creep, location, distance)
+        return moved
     }
 
     protected Harvest(creep: Creep, source: Source): void {

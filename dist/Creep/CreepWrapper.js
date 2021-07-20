@@ -1,49 +1,33 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreepWrapper = void 0;
-var GameObjectConsts_1 = require("../Constants/GameObjectConsts");
-var HardDrive_1 = require("../Disk/HardDrive");
-var GameObject_1 = require("../GameObject");
-var SignalManager_1 = require("../Signals/SignalManager");
-var BuildBehavior_1 = require("./Behaviors/BuildBehavior");
-var CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
-var DefendBehavior_1 = require("./Behaviors/DefendBehavior");
-var HarvestBehavior_1 = require("./Behaviors/HarvestBehavior");
-var UpgradeBehavior_1 = require("./Behaviors/UpgradeBehavior");
-var RepairBehavior_1 = require("./Behaviors/RepairBehavior");
+const GameObjectConsts_1 = require("../Constants/GameObjectConsts");
+const HardDrive_1 = require("../Disk/HardDrive");
+const GameObject_1 = require("../GameObject");
+const SignalManager_1 = require("../Signals/SignalManager");
+const BuildBehavior_1 = require("./Behaviors/BuildBehavior");
+const CreepBehaviorConsts_1 = require("../Constants/CreepBehaviorConsts");
+const DefendBehavior_1 = require("./Behaviors/DefendBehavior");
+const HarvestBehavior_1 = require("./Behaviors/HarvestBehavior");
+const UpgradeBehavior_1 = require("./Behaviors/UpgradeBehavior");
+const RepairBehavior_1 = require("./Behaviors/RepairBehavior");
 /*
 Class meant to extend functionaliyt of creep, provides fuctions like
 telling when creep dies
 givig creep more flexible behavior
 */
-var CreepWrapper = /** @class */ (function (_super) {
-    __extends(CreepWrapper, _super);
-    function CreepWrapper(name, room) {
-        var _this = _super.call(this, name, GameObjectConsts_1.CREEP_TYPE) || this;
-        _this.m_Creep_name = name;
+class CreepWrapper extends GameObject_1.GameObject {
+    constructor(name, room) {
+        super(name, GameObjectConsts_1.CREEP_TYPE);
+        this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map();
-        _this.m_Behavior = null;
-        _this.m_Room = room;
-        _this.m_Creep = Game.creeps[name];
-        _this.m_Cur_type = -1;
-        return _this;
+        this.m_Behavior = null;
+        this.m_Room = room;
+        this.m_Creep = Game.creeps[name];
+        this.m_Cur_type = -1;
+        this.m_Ready_to_run = false;
     }
-    CreepWrapper.prototype.LoadTypes = function () {
+    LoadTypes() {
         if (CreepWrapper.behavior_types.size === 0) {
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.HARVEST_BEHAVIOR, new HarvestBehavior_1.HarvestBehavior());
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.BUILDER_BEHAVIOR, new BuildBehavior_1.BuildBehavior());
@@ -51,62 +35,62 @@ var CreepWrapper = /** @class */ (function (_super) {
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.UPGRADER_BEHAVIOR, new UpgradeBehavior_1.UpgradeBehavior());
             CreepWrapper.behavior_types.set(CreepBehaviorConsts_1.REPAIR_BEHAVIOR, new RepairBehavior_1.RepairBehavior());
         }
-    };
-    CreepWrapper.prototype.SendRemoveNameSignal = function () {
-        var signal = {
+    }
+    SendRemoveNameSignal() {
+        const signal = {
             from: this,
             data: { name: this.GetName() },
-            filter: function (sender, other) {
-                var is_right = false;
-                var creeper = sender.from;
-                var type = other.SignalRecieverType();
-                var id = other.SignalRecieverID();
+            filter: (sender, other) => {
+                let is_right = false;
+                const creeper = sender.from;
+                const type = other.SignalRecieverType();
+                const id = other.SignalRecieverID();
                 if (type === GameObjectConsts_1.COLONY_TYPE && id === creeper.GetRoomName()) {
                     is_right = true;
                 }
                 return is_right;
             },
-            method: function (sender, reciever) {
+            method: (sender, reciever) => {
                 reciever.RemoveFromMemory(sender.data.name);
                 return true;
             }
         };
         SignalManager_1.SignalManager.Inst().SendSignal(signal);
-    };
-    CreepWrapper.prototype.OnLoad = function () {
+    }
+    OnLoad() {
         this.LoadTypes();
-        if (this.m_Creep) {
-            var data = HardDrive_1.HardDrive.Read(this.m_Creep.name);
-            var behavior = data.type;
+        if (this.m_Creep && this.m_Cur_type === -1) {
+            const data = HardDrive_1.HardDrive.Read(this.m_Creep.name);
+            const behavior = data.type;
             if (typeof behavior === 'number') {
                 this.m_Cur_type = behavior;
                 this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
             }
         }
-    };
-    CreepWrapper.prototype.OnRun = function () {
-        if (this.m_Creep && this.m_Behavior) {
+    }
+    OnRun() {
+        if (this.m_Creep && this.m_Behavior && this.m_Ready_to_run) {
             this.m_Behavior.Load(this.m_Creep);
             this.m_Behavior.Run(this.m_Creep, this.m_Room);
             this.m_Behavior.Save(this.m_Creep);
         }
-        else {
+        else if (!this.m_Creep) {
             HardDrive_1.HardDrive.Erase(this.m_Creep_name);
             this.SendRemoveNameSignal();
         }
-    };
-    CreepWrapper.prototype.OnSave = function () {
+    }
+    OnSave() {
         if (this.m_Creep) {
-            var data = HardDrive_1.HardDrive.Read(this.m_Creep_name);
+            const data = HardDrive_1.HardDrive.Read(this.m_Creep_name);
             data.type = this.m_Cur_type;
             HardDrive_1.HardDrive.Write(this.m_Creep_name, data);
         }
-    };
-    CreepWrapper.prototype.OnInvasion = function () {
+    }
+    OnInvasion() {
         this.m_Behavior = CreepWrapper.behavior_types.get(CreepBehaviorConsts_1.DEFENDER_BEHAVIOR);
-    };
-    CreepWrapper.prototype.OnSignal = function (signal) {
-        var ret = true;
+    }
+    OnSignal(signal) {
+        let ret = true;
         if (signal.method) {
             ret = signal.method(signal, this);
         }
@@ -114,26 +98,32 @@ var CreepWrapper = /** @class */ (function (_super) {
             ret = this.m_Behavior.Signal(signal, this);
         }
         return ret;
-    };
-    CreepWrapper.prototype.SetBehavior = function (new_type) {
+    }
+    SetBehavior(new_type) {
         this.LoadTypes();
         if (CreepWrapper.behavior_types.has(new_type)) {
             this.m_Cur_type = new_type;
             this.m_Behavior = CreepWrapper.behavior_types.get(this.m_Cur_type);
         }
-    };
-    CreepWrapper.prototype.GetBehavior = function () {
+    }
+    GetBehavior() {
         return this.m_Cur_type;
-    };
-    CreepWrapper.prototype.GetName = function () {
+    }
+    GetName() {
         return this.m_Creep_name;
-    };
-    CreepWrapper.prototype.GetRoomName = function () {
+    }
+    GetRoomName() {
         return this.m_Room.GetName();
-    };
-    CreepWrapper.prototype.HasBehavior = function () {
+    }
+    HasBehavior() {
         return Boolean(this.m_Behavior);
-    };
-    return CreepWrapper;
-}(GameObject_1.GameObject));
+    }
+    MakeReadyToRun() {
+        this.m_Ready_to_run = true;
+    }
+    GetPos() {
+        var _a;
+        return (_a = this.m_Creep) === null || _a === void 0 ? void 0 : _a.pos;
+    }
+}
 exports.CreepWrapper = CreepWrapper;
