@@ -1,3 +1,4 @@
+import { stubArray } from "lodash";
 import { Signal } from "../CompilerTyping/Interfaces";
 import { REPAIR_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { CREEP_TYPE, STRUCTURE_TYPE } from "../Constants/GameObjectConsts";
@@ -16,16 +17,17 @@ export class StructureWrapper<T extends StructureConstant> extends GameObject {
     protected m_Max_health: number
 
     constructor(struct_id: string, type: number = STRUCTURE_TYPE) {
-        super(struct_id, type)
-        
+        const struct = Game.getObjectById(struct_id as Id<Structure<T>>)
+        const should_run = Boolean(struct && struct.hits && struct.hitsMax && struct.hits < struct.hitsMax)
+        super(struct_id, type, 0, should_run, false)
         
         this.m_Struct_id = struct_id as Id<Structure<T>>
-        this.m_Struct = Game.getObjectById(this.m_Struct_id)
+        this.m_Struct = struct
 
         this.m_Cur_health = 0
         this.m_Max_health = 0
 
-        if (this.m_Struct) {
+        if (this.m_Struct?.hits && this.m_Struct?.hitsMax) {
             this.m_Cur_health = this.m_Struct.hits
             this.m_Max_health = this.m_Struct.hitsMax
         }

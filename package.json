@@ -14,10 +14,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "del": "rmdir /Q/S \"./js\" && rmdir /Q/S \"./dist\"",
-    "compile": "tsc && python flatten.py",
-    "upload-m": "npm run del & npm run compile && grunt screeps --branch=0",
-    "upload-d": "npm run del & npm run compile && grunt screeps --branch=1"
+    "del-files": "rmdir /Q/S \"./js\" & rmdir /Q/S \"./dist\"",
+    "compile":  "npm run del-files & tsc && python flatten.py",
+    "upload-m": "npm run compile && grunt screeps --branch=0",
+    "upload-d": "npm run compile && grunt screeps --branch=1"
   },
   "author": "Daniel Schechtman",
   "license": "ISC"

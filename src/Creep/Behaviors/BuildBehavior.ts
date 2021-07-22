@@ -1,5 +1,6 @@
 import { JsonObj } from "../../CompilerTyping/Interfaces";
 import { BUILD_DISTANCE } from "../../Constants/CreepBehaviorConsts";
+import { PriorityQueue } from "../../DataStructures/PriorityQueue";
 import { HardDrive } from "../../Disk/HardDrive";
 import { RoomWrapper } from "../../Room/RoomWrapper";
 import { CreepBehavior } from "./CreepBehavior";
@@ -7,6 +8,18 @@ import { CreepBehavior } from "./CreepBehavior";
 export class BuildBehavior extends CreepBehavior {
     
     private m_Data: JsonObj = {}
+    private m_Site_queue: PriorityQueue<ConstructionSite>
+
+    constructor() {
+        super()
+        this.m_Site_queue = new PriorityQueue((el) => {
+            let sort_val = Number.MAX_SAFE_INTEGER/2
+            if (el.structureType === STRUCTURE_WALL || el.structureType === STRUCTURE_RAMPART) {
+                sort_val = 0
+            }
+            return sort_val + this.m_Site_queue.Size()
+        })
+    }
 
     Load(creep: Creep): void {
         const behavior = this.GetBehavior(creep)
@@ -19,10 +32,14 @@ export class BuildBehavior extends CreepBehavior {
     }
 
     Run(creep: Creep, room: RoomWrapper): void {
-        const sites = room.GetConstructionSites()
+        if (this.m_Site_queue.Size() === 0) {
+            this.FillQueue(room)
+        }
 
-        if (sites.length > 0) {
-            const build_site = sites[0]
+        const sites = this.m_Site_queue.Peek()
+
+        if (sites) {
+            const build_site = sites
             let source = Game.getObjectById(this.m_Data.id as Id<Source>)
 
             if (!source) {
@@ -32,9 +49,9 @@ export class BuildBehavior extends CreepBehavior {
             if (this.m_Data.can_build) {
                 this.Build(creep, build_site)
             }
-            else if(source) {
-                this.m_Data.id = source.id
-                this.Harvest(creep, source)
+            else {
+                this.m_Data.id = source!!.id
+                this.Harvest(creep, source!!)
             }
         }
         else {
@@ -53,6 +70,15 @@ export class BuildBehavior extends CreepBehavior {
         if (!this.MoveTo(BUILD_DISTANCE, creep, build_site)) {
             creep.build(build_site)
         }
+    }
+
+    private FillQueue(room: RoomWrapper){
+        const sites = room.GetConstructionSites()
+
+        for (let s of sites) {
+            this.m_Site_queue.Push(s)
+        }
+
     }
 
 }

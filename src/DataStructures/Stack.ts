@@ -42,4 +42,8 @@ export class Stack<T> {
     Clear(): void {
         this.m_Stack = new Array()
     }
+
+    IsEmpty(): boolean {
+        return this.m_Stack.length === 0
+    }
 }

@@ -223,6 +223,17 @@ export class RoomWrapper {
         return this.GetResource<ConstructionSite>(key)
     }
 
+    GetController(): StructureController | null {
+        const controller_list = this.GetOwnedStructures<StructureController>(STRUCTURE_CONTROLLER)
+        let controller: StructureController | null = null
+
+        if (controller_list.length > 0) {
+            controller = controller_list[0]
+        }
+
+        return controller
+    }
+
     GetSources(): Source[] {
         const key = ObjectsInRoom.SOURCES
         if (!this.m_Room_objects.Has(key)) {

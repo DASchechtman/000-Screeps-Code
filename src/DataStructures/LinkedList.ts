@@ -1,4 +1,3 @@
-import { exception } from "console";
 import { LinkedListNode } from "../CompilerTyping/Interfaces";
 
 export class LinkedList<T> {
@@ -90,7 +89,6 @@ export class LinkedList<T> {
             ret = this.cur!!.val!!
         }
         catch {
-            console.log("Error: could not get")
             ret = null
         }
         return ret

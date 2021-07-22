@@ -1,18 +1,17 @@
 import { Colony } from "../Colony/Colony";
-import { COLONY_TYPE, CREEP_TYPE } from "../Constants/GameObjectConsts";
+import { COLONY_TYPE, CREEP_TYPE, MAX_SIGNALS } from "../Constants/GameObjectConsts";
 import { HardDrive } from "../Disk/HardDrive";
 import { GameObject } from "../GameObject";
 import { RoomWrapper } from "../Room/RoomWrapper";
 import { SignalManager } from "../Signals/SignalManager";
 import { BuildBehavior } from "./Behaviors/BuildBehavior";
 import { CreepBehavior } from "./Behaviors/CreepBehavior";
-import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, REPAIR_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
+import { BUILDER_BEHAVIOR, DEFENDER_BEHAVIOR, HARVEST_BEHAVIOR, HAS_NO_BEHAVIOR, REPAIR_BEHAVIOR, UPGRADER_BEHAVIOR } from "../Constants/CreepBehaviorConsts";
 import { DefendBehavior } from "./Behaviors/DefendBehavior";
 import { HarvestBehavior } from "./Behaviors/HarvestBehavior";
 import { UpgradeBehavior } from "./Behaviors/UpgradeBehavior";
 import { Signal } from "../CompilerTyping/Interfaces";
 import { RepairBehavior } from "./Behaviors/RepairBehavior";
-import { CpuTimer } from "../CpuTimer";
 
 /* 
 Class meant to extend functionaliyt of creep, provides fuctions like
@@ -31,13 +30,13 @@ export class CreepWrapper extends GameObject {
     private m_Ready_to_run: boolean
 
     constructor(name: string, room: RoomWrapper) {
-        super(name, CREEP_TYPE)
+        super(name, CREEP_TYPE, MAX_SIGNALS, true, true)
         this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map()
         this.m_Behavior = null
         this.m_Room = room
         this.m_Creep = Game.creeps[name]
-        this.m_Cur_type = -1
+        this.m_Cur_type = HAS_NO_BEHAVIOR
         this.m_Ready_to_run = false
     }
 
@@ -78,7 +77,7 @@ export class CreepWrapper extends GameObject {
 
     OnLoad(): void {
         this.LoadTypes()
-        if (this.m_Creep && this.m_Cur_type === -1) {
+        if (this.m_Creep && this.m_Cur_type === HAS_NO_BEHAVIOR) {
             const data = HardDrive.Read(this.m_Creep.name)
             const behavior = data.type
             if (typeof behavior === 'number') {
