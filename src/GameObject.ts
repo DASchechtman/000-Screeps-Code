@@ -5,23 +5,35 @@ import { SignalManager } from "./Signals/SignalManager";
 export abstract class GameObject {
     private m_Id: string
     private m_Type: number
-    constructor(id: string, type: number, max_signals: number = 100) {
+    constructor(
+        id: string,
+        type: number,
+        max_signals: number,
+        is_event_obj: boolean,
+        is_signal_obj: boolean
+    ) {
         this.m_Id = id
         this.m_Type = type
-        EventManager.Inst().Add(this)
-        SignalManager.Inst().Add(this, max_signals)
+
+        if (is_event_obj) {
+            EventManager.Inst().Add(this)
+        }
+
+        if (is_signal_obj) {
+            SignalManager.Inst().Add(this, max_signals)
+        }
     }
 
     // event manager functions below
-    OnLoad(): void {}
-    OnRun(): void {}
-    OnSave(): void {}
+    OnLoad(): void { }
+    OnRun(): void { }
+    OnSave(): void { }
 
-    OnInvasion(): void {}
-    OnRepair(): void {}
+    OnInvasion(): void { }
+    OnRepair(): void { }
 
     // signal manager functions below
-    SignalRecieverID(): string { return this.m_Id}
+    SignalRecieverID(): string { return this.m_Id }
     SignalRecieverType(): number { return this.m_Type }
 
     OnSignal(signal: Signal): boolean {

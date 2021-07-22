@@ -17,9 +17,12 @@ class CreepBehavior {
         return moved;
     }
     Harvest(creep, source) {
+        let moved = 0;
         if (!this.MoveTo(CreepBehaviorConsts_1.HARVEST_DISTANCE, creep, source)) {
             creep.harvest(source);
+            moved = 1;
         }
+        return moved;
     }
     UpdateWorkState(creep, cur_state) {
         const resource_type = RESOURCE_ENERGY;

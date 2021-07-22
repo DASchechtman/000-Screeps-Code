@@ -34,5 +34,8 @@ class Stack {
     Clear() {
         this.m_Stack = new Array();
     }
+    IsEmpty() {
+        return this.m_Stack.length === 0;
+    }
 }
 exports.Stack = Stack;

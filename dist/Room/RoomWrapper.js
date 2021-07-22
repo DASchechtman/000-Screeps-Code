@@ -194,6 +194,14 @@ class RoomWrapper {
         }
         return this.GetResource(key);
     }
+    GetController() {
+        const controller_list = this.GetOwnedStructures(STRUCTURE_CONTROLLER);
+        let controller = null;
+        if (controller_list.length > 0) {
+            controller = controller_list[0];
+        }
+        return controller;
+    }
     GetSources() {
         const key = ObjectsInRoom_1.ObjectsInRoom.SOURCES;
         if (!this.m_Room_objects.Has(key)) {

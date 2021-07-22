@@ -1,11 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHANGE_SIGN_DISTANCE = exports.HARVEST_DISTANCE = exports.TRANSFER_DISTANCE = exports.ATTACK_DISTANCE = exports.RANGED_ATTACK_DISTANCE = exports.UPGRADE_DISTANCE = exports.BUILD_DISTANCE = exports.REPAIR_DISTANCE = exports.REPAIR_BEHAVIOR = exports.BUILDER_BEHAVIOR = exports.DEFENDER_BEHAVIOR = exports.UPGRADER_BEHAVIOR = exports.HARVEST_BEHAVIOR = void 0;
+exports.CHANGE_SIGN_DISTANCE = exports.HARVEST_DISTANCE = exports.TRANSFER_DISTANCE = exports.ATTACK_DISTANCE = exports.RANGED_ATTACK_DISTANCE = exports.UPGRADE_DISTANCE = exports.BUILD_DISTANCE = exports.REPAIR_DISTANCE = exports.HAS_NO_BEHAVIOR = exports.REPAIR_BEHAVIOR = exports.BUILDER_BEHAVIOR = exports.DEFENDER_BEHAVIOR = exports.UPGRADER_BEHAVIOR = exports.HARVEST_BEHAVIOR = void 0;
 exports.HARVEST_BEHAVIOR = 0;
 exports.UPGRADER_BEHAVIOR = 1;
 exports.DEFENDER_BEHAVIOR = 2;
 exports.BUILDER_BEHAVIOR = 3;
 exports.REPAIR_BEHAVIOR = 4;
+exports.HAS_NO_BEHAVIOR = -1;
 exports.REPAIR_DISTANCE = 3;
 exports.BUILD_DISTANCE = 3;
 exports.UPGRADE_DISTANCE = 3;

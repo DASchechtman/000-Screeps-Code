@@ -4,11 +4,15 @@ exports.GameObject = void 0;
 const EventManager_1 = require("./EventManager");
 const SignalManager_1 = require("./SignalManager");
 class GameObject {
-    constructor(id, type, max_signals = 100) {
+    constructor(id, type, max_signals, is_event_obj, is_signal_obj) {
         this.m_Id = id;
         this.m_Type = type;
-        EventManager_1.EventManager.Inst().Add(this);
-        SignalManager_1.SignalManager.Inst().Add(this, max_signals);
+        if (is_event_obj) {
+            EventManager_1.EventManager.Inst().Add(this);
+        }
+        if (is_signal_obj) {
+            SignalManager_1.SignalManager.Inst().Add(this, max_signals);
+        }
     }
     // event manager functions below
     OnLoad() { }

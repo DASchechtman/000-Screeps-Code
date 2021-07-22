@@ -66,23 +66,15 @@ class InRoomPathFinder {
         return Math.sqrt(x + y);
     }
     G(p) {
-        const terrain_type = this.m_Grid.GetTerrainAt(p.x, p.y);
-        let ret = Infinity;
-        switch (terrain_type) {
-            case Enums_1.TerrainTypes.PLAIN_TERRAIN: {
-                ret = Enums_1.TerrainTypes.PLAIN_TERRAIN;
-                break;
-            }
-            case Enums_1.TerrainTypes.SWAMP_TERRAIN: {
-                ret = Enums_1.TerrainTypes.SWAMP_TERRAIN;
-                break;
-            }
-            case Enums_1.TerrainTypes.OCCUPIED_TERRAIN: {
-                ret = Enums_1.TerrainTypes.OCCUPIED_TERRAIN;
-                break;
-            }
+        var _a, _b;
+        let terrain_type = this.m_Grid.GetTerrainAt(p.x, p.y);
+        if ((_a = this.m_Grid) === null || _a === void 0 ? void 0 : _a.SpotIsUsed(p.x, p.y)) {
+            terrain_type = Enums_1.TerrainTypes.OCCUPIED_TERRAIN;
         }
-        return ret;
+        else if ((_b = this.m_Grid) === null || _b === void 0 ? void 0 : _b.HasRoad(p.x, p.y)) {
+            terrain_type = Enums_1.TerrainTypes.ROAD_TERRAIN;
+        }
+        return terrain_type;
     }
     GetQueue() {
         const sort_algo = (el) => {
@@ -109,7 +101,7 @@ class InRoomPathFinder {
         return path;
     }
     ShowSearch(pos, color = "#00FF00") {
-        const vis = new RoomVisual("sim");
+        const vis = new RoomVisual(this.m_Grid.GetRoomName());
         const style = {
             fill: color
         };
@@ -133,6 +125,7 @@ class InRoomPathFinder {
         const close = new Map();
         const queue = this.GetQueue();
         const color_red = "#FF0000";
+        debugger;
         this.AddToOpen(queue, open, cur_node);
         let i = 0;
         let found = false;
@@ -141,11 +134,6 @@ class InRoomPathFinder {
             current = this.RemoveFromOpen(queue, open);
             if (this.InRange(current.pos, dest, range)) {
                 found = true;
-                console.log("could find path", creep.name);
-                break;
-            }
-            else if (i === steps) {
-                console.log("couldn't find path");
                 break;
             }
             else {
@@ -199,9 +187,9 @@ class InRoomPathFinder {
         };
         HardDrive_1.HardDrive.Write(creep.name, save_data);
     }
-    MarkPathAsUsed(start_index, array) {
+    MarkPathAsUsed(array) {
         var _a;
-        for (let i = start_index; i < array.length; i++) {
+        for (let i = 0; i < array.length; i++) {
             const spot = array[i];
             if (spot) {
                 (_a = this.m_Grid) === null || _a === void 0 ? void 0 : _a.MarkSpotAsUsed(spot.p.x, spot.p.y);
@@ -222,14 +210,10 @@ class InRoomPathFinder {
             const data = this.GetPath(creep);
             let path_array = data === null || data === void 0 ? void 0 : data.steps;
             let path_index = data === null || data === void 0 ? void 0 : data.index;
-            const data_exists = path_array !== undefined;
-            console.log(path_array === null || path_array === void 0 ? void 0 : path_array.length);
-            debugger;
             if (!path_array) {
                 path_array = new Array();
             }
             if (path_array.length === 0) {
-                debugger;
                 const grid_key = creep.room.name;
                 if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
                     InRoomPathFinder.m_Room_grids.set(grid_key, new PathGrid_1.InRoomGrid(grid_key));
@@ -251,7 +235,6 @@ class InRoomPathFinder {
                 });
             }
             //this.MarkPathAsUsed(path_index, dir)
-            console.log(path_array[0]);
             if (path_array[0]) {
                 const ret = creep.move(path_array[0]);
                 if (ret === OK) {

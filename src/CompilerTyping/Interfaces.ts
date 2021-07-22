@@ -77,6 +77,14 @@ export interface LinkedListNode<T> {
     prev?: LinkedListNode<T>
 }
 
-export interface PriorityQueueSortVals {
-    val: number,
+export interface GridNodeData{
+    node: GridNode,
+    has_road: boolean,
+    is_walkable: boolean,
+    creep_on_tile?: boolean
+}
+
+export interface SignalMember {
+    member: SignalReciever,
+    receive_count: number
 }

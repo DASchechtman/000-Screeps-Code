@@ -1,6 +1,5 @@
-import { runInThisContext } from "vm"
 import { TerrainTypes } from "../CompilerTyping/Enums"
-import { GridNode, Point } from "../CompilerTyping/Interfaces"
+import { GridNode, GridNodeData, Point } from "../CompilerTyping/Interfaces"
 
 export class InRoomGrid {
 
@@ -14,23 +13,22 @@ export class InRoomGrid {
     private readonly M_RIGHT_EDGE: number
     private readonly M_TOP_EDGE: number
     private readonly M_BOTTOM_EDGE: number
+    private readonly M_GRID_DEMENSION: number
 
-    private m_Grid: Array<Array<GridNode>>
-    private m_Nodes_used: Map<string, undefined>
+    private m_Grid: Map<number, Map<number, GridNodeData>>
     private m_Room_name: string
     private m_Grid_x: number
     private m_Grid_y: number
     private m_Walkable_tile_num: number
 
     constructor(room_name: string) {
-        this.m_Grid = new Array()
-        this.m_Nodes_used = new Map()
         this.m_Room_name = room_name
 
         this.M_ROAD = TerrainTypes.ROAD_TERRAIN
         this.M_PLAIN = TerrainTypes.PLAIN_TERRAIN
         this.M_SWAMP = TerrainTypes.SWAMP_TERRAIN
         this.M_NOT_WALKABLE = Number.MAX_VALUE
+        this.M_GRID_DEMENSION = 50
 
         this.M_LEFT_EDGE = 0
         this.M_RIGHT_EDGE = 49
@@ -41,82 +39,95 @@ export class InRoomGrid {
         this.m_Grid_y = 24
         this.m_Walkable_tile_num = 0
 
-        this.InitGrid()
+        this.m_Grid = new Map()
     }
 
-    private GetRoadOnTile(x: number, y: number, original_val: number): number {
+    private GetRoadOnTile(x: number, y: number): boolean {
         const room = Game.rooms[this.m_Room_name]
+        let has_road = false
 
         if (room) {
             const objects_at_point = room.lookAt(x, y)
 
             for (let object of objects_at_point) {
+                if (!object.structure) {
+                    break
+                }
                 if (object.structure?.structureType === STRUCTURE_ROAD) {
-                    original_val = TerrainTypes.ROAD_TERRAIN
+                    has_road = true
                     break
                 }
             }
         }
 
-        return original_val
+        return has_road
     }
 
-    private IsWalkableStructure(struct: Structure | ConstructionSite) {
-        let no_blocks = true
-
-        const walkable_structs = [
+    private IsWalkableStructure(struct: Structure | ConstructionSite): boolean {
+        const walkable_structs: Array<StructureConstant> = [
             STRUCTURE_ROAD,
             STRUCTURE_RAMPART,
             STRUCTURE_CONTAINER
         ]
 
-        for (let st of walkable_structs) {
-            if (struct.structureType !== st) {
-                no_blocks = false
-                break
-            }
-            else if (struct.structureType !== st) {
-                no_blocks = false
-                break
-            }
-        }
-
-        return no_blocks
+        return walkable_structs.includes(struct.structureType)
     }
 
     private IsTravelableTerrain(x: number, y: number): boolean {
         return this.GetTerrainAt(x, y) !== TerrainTypes.WALL_TERRAIN
     }
 
-    private InitGrid(): void {
-        const room = Game.rooms[this.m_Room_name]
+    private IsWalkableTile(x: number, y: number): boolean {
+        let walkable = true
 
-        if (room) {
-            for (let x = 0; x < 50; x++) {
-                this.m_Grid.push(new Array())
-                for (let y = 0; y < 50; y++) {
-                    const node: GridNode = {
-                        G: Infinity,
-                        H: Infinity,
-                        F: Infinity,
-                        pos: {
-                            x: x,
-                            y: y
-                        }
-                    }
-
-                    this.m_Grid[x].push(node)
-
-                    if (this.IsWalkable(x, y)) {
-                        this.m_Walkable_tile_num++
-                    }
-                }
-            }
+        if (x === this.M_LEFT_EDGE || x === this.M_RIGHT_EDGE) {
+            walkable = false
         }
+        else if (y === this.M_TOP_EDGE || y === this.M_BOTTOM_EDGE) {
+            walkable = false
+        }
+        else {
+            const is_plain = this.IsTravelableTerrain(x, y)
+            const spot_clear = this.AreNoObsticalsAtPoint(x, y)
+            walkable = is_plain && spot_clear
+        }
+
+        return walkable
     }
 
-    private CoordToString(x: number, y: number): string {
-        return `${x},${y}`
+    private InitCell(x: number, y: number): GridNodeData {
+        if (!this.m_Grid.has(x)) {
+            this.m_Grid.set(x, new Map())
+        }
+
+        if (!this.m_Grid.get(x)!!.has(y)) {
+            const node: GridNodeData = {
+                node: {
+                    G: Infinity,
+                    H: Infinity,
+                    F: Infinity,
+                    pos: {
+                        x: x,
+                        y: y
+                    }
+                },
+                has_road: false,
+                is_walkable: this.IsWalkableTile(x, y)
+            }
+
+            if (node.is_walkable) {
+                this.m_Walkable_tile_num++
+                node.has_road = this.GetRoadOnTile(x, y)
+            }
+
+            this.m_Grid.get(x)!!.set(y, node)
+        }
+
+        return this.m_Grid.get(x)!!.get(y)!!
+    }
+
+    private GetCell(x: number, y: number): GridNodeData {
+        return this.InitCell(x, y)
     }
 
     GetTerrainAt(x: number, y: number): number {
@@ -141,12 +152,11 @@ export class InRoomGrid {
             }
         }
 
-        tile_type = this.GetRoadOnTile(x, y, tile_type)
-        if (this.SpotIsUsed(x, y)) {
-            tile_type = TerrainTypes.OCCUPIED_TERRAIN
-        }
-
         return tile_type
+    }
+
+    HasRoad(x: number, y: number): boolean {
+        return this.GetCell(x, y).has_road
     }
 
     AreNoObsticalsAtPoint(x: number, y: number): boolean {
@@ -175,41 +185,25 @@ export class InRoomGrid {
         return no_blocks
     }
 
-    MarkSpotAsUsed(x: number, y: number) {
-        const spot_string = this.CoordToString(x, y)
-        this.m_Nodes_used.set(spot_string, undefined)
+    MarkSpotAsUsed(x: number, y: number): void {
+        this.GetCell(x, y).creep_on_tile = true
     }
 
     SpotIsUsed(x: number, y: number): boolean {
-        const spot_string = this.CoordToString(x, y)
-        return this.m_Nodes_used.has(spot_string)
+        const is_used = this.GetCell(x, y).creep_on_tile
+        return Boolean(is_used)
     }
 
-    IsWalkable(x: number, y: number) {
-        let walkable = true
-
-        if (x === this.M_LEFT_EDGE || x === this.M_RIGHT_EDGE) {
-            walkable = false
-        }
-        else if (y === this.M_TOP_EDGE || y === this.M_BOTTOM_EDGE) {
-            walkable = false
-        }
-        else {
-            const is_plain = this.IsTravelableTerrain(x, y)
-            const spot_clear = this.AreNoObsticalsAtPoint(x, y)
-            walkable = is_plain && spot_clear
-        }
-
-        return walkable
+    IsWalkable(x: number, y: number): boolean {
+        return this.GetCell(x, y).is_walkable
     }
 
-
-    GetCurGridPosition() {
-        return this.m_Grid[this.m_Grid_x][this.m_Grid_y]
+    GetCurGridPosition(): GridNode {
+        return this.GetCell(this.m_Grid_x, this.m_Grid_y).node
     }
 
-    GetGridPosition(x: number, y: number) {
-        return this.m_Grid[x][y]
+    GetGridPosition(x: number, y: number): GridNode {
+        return this.GetCell(x, y).node
     }
 
     SetGridPosition(x: number, y: number): void {
@@ -283,5 +277,8 @@ export class InRoomGrid {
 
     GetNumOfWalkableTiles(): number {
         return this.m_Walkable_tile_num
+    }
+    GetRoomName(): string {
+        return this.m_Room_name
     }
 }

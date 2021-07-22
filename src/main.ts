@@ -1,10 +1,8 @@
-import { cpuUsage } from "process";
+
 import { Colony } from "./Colony/Colony";
 import { LOAD_EVENT, RUN_EVENT, SAVE_EVENT } from "./Constants/EventConsts";
-import { CpuTimer } from "./CpuTimer";
 import { HardDrive } from "./Disk/HardDrive";
 import { EventManager } from "./Events/EventManager";
-import { Output } from "./Output/Output";
 
 class Main {
 
@@ -62,17 +60,32 @@ class Main {
     }
 }
 
+var tick = new Main()
+
 if (Game.cpu.limit === 0) {
     const shard_name_len = Game.shard.name.length - 1
     const shard_num = Number.parseInt(Game.shard.name[shard_name_len])
     Game.cpu.setShardLimits({ shard: shard_num, cpu: 20 })
 }
 else {
-    var tick = new Main()
-    let start = Game.cpu.getUsed()
-    tick.Load()
-    tick.Run()
-    tick.Save()
-    let end = Game.cpu.getUsed() - start
-    console.log(end, Game.cpu.bucket)
+    try {
+        let start = Game.cpu.getUsed()
+        if (Game.cpu.bucket > 5000 || Game.cpu.bucket === undefined) {
+
+            tick.Load()
+            tick.Run()
+            tick.Save()
+        }
+        else {
+            console.log("pausing due to error")
+        }
+        let end = Game.cpu.getUsed() - start
+        console.log(`time token in cpus: ${end.toFixed(6)}, bucket remaining: ${Game.cpu.bucket}`)
+    }
+    catch (e) {
+        console.log((e as Error).stack)
+        console.log((e as Error).message)
+    }
 }
+
+

@@ -1,4 +1,3 @@
-import { PriorityQueueSortVals } from "../CompilerTyping/Interfaces"
 import { LinkedList } from "./LinkedList"
 
 export class PriorityQueue<T> {

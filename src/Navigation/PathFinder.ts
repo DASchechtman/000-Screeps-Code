@@ -1,6 +1,5 @@
-import path from "path/posix";
 import { TerrainTypes } from "../CompilerTyping/Enums";
-import { GridNode, GridNodePoint, JsonObj, Point, PriorityQueueSortVals } from "../CompilerTyping/Interfaces";
+import { GridNode, GridNodePoint, JsonObj, Point } from "../CompilerTyping/Interfaces";
 import { RoomPos, RoomPosObj } from "../CompilerTyping/Types";
 import { PriorityQueue } from "../DataStructures/PriorityQueue";
 import { HardDrive } from "../Disk/HardDrive";
@@ -77,26 +76,16 @@ export class InRoomPathFinder {
         return Math.sqrt(x + y)
     }
 
-    private G(p: Point) {
-        const terrain_type = this.m_Grid!!.GetTerrainAt(p.x, p.y)
-        let ret = Infinity
+    private G(p: Point): number {
+        let terrain_type: number = this.m_Grid!!.GetTerrainAt(p.x, p.y)
 
-        switch (terrain_type) {
-            case TerrainTypes.PLAIN_TERRAIN: {
-                ret = TerrainTypes.PLAIN_TERRAIN
-                break
-            }
-            case TerrainTypes.SWAMP_TERRAIN: {
-                ret = TerrainTypes.SWAMP_TERRAIN
-                break
-            }
-            case TerrainTypes.OCCUPIED_TERRAIN: {
-                ret = TerrainTypes.OCCUPIED_TERRAIN
-                break
-            }
+        if (this.m_Grid?.SpotIsUsed(p.x, p.y)) {
+            terrain_type = TerrainTypes.OCCUPIED_TERRAIN
         }
-
-        return ret
+        else if (this.m_Grid?.HasRoad(p.x, p.y)) {
+            terrain_type = TerrainTypes.ROAD_TERRAIN
+        }
+        return terrain_type
     }
 
 
@@ -135,7 +124,7 @@ export class InRoomPathFinder {
     }
 
     private ShowSearch(pos: Point, color: string = "#00FF00") {
-        const vis = new RoomVisual("sim")
+        const vis = new RoomVisual(this.m_Grid!!.GetRoomName())
         const style: CircleStyle = {
             fill: color
         }
@@ -170,22 +159,18 @@ export class InRoomPathFinder {
         const queue = this.GetQueue()
         const color_red = "#FF0000"
 
+        debugger
+
         this.AddToOpen(queue, open, cur_node)
         let i = 0
         let found = false
         let current: GridNode | null = null
-
 
         while (queue.Size() > 0) {
             current = this.RemoveFromOpen(queue, open)!!
 
             if (this.InRange(current.pos, dest, range)) {
                 found = true
-                console.log("could find path", creep.name)
-                break
-            }
-            else if (i === steps) {
-                console.log("couldn't find path")
                 break
             }
             else {
@@ -196,7 +181,6 @@ export class InRoomPathFinder {
 
             this.m_Grid?.SetGridPosition(current.pos.x, current.pos.y)
             const node_list = this.GetNodesList()
-
             for (let node of node_list) {
                 const is_walkable = this.m_Grid?.IsWalkable(node.point.x, node.point.y)
 
@@ -255,8 +239,8 @@ export class InRoomPathFinder {
         HardDrive.Write(creep.name, save_data)
     }
 
-    private MarkPathAsUsed(start_index: number, array: Array<{ dir: DirectionConstant, p: Point } | null>) {
-        for (let i = start_index; i < array.length; i++) {
+    private MarkPathAsUsed(array: Array<{ dir: DirectionConstant, p: Point } | null>) {
+        for (let i = 0; i < array.length; i++) {
             const spot = array[i]
             if (spot) {
                 this.m_Grid?.MarkSpotAsUsed(spot.p.x, spot.p.y)
@@ -286,17 +270,11 @@ export class InRoomPathFinder {
             let path_array = data?.steps as Array<DirectionConstant | null>
             let path_index = data?.index as number
 
-            const data_exists = path_array !== undefined
-
-            console.log(path_array?.length)
-            debugger
-
             if (!path_array) {
                 path_array = new Array()
             }
 
             if (path_array.length === 0) {
-                debugger
                 const grid_key = creep.room.name
                 if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
                     InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
@@ -305,7 +283,7 @@ export class InRoomPathFinder {
                 const num_of_search_tiles = this.m_Grid.GetNumOfWalkableTiles()
                 const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, num_of_search_tiles)
                 path_index = 0
-
+                
                 for (let node of path_steps) {
                     let direction: DirectionConstant | null = null
                     if (node) {
@@ -323,7 +301,6 @@ export class InRoomPathFinder {
 
             //this.MarkPathAsUsed(path_index, dir)
 
-            console.log(path_array[0])
 
             if (path_array[0]) {
                 const ret = creep.move(path_array[0])

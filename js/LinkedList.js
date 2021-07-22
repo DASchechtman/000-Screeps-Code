@@ -73,7 +73,6 @@ class LinkedList {
             ret = this.cur.val;
         }
         catch (_a) {
-            console.log("Error: could not get");
             ret = null;
         }
         return ret;

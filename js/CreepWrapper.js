@@ -18,13 +18,13 @@ givig creep more flexible behavior
 */
 class CreepWrapper extends GameObject_1.GameObject {
     constructor(name, room) {
-        super(name, GameObjectConsts_1.CREEP_TYPE);
+        super(name, GameObjectConsts_1.CREEP_TYPE, GameObjectConsts_1.MAX_SIGNALS, true, true);
         this.m_Creep_name = name;
         CreepWrapper.behavior_types = new Map();
         this.m_Behavior = null;
         this.m_Room = room;
         this.m_Creep = Game.creeps[name];
-        this.m_Cur_type = -1;
+        this.m_Cur_type = CreepBehaviorConsts_1.HAS_NO_BEHAVIOR;
         this.m_Ready_to_run = false;
     }
     LoadTypes() {
@@ -59,7 +59,7 @@ class CreepWrapper extends GameObject_1.GameObject {
     }
     OnLoad() {
         this.LoadTypes();
-        if (this.m_Creep && this.m_Cur_type === -1) {
+        if (this.m_Creep && this.m_Cur_type === CreepBehaviorConsts_1.HAS_NO_BEHAVIOR) {
             const data = HardDrive_1.HardDrive.Read(this.m_Creep.name);
             const behavior = data.type;
             if (typeof behavior === 'number') {

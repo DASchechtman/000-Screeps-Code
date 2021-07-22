@@ -28,10 +28,13 @@ export abstract class CreepBehavior {
         return moved
     }
 
-    protected Harvest(creep: Creep, source: Source): void {
+    protected Harvest(creep: Creep, source: Source): number {
+        let moved = 0
         if (!this.MoveTo(HARVEST_DISTANCE, creep, source)) {
             creep.harvest(source)
+            moved = 1
         }
+        return moved
     }
 
     protected UpdateWorkState(creep: Creep, cur_state: boolean): boolean {

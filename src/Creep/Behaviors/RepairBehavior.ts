@@ -15,7 +15,7 @@ export class RepairBehavior extends CreepBehavior {
     Load(creep: Creep): void {
 
         const data_behavior = this.GetBehavior(creep)
-        const cur_state = Boolean(data_behavior?.full)
+        const cur_state = data_behavior?.full === undefined ? false : data_behavior.full as boolean
         const cur_tick = typeof data_behavior?.tick === 'number' ? data_behavior.tick : 0
         let new_id = data_behavior?.new_id as boolean
         const source_id = String(data_behavior?.source_id)
@@ -34,6 +34,7 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     Run(creep: Creep, room: RoomWrapper): void {
+        debugger
         let source = Game.getObjectById(this.m_Data.source_id as Id<Source>)
 
 
@@ -68,6 +69,7 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     Signal(signal: Signal): boolean {
+        debugger
         this.m_Struct_Stack.Add(signal.from as StructureWrapper<any>)
         return true
     }

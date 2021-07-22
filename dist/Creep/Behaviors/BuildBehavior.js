@@ -2,12 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BuildBehavior = void 0;
 const CreepBehaviorConsts_1 = require("../../Constants/CreepBehaviorConsts");
+const PriorityQueue_1 = require("../../DataStructures/PriorityQueue");
 const HardDrive_1 = require("../../Disk/HardDrive");
 const CreepBehavior_1 = require("./CreepBehavior");
 class BuildBehavior extends CreepBehavior_1.CreepBehavior {
     constructor() {
-        super(...arguments);
+        super();
         this.m_Data = {};
+        this.m_Site_queue = new PriorityQueue_1.PriorityQueue((el) => {
+            let sort_val = Number.MAX_SAFE_INTEGER / 2;
+            if (el.structureType === STRUCTURE_WALL || el.structureType === STRUCTURE_RAMPART) {
+                sort_val = 0;
+            }
+            return sort_val + this.m_Site_queue.Size();
+        });
     }
     Load(creep) {
         const behavior = this.GetBehavior(creep);
@@ -19,9 +27,12 @@ class BuildBehavior extends CreepBehavior_1.CreepBehavior {
         };
     }
     Run(creep, room) {
-        const sites = room.GetConstructionSites();
-        if (sites.length > 0) {
-            const build_site = sites[0];
+        if (this.m_Site_queue.Size() === 0) {
+            this.FillQueue(room);
+        }
+        const sites = this.m_Site_queue.Peek();
+        if (sites) {
+            const build_site = sites;
             let source = Game.getObjectById(this.m_Data.id);
             if (!source) {
                 source = build_site.pos.findClosestByPath(FIND_SOURCES);
@@ -29,7 +40,7 @@ class BuildBehavior extends CreepBehavior_1.CreepBehavior {
             if (this.m_Data.can_build) {
                 this.Build(creep, build_site);
             }
-            else if (source) {
+            else {
                 this.m_Data.id = source.id;
                 this.Harvest(creep, source);
             }
@@ -47,6 +58,12 @@ class BuildBehavior extends CreepBehavior_1.CreepBehavior {
     Build(creep, build_site) {
         if (!this.MoveTo(CreepBehaviorConsts_1.BUILD_DISTANCE, creep, build_site)) {
             creep.build(build_site);
+        }
+    }
+    FillQueue(room) {
+        const sites = room.GetConstructionSites();
+        for (let s of sites) {
+            this.m_Site_queue.Push(s);
         }
     }
 }

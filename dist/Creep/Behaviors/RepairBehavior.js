@@ -14,7 +14,7 @@ class RepairBehavior extends CreepBehavior_1.CreepBehavior {
     }
     Load(creep) {
         const data_behavior = this.GetBehavior(creep);
-        const cur_state = Boolean(data_behavior === null || data_behavior === void 0 ? void 0 : data_behavior.full);
+        const cur_state = (data_behavior === null || data_behavior === void 0 ? void 0 : data_behavior.full) === undefined ? false : data_behavior.full;
         const cur_tick = typeof (data_behavior === null || data_behavior === void 0 ? void 0 : data_behavior.tick) === 'number' ? data_behavior.tick : 0;
         let new_id = data_behavior === null || data_behavior === void 0 ? void 0 : data_behavior.new_id;
         const source_id = String(data_behavior === null || data_behavior === void 0 ? void 0 : data_behavior.source_id);
@@ -30,6 +30,7 @@ class RepairBehavior extends CreepBehavior_1.CreepBehavior {
         };
     }
     Run(creep, room) {
+        debugger;
         let source = Game.getObjectById(this.m_Data.source_id);
         if (this.m_Data.full) {
             const id = this.SetStruct();
@@ -57,6 +58,7 @@ class RepairBehavior extends CreepBehavior_1.CreepBehavior {
         HardDrive_1.HardDrive.Write(creep.name, data);
     }
     Signal(signal) {
+        debugger;
         this.m_Struct_Stack.Add(signal.from);
         return true;
     }

@@ -17,13 +17,15 @@ class UpgradeBehavior extends CreepBehavior_1.CreepBehavior {
         };
     }
     Run(creep, room) {
-        const controller = room.GetOwnedStructures(STRUCTURE_CONTROLLER)[0];
-        const source = room.GetSources()[0];
-        if (this.m_Data.can_upgrade === true) {
-            this.Upgrade(creep, controller);
-        }
-        else if (this.m_Data.can_upgrade === false) {
-            this.Harvest(creep, source);
+        const controller = room.GetController();
+        if (controller) {
+            const source = room.GetSources()[0];
+            if (this.m_Data.can_upgrade === true) {
+                this.Upgrade(creep, controller);
+            }
+            else if (this.m_Data.can_upgrade === false) {
+                this.Harvest(creep, source);
+            }
         }
     }
     Save(creep) {

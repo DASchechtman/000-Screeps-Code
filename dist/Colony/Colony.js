@@ -17,11 +17,9 @@ const TimedStructureWrapper_1 = require("../Structure/TimedStructureWrapper");
 const BehaviorStructureWrapper_1 = require("../Structure/BehaviorStructureWrapper");
 class Colony extends GameObject_1.GameObject {
     constructor(room_name) {
-        super(room_name, GameObjectConsts_1.COLONY_TYPE);
+        super(room_name, GameObjectConsts_1.COLONY_TYPE, GameObjectConsts_1.MAX_SIGNALS, true, true);
         this.m_Room = new RoomWrapper_1.RoomWrapper(room_name);
         this.m_Colony_queen = this.m_Room.GetOwnedStructures(STRUCTURE_SPAWN)[0];
-        this.m_Creeps_count = 0;
-        this.m_Creep_cap = 10;
         this.m_Creep_types = new Stack_1.Stack();
         this.m_Creeps_list = {};
         this.m_Data_key = "creeps";
@@ -74,12 +72,13 @@ class Colony extends GameObject_1.GameObject {
         this.GetCreepNames().push(creep.GetName());
     }
     UpdateData() {
-        this.m_Creeps_count++;
         const behavior = this.m_Creep_types.Pop();
         return behavior;
     }
     CreateStack() {
-        this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
+        if (this.m_Creep_types.IsEmpty()) {
+            this.m_Creep_types = this.m_Type_queue.CreateStack(this.m_Type_tracker);
+        }
     }
     SpawnColonyMember() {
         var _a;
@@ -133,20 +132,11 @@ class Colony extends GameObject_1.GameObject {
     OnLoadCreeps() {
         var _a, _b;
         const creep_names = this.GetCreepNames();
-        this.CreateStack();
         for (var creep_name of creep_names) {
             if (creep_name !== ((_b = (_a = this.m_Colony_queen) === null || _a === void 0 ? void 0 : _a.spawning) === null || _b === void 0 ? void 0 : _b.name)) {
                 const wrapper = new CreepWrapper_1.CreepWrapper(creep_name, this.m_Room);
-                if (wrapper.GetBehavior() === -1) {
-                    const new_behavior = this.UpdateData();
-                    if (typeof new_behavior === 'number') {
-                        wrapper.SetBehavior(new_behavior);
-                        this.m_Type_tracker.Add(wrapper.GetBehavior(), wrapper.GetName());
-                    }
-                }
                 wrapper.MakeReadyToRun();
                 this.m_Creeps.push(wrapper);
-                this.m_Creeps_count++;
             }
         }
     }
@@ -171,13 +161,32 @@ class Colony extends GameObject_1.GameObject {
             }
         }
     }
+    StartSafeMode() {
+        var _a;
+        const controller = (_a = this.m_Room) === null || _a === void 0 ? void 0 : _a.GetController();
+        if (controller) {
+            const still_safe = controller.safeMode;
+            const avalible_safe_mode = controller.safeModeAvailable;
+            const cool_down = controller.safeModeCooldown;
+            if (!still_safe && avalible_safe_mode > 0 && !cool_down) {
+                controller.activateSafeMode();
+            }
+        }
+    }
     OnLoad() {
         this.OnLoadCreeps();
         this.OnLoadStructs();
     }
     OnRun() {
+        var _a;
+        //this.StartSafeMode()
         if (this.m_Colony_queen) {
+            const behaviorless_creeps = new Array();
             for (let creep of this.m_Creeps) {
+                let spawnning_creep = (_a = this.m_Colony_queen.spawning) === null || _a === void 0 ? void 0 : _a.name;
+                if (creep.GetBehavior() === CreepBehaviorConsts_1.HAS_NO_BEHAVIOR && creep.GetName() !== spawnning_creep) {
+                    behaviorless_creeps.push(creep);
+                }
                 this.m_Type_tracker.Add(creep.GetBehavior(), creep.GetName());
                 const pos = creep.GetPos();
                 if (pos) {
@@ -188,8 +197,13 @@ class Colony extends GameObject_1.GameObject {
                     }
                 }
             }
+            for (let creep of behaviorless_creeps) {
+                this.CreateStack();
+                creep.SetBehavior(this.UpdateData());
+            }
             const harvester_count = this.m_Type_tracker.GetTypeCount(CreepBehaviorConsts_1.HARVEST_BEHAVIOR);
             const max = this.m_Type_queue.GetMax(CreepBehaviorConsts_1.HARVEST_BEHAVIOR);
+            this.CreateStack();
             if (max !== -1 && harvester_count < max) {
                 this.ConvertToHarvester();
             }

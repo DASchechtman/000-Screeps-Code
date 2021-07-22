@@ -7,12 +7,15 @@ const GameObject_1 = require("./GameObject");
 const SignalManager_1 = require("./SignalManager");
 class StructureWrapper extends GameObject_1.GameObject {
     constructor(struct_id, type = GameObjectConsts_1.STRUCTURE_TYPE) {
-        super(struct_id, type);
+        var _a, _b;
+        const struct = Game.getObjectById(struct_id);
+        const should_run = Boolean(struct && struct.hits && struct.hitsMax && struct.hits < struct.hitsMax);
+        super(struct_id, type, 0, should_run, false);
         this.m_Struct_id = struct_id;
-        this.m_Struct = Game.getObjectById(this.m_Struct_id);
+        this.m_Struct = struct;
         this.m_Cur_health = 0;
         this.m_Max_health = 0;
-        if (this.m_Struct) {
+        if (((_a = this.m_Struct) === null || _a === void 0 ? void 0 : _a.hits) && ((_b = this.m_Struct) === null || _b === void 0 ? void 0 : _b.hitsMax)) {
             this.m_Cur_health = this.m_Struct.hits;
             this.m_Max_health = this.m_Struct.hitsMax;
         }

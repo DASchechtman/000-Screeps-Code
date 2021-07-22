@@ -3,6 +3,7 @@ export const UPGRADER_BEHAVIOR = 1
 export const DEFENDER_BEHAVIOR = 2
 export const BUILDER_BEHAVIOR = 3
 export const REPAIR_BEHAVIOR = 4
+export const HAS_NO_BEHAVIOR = -1
 
 export const REPAIR_DISTANCE = 3
 export const BUILD_DISTANCE = 3
