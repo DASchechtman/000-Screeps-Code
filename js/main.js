@@ -4,6 +4,7 @@ const Colony_1 = require("./Colony");
 const EventConsts_1 = require("./EventConsts");
 const HardDrive_1 = require("./HardDrive");
 const EventManager_1 = require("./EventManager");
+const Test_1 = require("./Test");
 class Main {
     constructor() {
         Game.cpu.shardLimits;
@@ -51,6 +52,8 @@ class Main {
     }
 }
 var tick = new Main();
+var test = new Test_1.Test();
+test.HelloWorld();
 if (Game.cpu.limit === 0) {
     const shard_name_len = Game.shard.name.length - 1;
     const shard_num = Number.parseInt(Game.shard.name[shard_name_len]);
@@ -75,3 +78,6 @@ else {
         console.log(e.message);
     }
 }
+module.exports.loop = () => {
+    test.HelloWorld();
+};
