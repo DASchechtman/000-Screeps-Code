@@ -13,8 +13,11 @@ export class BuildBehavior extends CreepBehavior {
     constructor() {
         super()
         this.m_Site_queue = new PriorityQueue((el) => {
-            let sort_val = Number.MAX_SAFE_INTEGER/2
-            if (el.structureType === STRUCTURE_WALL || el.structureType === STRUCTURE_RAMPART) {
+            let sort_val = 50000
+            if (el.structureType === STRUCTURE_EXTENSION) {
+                sort_val = 25000
+            }
+            else if (el.structureType === STRUCTURE_WALL || el.structureType === STRUCTURE_RAMPART) {
                 sort_val = 0
             }
             return sort_val + this.m_Site_queue.Size()
