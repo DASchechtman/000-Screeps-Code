@@ -15,6 +15,7 @@ import { StructureWrapper } from "../Structure/StructureWrapper";
 import { TimedStructureWrapper } from "../Structure/TimedStructureWrapper";
 import { BehaviorStructureWrapper } from "../Structure/BehaviorStructureWrapper";
 import { CpuTimer } from "../CpuTimer";
+import { PriorityQueue } from "../DataStructures/PriorityQueue";
 
 export class Colony extends GameObject {
 
@@ -178,12 +179,30 @@ export class Colony extends GameObject {
 
     private OnLoadStructs(): void {
         const structs = this.m_Room.GetAllNonHostileStructs()
+        const queue = new PriorityQueue<{ type: number, s: Structure }>(function (el) {
+            const regular = 1
+            const timed = .99
+            const health_percent = (el.s.hits / el.s.hitsMax) * 100
+
+            let sort_val = regular + health_percent
+
+            if (el.s.structureType === STRUCTURE_WALL || el.s.structureType === STRUCTURE_RAMPART) {
+                sort_val = timed + health_percent
+            }
+
+            return health_percent
+        })
+
+        const timed_type = 0
+        const reg_type = 1
+        let type = -1
 
         for (let s of structs) {
             switch (s.structureType) {
                 case STRUCTURE_ROAD:
                 case STRUCTURE_RAMPART: {
-                    new TimedStructureWrapper(s.id)
+                    queue.Push({ type: timed_type, s: s })
+                    type = timed_type
                     break
                 }
                 case STRUCTURE_TOWER:
@@ -192,10 +211,20 @@ export class Colony extends GameObject {
                     break
                 }
                 default: {
-                    new StructureWrapper(s.id)
+                    queue.Push({ type: reg_type, s: s })
+                    type = reg_type
                     break
                 }
             }
+        }
+
+        const struct = queue.Peek()
+
+        if (struct && struct?.type === reg_type) {
+            new StructureWrapper(struct.s.id)
+        }
+        else if (struct && struct.type === timed_type) {
+            new TimedStructureWrapper(struct.s.id)
         }
     }
 
@@ -226,7 +255,7 @@ export class Colony extends GameObject {
             for (let creep of this.m_Creeps) {
 
                 let spawnning_creep = this.m_Colony_queen.spawning?.name
-                
+
                 if (creep.GetBehavior() === HAS_NO_BEHAVIOR && creep.GetName() !== spawnning_creep) {
                     behaviorless_creeps.push(creep)
                 }
@@ -244,7 +273,7 @@ export class Colony extends GameObject {
                 }
             }
 
-            for(let creep of behaviorless_creeps) {
+            for (let creep of behaviorless_creeps) {
                 this.CreateStack()
                 creep.SetBehavior(this.UpdateData()!!)
             }
@@ -252,9 +281,9 @@ export class Colony extends GameObject {
             const harvester_count = this.m_Type_tracker.GetTypeCount(HARVEST_BEHAVIOR)
             const max = this.m_Type_queue.GetMax(HARVEST_BEHAVIOR)
 
-        
+
             this.CreateStack()
-            
+
 
             if (max !== -1 && harvester_count < max) {
                 this.ConvertToHarvester()

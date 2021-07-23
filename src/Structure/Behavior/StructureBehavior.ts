@@ -12,8 +12,10 @@ export abstract class StructureBehavior {
         return `${struct.id}${struct.room.name}`
     }
 
-    protected GetBehavior(struct: Structure): JsonType | JsonObj {
-        return HardDrive.Read(this.GetId(struct)).behavior
+    protected GetBehavior(struct: Structure): JsonObj {
+        const data = HardDrive.Read(this.GetId(struct))
+        data.behavior = {}
+        return data.behavior
     }
 
     protected SaveBehavior(struct: Structure, data: JsonObj): void {
