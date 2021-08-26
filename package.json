@@ -3,19 +3,21 @@
   "version": "1.0.0",
   "description": "code for screeps game",
   "main": "main.js",
-  "dependencies": {},
+  "dependencies": {
+    "cmd-shim": "^4.1.0"
+  },
   "devDependencies": {
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.12.2",
     "@types/screeps": "^3.2.2",
     "grunt": "^1.4.1",
     "grunt-screeps": "^1.5.0",
-    "typescript": "^4.3.2"
+    "typescript": "^4.3.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "del-files": "rmdir /Q/S \"./js\" & rmdir /Q/S \"./dist\"",
-    "compile":  "npm run del-files & tsc && python flatten.py",
+    "compile": "npm run del-files & tsc && python flatten.py",
     "upload-m": "npm run compile && grunt screeps --branch=0",
     "upload-d": "npm run compile && grunt screeps --branch=1"
   },
