@@ -1,6 +1,6 @@
 
 import { Behavior } from "../consts/CreepBehaviorConsts";
-import { GameEntityTypes } from "../consts/GameConstants";
+import { EventTypes, GameEntityTypes } from "../consts/GameConstants";
 import { JsonObj, SignalMessage } from "../types/Interfaces";
 import { JsonList, JsonType } from "../types/Types";
 import { BuildScalableDefender, BuildScalableWorker } from "../utils/creeps/CreepBuilder";
@@ -14,6 +14,7 @@ import { RoomWrapper } from "./room/RoomWrapper";
 import { Spawner } from "./Spawner";
 import { StructureWrapper } from "./StructureWrapper";
 import { DegradableStructureWrapper } from "./DegradableStructureWrapper";
+import { EventManager } from "../utils/event_handler/EventManager";
 
 interface CreepDetails {
     name: string,
@@ -94,6 +95,9 @@ export class Colony extends ColonyMember {
                     receiver = member
                     if (RunSignal(receiver, signal)) {
                         break
+                    }
+                    else {
+                        receiver = undefined
                     }
                 }
             }
@@ -240,6 +244,20 @@ export class Colony extends ColonyMember {
     OnRun(): void {
         const spawner = new Spawner(this.m_Room)
         spawner.TrackCreepTypes()
+
+        // checks for any events that need to be run
+        {
+            const hostile_creeps = this.m_Room.GetHostileCreeps().length
+            let event: EventTypes | undefined = undefined
+
+            if (hostile_creeps > 0) {
+                event = EventTypes.INVASION
+            }
+
+            if (event !== undefined) {
+                EventManager.GetInst().RunEvent(event)
+            }
+        }
 
         const spawn_list = spawner.CreateSpawnList()
         if (spawn_list.length > 0) {

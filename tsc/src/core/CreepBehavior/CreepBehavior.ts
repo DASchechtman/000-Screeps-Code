@@ -18,10 +18,25 @@ export abstract class CreepBehavior {
         this.m_Wrapper = wrapper
     }
 
+    /**
+     * 
+     * @param creep 
+     * will only be called once on the creation of a creep wrapper or
+     * upon the switch to a new behavior
+     */
+    abstract Init(creep: Creep): void
+
+    // the 3 methods below will be called once every tick
     abstract Load(creep: Creep): void
     abstract Run(creep: Creep, room: RoomWrapper): void
     abstract Save(creep: Creep): void
-    abstract Destroy(creep: Creep): void
+
+    /**
+     * 
+     * @param creep 
+     * will only be called once on the death of a creep
+     */
+    abstract Destroy(creep: Creep | null): void
 
     ReceiveSignal(signal: SignalMessage): boolean {
         return false

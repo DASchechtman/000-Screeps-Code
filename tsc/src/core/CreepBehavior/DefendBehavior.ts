@@ -11,6 +11,8 @@ export class DefendBehavior extends CreepBehavior {
     constructor(wrapper: CreepWrapper) {
         super(wrapper)
     }
+
+    Init(creep: Creep): void {}
    
     Load(creep: Creep): void {}
 
@@ -34,6 +36,6 @@ export class DefendBehavior extends CreepBehavior {
         }
     }
 
-    Destroy(creep: Creep): void {}
+    Destroy(creep: Creep | null): void {}
 
 }

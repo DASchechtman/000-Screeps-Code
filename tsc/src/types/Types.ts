@@ -8,6 +8,8 @@ export type Container = (
     | StructureTower
 )
 
+export type HoleyArray<T> = Array<T | undefined>
+
 export type Filter = (sender: Signal, other: ColonyMember) => boolean
 
 export type JsonList = (string | number | boolean | JsonObj | null | JsonList)[]

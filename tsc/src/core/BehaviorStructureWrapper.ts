@@ -7,6 +7,6 @@ export class BehaviorStructureWrapper<T extends StructureConstant> extends Struc
     }
 
     OnRun(): void {
-        throw new Error("not implemented yet")
+        super.OnRun()
     }
 }

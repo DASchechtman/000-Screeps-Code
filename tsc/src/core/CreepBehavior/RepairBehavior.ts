@@ -28,6 +28,8 @@ export class RepairBehavior extends CreepBehavior {
         return this.m_Struct_Stack
     }
 
+    Init(creep: Creep): void {}
+
     Load(creep: Creep): void {
 
         const data_behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
@@ -54,8 +56,18 @@ export class RepairBehavior extends CreepBehavior {
 
 
         if (this.m_Data.full) {
-            const id = this.SetStruct()
-            const struct = Game.getObjectById(id)
+            let id = this.SetStruct()
+            let struct = Game.getObjectById(id)
+            const stack = this.GetStack()
+
+            // a struct can be destroyed and so not
+            // exist, but other structs still do
+            // and need repairing
+            while(stack.Size() > 0 && !struct) {
+                id = this.SetStruct()
+                struct = Game.getObjectById(id)
+            }
+
             if (struct) {
                 this.Repair(creep, struct)
             }
@@ -84,7 +96,7 @@ export class RepairBehavior extends CreepBehavior {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
     }
 
-    Destroy(creep: Creep): void {
+    Destroy(creep: Creep | null): void {
         this.m_Struct_Stack = null
     }
 

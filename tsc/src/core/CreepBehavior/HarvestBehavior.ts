@@ -1,6 +1,8 @@
 import { ActionDistance } from "../../consts/CreepBehaviorConsts"
+import { EventTypes } from "../../consts/GameConstants"
 import { JsonObj, SignalMessage } from "../../types/Interfaces"
 import { Container } from "../../types/Types"
+import { EventManager } from "../../utils/event_handler/EventManager"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
 import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
@@ -13,6 +15,10 @@ export class HarvestBehavior extends CreepBehavior {
 
     constructor(wrapper: CreepWrapper) {
         super(wrapper)
+    }
+
+    Init(creep: Creep): void {
+        EventManager.GetInst().AddEventMethod(EventTypes.INVASION, this.OnInvasion)
     }
 
     Load(creep: Creep): void {
@@ -56,7 +62,9 @@ export class HarvestBehavior extends CreepBehavior {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data)
     }
 
-    Destroy(creep: Creep): void {}
+    Destroy(creep: Creep | null): void {
+        EventManager.GetInst().RemoveEventMethod(EventTypes.INVASION, this.OnInvasion)
+    }
 
     protected UpdateWorkState(creep: Creep, cur_state: boolean): boolean {
         const resource_type = RESOURCE_ENERGY
@@ -111,6 +119,10 @@ export class HarvestBehavior extends CreepBehavior {
             }
         }
         return source
+    }
+
+    private OnInvasion() {
+        console.log("WE'RE UNDER ATTACK")
     }
 
 }

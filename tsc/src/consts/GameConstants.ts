@@ -10,6 +10,10 @@ export enum GameEntityTypes {
     ERROR
 }
 
+export enum EventTypes {
+    INVASION
+}
+
 export const COLONY_ALLIES = [
     "Zpike"
 ]

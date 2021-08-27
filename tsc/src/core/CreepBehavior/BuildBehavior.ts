@@ -29,6 +29,8 @@ export class BuildBehavior extends CreepBehavior {
         })
     }
 
+    Init(creep: Creep): void {}
+
     Load(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
         const cur_state = Boolean(behavior?.can_build)
@@ -71,7 +73,7 @@ export class BuildBehavior extends CreepBehavior {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
     }
 
-    Destroy(creep: Creep): void {}
+    Destroy(creep: Creep | null): void {}
 
 
     private Build(creep: Creep, build_site: ConstructionSite): void {

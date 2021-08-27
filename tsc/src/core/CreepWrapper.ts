@@ -20,6 +20,7 @@ export class CreepWrapper extends ColonyMember {
     private type_file_path: string
     private m_Base_path: string
     private m_Creep: Creep | undefined = undefined
+    private m_Not_run_yet = true
 
     constructor(creep_name: string) {
 
@@ -65,13 +66,18 @@ export class CreepWrapper extends ColonyMember {
         const creep = this.GetCreep()
         if (creep && this.m_Behavior) {
             const room = new RoomWrapper(creep.room.name)
+
+            if (this.m_Not_run_yet) {
+                this.m_Behavior.Init(creep)
+                this.m_Not_run_yet = false
+            }
+
             this.m_Behavior.Load(creep)
             this.m_Behavior.Run(creep, room)
             this.m_Behavior.Save(creep)
-            this.m_Behavior.Destroy(creep)
         }
         else {
-            //console.log(`error: creep cant run. Internal Creep: ${this.m_Creep}, Internal behavior: ${this.m_Behavior}`)
+            this.m_Behavior?.Destroy(null)
             HardDrive.DeleteFolder(this.m_Base_path)
             this.m_Signal = {
                 data: this.m_Name,
@@ -114,6 +120,7 @@ export class CreepWrapper extends ColonyMember {
         const creep = this.GetCreep()
 
         if (creep) {
+            this.m_Not_run_yet = true
             this.m_Behavior_type = new_behavior
             this.m_Behavior = this.behaviors.get(new_behavior)!!
         }

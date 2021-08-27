@@ -1,8 +1,6 @@
 import { GameEntityTypes } from "../../consts/GameConstants";
 import { ColonyMember } from "../../core/ColonyMember";
-import { ColonyMemberKey } from "../../types/Types";
-
-type HoleyArray<T> = Array<T | undefined>
+import { ColonyMemberKey, HoleyArray } from "../../types/Types";
 
 export class ColonyMemberMap {
     private m_Member_map: Map<string, ColonyMember>
