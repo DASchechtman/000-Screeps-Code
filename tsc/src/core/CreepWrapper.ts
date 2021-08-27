@@ -12,12 +12,13 @@ import { UpgradeBehavior } from "./CreepBehavior/UpgradeBehavior";
 import { RoomWrapper } from "./room/RoomWrapper";
 
 export class CreepWrapper extends ColonyMember {
-    private static behaviors = new Map<Behavior, CreepBehavior>()
+    private behaviors = new Map<Behavior, CreepBehavior>()
 
     private m_Name: string
     private m_Behavior_type: Behavior = Behavior.NONE
     private m_Behavior: CreepBehavior | undefined = undefined
     private type_file_path: string
+    private m_Base_path: string
     private m_Creep: Creep | undefined = undefined
 
     constructor(creep_name: string) {
@@ -25,23 +26,26 @@ export class CreepWrapper extends ColonyMember {
         super(GameEntityTypes.CREEP, creep_name)
 
         this.m_Name = creep_name
-        if (this.GetCreep()) {
-            this.type_file_path = HardDrive.Join(this.m_Name, "creep-type", "type")
+        const creep = this.GetCreep()
+        if (creep) {
+            this.m_Base_path = HardDrive.Join(creep.room.name, this.m_Name)
+            this.type_file_path = HardDrive.Join(this.m_Base_path, "creep-type", "type")
         }
         else {
             this.type_file_path = ""
+            this.m_Base_path = ""
         }
 
-        if (CreepWrapper.behaviors.size === 0) {
-            CreepWrapper.behaviors.set(Behavior.HARVEST, new HarvestBehavior())
-            CreepWrapper.behaviors.set(Behavior.UPGRADER, new UpgradeBehavior())
-            CreepWrapper.behaviors.set(Behavior.DEFENDER, new DefendBehavior())
-            CreepWrapper.behaviors.set(Behavior.BUILDER, new BuildBehavior())
-            CreepWrapper.behaviors.set(Behavior.REPAIR, new RepairBehavior())
+        if (this.behaviors.size === 0) {
+            this.behaviors.set(Behavior.HARVEST, new HarvestBehavior(this))
+            this.behaviors.set(Behavior.UPGRADER, new UpgradeBehavior(this))
+            this.behaviors.set(Behavior.DEFENDER, new DefendBehavior(this))
+            this.behaviors.set(Behavior.BUILDER, new BuildBehavior(this))
+            this.behaviors.set(Behavior.REPAIR, new RepairBehavior(this))
         }
     }
 
-    private GetCreep(): Creep | undefined {
+    public GetCreep(): Creep | undefined {
         if (!this.m_Creep) {
             this.m_Creep = Game.creeps[this.m_Name]
         }
@@ -52,7 +56,7 @@ export class CreepWrapper extends ColonyMember {
         const type = HardDrive.ReadFile(this.type_file_path)
         if (typeof type === 'number') {
             this.m_Behavior_type = type
-            this.m_Behavior = CreepWrapper.behaviors.get(this.m_Behavior_type)
+            this.m_Behavior = this.behaviors.get(this.m_Behavior_type)
         }
 
     }
@@ -68,7 +72,7 @@ export class CreepWrapper extends ColonyMember {
         }
         else {
             //console.log(`error: creep cant run. Internal Creep: ${this.m_Creep}, Internal behavior: ${this.m_Behavior}`)
-            HardDrive.DeleteFolder(this.m_Name)
+            HardDrive.DeleteFolder(this.m_Base_path)
             this.m_Signal = {
                 data: this.m_Name,
                 sender: this,
@@ -111,7 +115,11 @@ export class CreepWrapper extends ColonyMember {
 
         if (creep) {
             this.m_Behavior_type = new_behavior
-            this.m_Behavior = CreepWrapper.behaviors.get(new_behavior)!!
+            this.m_Behavior = this.behaviors.get(new_behavior)!!
         }
+    }
+
+    public GetPath(): string {
+        return this.m_Base_path
     }
 }

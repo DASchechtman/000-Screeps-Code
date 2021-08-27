@@ -14,7 +14,7 @@ export class PriorityStructuresStack {
 
             let sort_val = regular_struct + health_percent
 
-            if (el.GetType() === GameEntityTypes.TIMED_STRUCTURE) {
+            if (el.GetType() === GameEntityTypes.DEGRADABLE_STRUCT) {
                 sort_val = timed_struct + health_percent
             }
 

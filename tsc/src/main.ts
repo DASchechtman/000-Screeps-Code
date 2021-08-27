@@ -26,6 +26,7 @@ module.exports.loop = (): void => {
         colony.OnLoad()
         colony.OnRun()
         colony.OnSave()
+        colony.OnDestroy()
         
         if (colony.GetID() !== DEBUG_ROOM_NAME) {
             end += Game.cpu.getUsed() - start

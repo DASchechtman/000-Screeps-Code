@@ -8,27 +8,8 @@ export class StructureWrapper<T extends StructureConstant> extends ColonyMember 
 
     private m_Repair_creep_id: string | null
 
-    constructor(struct_id: string) {
-        let catagory = GameEntityTypes.ERROR
-        const struct = Game.getObjectById(struct_id as Id<Structure<T>>)
-        const timed_types: Array<StructureConstant> = [STRUCTURE_RAMPART, STRUCTURE_CONTAINER, STRUCTURE_ROAD]
-        const behavior_types: Array<StructureConstant> = [STRUCTURE_TOWER, STRUCTURE_LINK]
-
-        if (struct) {
-
-            if (timed_types.includes(struct.structureType)) {
-                catagory = GameEntityTypes.TIMED_STRUCTURE
-            }
-            else if (behavior_types.includes(struct.structureType)) {
-                catagory = GameEntityTypes.BEHAVIOR_STRUCT
-            }
-            else {
-                catagory = GameEntityTypes.STRUCT
-            }
-        }
-       
-
-        super(catagory, struct_id)
+    constructor(struct_id: string, type: GameEntityTypes = GameEntityTypes.STRUCT) {
+        super(type, struct_id)
         this.m_Repair_creep_id = null
     }
 

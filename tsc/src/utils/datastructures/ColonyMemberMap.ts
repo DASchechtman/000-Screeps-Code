@@ -2,9 +2,11 @@ import { GameEntityTypes } from "../../consts/GameConstants";
 import { ColonyMember } from "../../core/ColonyMember";
 import { ColonyMemberKey } from "../../types/Types";
 
+type HoleyArray<T> = Array<T | undefined>
+
 export class ColonyMemberMap {
     private m_Member_map: Map<string, ColonyMember>
-    private m_Type_map: Array<Array<ColonyMember>>
+    private m_Type_map: HoleyArray<Array<ColonyMember>>
 
     constructor() {
         this.m_Member_map = new Map()
@@ -12,11 +14,13 @@ export class ColonyMemberMap {
     }
 
     Put(member: ColonyMember): void {
-        if (!this.m_Type_map[member.GetType()]) {
-            this.m_Type_map[member.GetType()] = new Array()
+        let type_array = this.m_Type_map[member.GetType()]
+        if (!type_array) {
+            type_array = new Array()
+            this.m_Type_map[member.GetType()] = type_array
         }
 
-        this.m_Type_map[member.GetType()].push(member)
+        type_array.push(member)
 
         if (!this.m_Member_map.has(member.GetID())) {
             this.m_Member_map.set(member.GetID(), member)
@@ -52,8 +56,9 @@ export class ColonyMemberMap {
     }
 
     DeleteByType(type: GameEntityTypes): void {
-        if (this.m_Type_map[type]) {
-            const new_array = this.m_Type_map[type].filter((val): boolean => {
+        const old_array = this.m_Type_map[type]
+        if (old_array) {
+            const new_array = old_array.filter((val): boolean => {
                 this.m_Member_map.delete(val.GetID())
                 return false
             })
@@ -63,9 +68,11 @@ export class ColonyMemberMap {
     }
 
     ForEach(call_back_fnc: (member: ColonyMember) => void) {
-        this.m_Member_map.forEach((val, key) => {
-            call_back_fnc(val)
-        })
+        this.m_Member_map.forEach(call_back_fnc)
+    }
+
+    ForEachByType(type: GameEntityTypes, call_back_fnc: (member: ColonyMember) => void) {
+        this.m_Type_map[type]?.forEach(call_back_fnc)
     }
 
     HasMember(member_id: string): boolean {

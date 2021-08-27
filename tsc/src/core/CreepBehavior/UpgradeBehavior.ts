@@ -1,12 +1,17 @@
 import { ActionDistance } from "../../consts/CreepBehaviorConsts"
 import { JsonObj, SignalMessage } from "../../types/Interfaces"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
+import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
 import { CreepBehavior } from "./CreepBehavior"
 
 
 export class UpgradeBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
+
+    constructor(wrapper: CreepWrapper) {
+        super(wrapper)
+    }
 
     Load(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
@@ -26,7 +31,7 @@ export class UpgradeBehavior extends CreepBehavior {
                 this.Upgrade(creep, controller)
             }
             else if (this.m_Data.can_upgrade === false) {
-                this.Harvest(creep, source)
+                this.Harvest(source)
             }
         }
     }
@@ -49,7 +54,7 @@ export class UpgradeBehavior extends CreepBehavior {
             dist = ActionDistance.CHANGE_SIGN
         }
 
-        if (!this.MoveTo(dist, creep, controller)) {
+        if (!this.MoveTo(dist, controller)) {
             if (dist === ActionDistance.CHANGE_SIGN) {
                 creep.signController(controller, msg)
             }

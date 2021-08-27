@@ -4,6 +4,7 @@ import { RoomPos } from "../../types/Types"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
 import { InRoomPathFinder } from "../../utils/navigation/InRoomPathFinder"
 import { ColonyMember } from "../ColonyMember"
+import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
 import { SourceWrapper } from "../SourceWrapper"
 
@@ -11,11 +12,17 @@ import { SourceWrapper } from "../SourceWrapper"
 
 export abstract class CreepBehavior {
 
+    private m_Wrapper: CreepWrapper
+
+    constructor(wrapper: CreepWrapper) {
+        this.m_Wrapper = wrapper
+    }
+
     abstract Load(creep: Creep): void
     abstract Run(creep: Creep, room: RoomWrapper): void
     abstract Save(creep: Creep): void
     abstract Destroy(creep: Creep): void
-    
+
     ReceiveSignal(signal: SignalMessage): boolean {
         return false
     }
@@ -38,10 +45,11 @@ export abstract class CreepBehavior {
         return possible_source
     }
 
-    protected MoveTo(distance: number, creep: Creep, location: RoomPos) {
+    protected MoveTo(distance: number, location: RoomPos) {
         const p = new InRoomPathFinder()
-        p.GeneratePath(creep, location, distance)
-        return p.MoveTo(creep)
+        p.GeneratePath(this.m_Wrapper, location, distance)
+        return p.MoveTo(this.m_Wrapper)
+
     }
 
     protected GetSource(creep: Creep, room: RoomWrapper): Source {
@@ -69,21 +77,25 @@ export abstract class CreepBehavior {
         return correct_source
     }
 
-    protected Harvest(creep: Creep, source: Source): number {
+    protected Harvest(source: Source): number {
         let moved = 0
         const can_harvest = new SourceWrapper(source.id).HasFreeSpot()
-        const is_close_to_source = creep.pos.inRangeTo(source, ActionDistance.HARVEST)
-        const path_finder = new InRoomPathFinder()
+        const creep = this.m_Wrapper.GetCreep()
 
-        if (can_harvest) {
-            path_finder.GeneratePath(creep, source, ActionDistance.HARVEST)
-            if (!path_finder.MoveTo(creep)) {
-                moved = 1
+        if (creep) {
+            const is_close_to_source = creep.pos.inRangeTo(source, ActionDistance.HARVEST)
+            const path_finder = new InRoomPathFinder()
+
+            if (can_harvest) {
+                path_finder.GeneratePath(this.m_Wrapper, source, ActionDistance.HARVEST)
+                if (!path_finder.MoveTo(this.m_Wrapper)) {
+                    moved = 1
+                    creep.harvest(source)
+                }
+            }
+            else if (!can_harvest && is_close_to_source) {
                 creep.harvest(source)
             }
-        }
-        else if (!can_harvest && is_close_to_source) {
-            creep.harvest(source)
         }
 
         return moved
@@ -107,6 +119,6 @@ export abstract class CreepBehavior {
     }
 
     protected GetFolderPath(creep: Creep) {
-        return HardDrive.Join(creep.name, "behavior-data")
+        return HardDrive.Join(this.m_Wrapper.GetPath(), "behavior-data")
     }
 }

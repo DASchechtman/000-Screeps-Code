@@ -5,7 +5,7 @@ export enum GameEntityTypes {
     COLONY,
     CREEP,
     STRUCT,
-    TIMED_STRUCTURE,
+    DEGRADABLE_STRUCT,
     BEHAVIOR_STRUCT,
     ERROR
 }

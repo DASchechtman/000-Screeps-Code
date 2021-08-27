@@ -2,6 +2,7 @@ import { ActionDistance } from "../../consts/CreepBehaviorConsts"
 import { JsonObj, SignalMessage } from "../../types/Interfaces"
 import { Container } from "../../types/Types"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
+import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
 import { SourceWrapper } from "../SourceWrapper"
 import { CreepBehavior } from "./CreepBehavior"
@@ -9,6 +10,10 @@ import { CreepBehavior } from "./CreepBehavior"
 
 export class HarvestBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
+
+    constructor(wrapper: CreepWrapper) {
+        super(wrapper)
+    }
 
     Load(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
@@ -41,7 +46,7 @@ export class HarvestBehavior extends CreepBehavior {
                 this.DepositToContainer(creep, container)
             }
             else {
-                this.Harvest(creep, source)
+                this.Harvest(source)
             }
         }
 
@@ -89,7 +94,7 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     private DepositToContainer(creep: Creep, container: Container) {
-        if (!this.MoveTo(ActionDistance.TRANSFER, creep, container)) {
+        if (!this.MoveTo(ActionDistance.TRANSFER, container)) {
             creep.transfer(container, RESOURCE_ENERGY)
         }
     }
@@ -101,7 +106,7 @@ export class HarvestBehavior extends CreepBehavior {
 
         if (!source) {
             source = creep.pos.findClosestByPath(FIND_SOURCES)
-            if (!new SourceWrapper(source!!.id).HasFreeSpot()) {
+            if (source && !new SourceWrapper(source!!.id).HasFreeSpot()) {
                 source = this.GetSource(creep, room)
             }
         }

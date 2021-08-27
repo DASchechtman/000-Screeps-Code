@@ -4,6 +4,7 @@ import { JsonObj, SignalMessage } from "../../types/Interfaces"
 import { JsonType } from "../../types/Types"
 import { PriorityQueue } from "../../utils/datastructures/PriorityQueue"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
+import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
 import { SourceWrapper } from "../SourceWrapper"
 import { CreepBehavior } from "./CreepBehavior"
@@ -14,8 +15,8 @@ export class BuildBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
     private m_Site_queue: PriorityQueue<ConstructionSite>
 
-    constructor() {
-        super()
+    constructor(wrapper: CreepWrapper) {
+        super(wrapper)
         this.m_Site_queue = new PriorityQueue((el) => {
             let sort_val = 50000
             if (el.structureType === STRUCTURE_EXTENSION) {
@@ -57,7 +58,7 @@ export class BuildBehavior extends CreepBehavior {
             }
             else {
                 this.m_Data.id = source!!.id
-                this.Harvest(creep, source!!)
+                this.Harvest(source!!)
             }
         }
         else {
@@ -74,7 +75,7 @@ export class BuildBehavior extends CreepBehavior {
 
 
     private Build(creep: Creep, build_site: ConstructionSite): void {
-        if (!this.MoveTo(ActionDistance.BUILD, creep, build_site)) {
+        if (!this.MoveTo(ActionDistance.BUILD, build_site)) {
             creep.build(build_site)
         }
     }

@@ -1,8 +1,8 @@
 import { GameEntityTypes } from "../consts/GameConstants"
 import { StructureWrapper } from "./StructureWrapper"
 
-export class TimedStructureWrapper<T extends StructureConstant> extends StructureWrapper<T> {
+export class DegradableStructureWrapper<T extends StructureConstant> extends StructureWrapper<T> {
     constructor(struct: Id<Structure<T>>) {
-        super(struct)
+        super(struct, GameEntityTypes.DEGRADABLE_STRUCT)
     }
 }

@@ -1,3 +1,4 @@
+import { CreepWrapper } from "../../core/CreepWrapper"
 import { TerrainTypes } from "../../types/Enums"
 import { GridNode, GridNodePoint, JsonObj, Point } from "../../types/Interfaces"
 import { RoomPos, RoomPosObj } from "../../types/Types"
@@ -225,13 +226,14 @@ export class InRoomPathFinder {
         return path
     }
 
-    private GetPath(creep: Creep): JsonObj {
-        const path = HardDrive.Join(creep.name, "path")
+    private GetPath(creep: CreepWrapper): JsonObj {
+        const path = HardDrive.Join(creep.GetPath(), "path")
         return HardDrive.ReadFolder(path)
     }
 
-    private SavePath(creep: Creep, data: JsonObj) {
-        const path = HardDrive.Join(creep.name, "path")
+    private SavePath(creep: CreepWrapper, data: JsonObj) {
+        debugger
+        const path = HardDrive.Join(creep.GetPath(), "path")
         HardDrive.WriteFiles(path, data)
     }
 
@@ -244,69 +246,73 @@ export class InRoomPathFinder {
         }
     }
 
-    GeneratePath(creep: Creep, obj: RoomPos, dist: number = 1): boolean {
-        const obj_point = this.GetPoint(obj)
-        const creep_point = this.GetPoint(creep)
-
+    GeneratePath(wrapper: CreepWrapper, obj: RoomPos, dist: number = 1): boolean {
+        const creep = wrapper.GetCreep()
         let moved = false
 
-        if (!this.InRange(creep_point, obj_point, dist)) {
+        if (creep) {
+            const obj_point = this.GetPoint(obj)
+            const creep_point = this.GetPoint(creep)
+
+            if (!this.InRange(creep_point, obj_point, dist)) {
 
 
-            const start_node: GridNode = {
-                G: 0,
-                H: 0,
-                F: 0,
-                pos: creep_point
-            }
-
-            const data = this.GetPath(creep)
-
-            let path_array = data.steps as Array<DirectionConstant | null>
-            let path_index = data.index as number
-
-            if (!path_array) {
-                path_array = new Array()
-            }
-
-            if (path_array.length === 0) {
-                const grid_key = creep.room.name
-                if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
-                    InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
+                const start_node: GridNode = {
+                    G: 0,
+                    H: 0,
+                    F: 0,
+                    pos: creep_point
                 }
-                this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
-                const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, 128)
-                path_index = 0
-                
-                for (let node of path_steps) {
-                    let direction: DirectionConstant | null = null
-                    if (node) {
-                        direction = node.dir
+
+                const data = this.GetPath(wrapper)
+
+                let path_array = data.steps as Array<DirectionConstant | null>
+                let path_index = data.index as number
+
+                if (!path_array) {
+                    path_array = new Array()
+                }
+
+                if (path_array.length === 0) {
+                    const grid_key = creep.room.name
+                    if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
+                        InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
                     }
-                    path_array.push(direction)
+                    this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
+                    const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, 128)
+                    path_index = 0
+
+                    for (let node of path_steps) {
+                        let direction: DirectionConstant | null = null
+                        if (node) {
+                            direction = node.dir
+                        }
+                        path_array.push(direction)
+                    }
                 }
+
+                this.SavePath(wrapper, {
+                    index: path_index,
+                    steps: path_array
+                })
+
+                //this.MarkPathAsUsed(path_index, dir)
+
             }
-
-            this.SavePath(creep, {
-                index: path_index,
-                steps: path_array
-            })
-
-            //this.MarkPathAsUsed(path_index, dir)
-
         }
 
         return moved
     }
 
-    MoveTo(creep: Creep): boolean {
+    MoveTo(wrapper: CreepWrapper): boolean {
         let moved = false
-        
-        const data = this.GetPath(creep)
+
+        const data = this.GetPath(wrapper)
+        const creep = wrapper.GetCreep()
         let path_array = data.steps as Array<DirectionConstant | null>
         let path_index = data.index as number
 
-        if (path_array && path_array[0]) {
+        if (creep && path_array && path_array[0]) {
             const ret = creep.move(path_array[0])
             if (ret === OK) {
                 moved = true
@@ -328,7 +334,7 @@ export class InRoomPathFinder {
             path_data.index = 0
         }
 
-        this.SavePath(creep, path_data)
+        this.SavePath(wrapper, path_data)
 
         return moved
     }

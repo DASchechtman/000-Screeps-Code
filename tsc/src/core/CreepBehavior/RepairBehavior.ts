@@ -3,6 +3,7 @@ import { GameEntityTypes } from "../../consts/GameConstants"
 import { JsonObj, Signal, SignalMessage } from "../../types/Interfaces"
 import { PriorityStructuresStack } from "../../utils/datastructures/PriorityStructuresStack"
 import { HardDrive } from "../../utils/harddrive/HardDrive"
+import { CreepWrapper } from "../CreepWrapper"
 import { RoomWrapper } from "../room/RoomWrapper"
 import { SourceWrapper } from "../SourceWrapper"
 import { StructureWrapper } from "../StructureWrapper"
@@ -14,6 +15,10 @@ export class RepairBehavior extends CreepBehavior {
     private m_Data: JsonObj = {}
     private m_Struct_Stack: PriorityStructuresStack | null = null
     private m_Max_time = 10
+
+    constructor(wrapper: CreepWrapper) {
+        super(wrapper)
+    }
 
     private GetStack(): PriorityStructuresStack {
         if (!this.m_Struct_Stack) {
@@ -68,7 +73,7 @@ export class RepairBehavior extends CreepBehavior {
 
             if (source) {
                 this.m_Data.source_id = source.id
-                this.Harvest(creep, source)
+                this.Harvest(source)
             }
         }
 
@@ -90,10 +95,9 @@ export class RepairBehavior extends CreepBehavior {
         if (
             (signal.sender.GetType() === GameEntityTypes.BEHAVIOR_STRUCT
             || signal.sender.GetType() === GameEntityTypes.STRUCT
-            || signal.sender.GetType() === GameEntityTypes.TIMED_STRUCTURE)
+            || signal.sender.GetType() === GameEntityTypes.DEGRADABLE_STRUCT)
             && !struct_list.includes(signal.sender as StructureWrapper<any>)
         ) {
-            debugger
             was_processed = true
             stack.Add(signal.sender as StructureWrapper<any>)
         }
@@ -102,7 +106,7 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     private Repair(creep: Creep, struct: Structure<any>) {
-        if (!this.MoveTo(ActionDistance.REPAIR, creep, struct)) {
+        if (!this.MoveTo(ActionDistance.REPAIR, struct)) {
             creep.repair(struct)
             this.IncCounter()
         }

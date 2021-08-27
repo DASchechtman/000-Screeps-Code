@@ -29,12 +29,14 @@ export class PriorityQueue<T> {
         let mid = Math.trunc(size / 2)
         let mid_adjust = mid
 
-        const InLoopRange = function(index: number, size: number) { return mid >= 0 && mid < size }
+        const InLoopRange = function(index: number, size: number) { return index >= 0 && index < size }
 
         while (InLoopRange(mid, size)) {
             const el = this.m_ToNumber(val)
             const cur_item = this.m_ToNumber(this.m_Queue.Get(mid)!!)
 
+            // checks to see if item to insert (el) is between the values of Queue[i-1] and Queue[i]
+            // if that is the case then it's clear that el should be inserted there
             let found_index = (function(ToNum: (el: T) => number, queue: LinkedList<T>, el: number, cur_item: number) {
                 let should_break = false
                 const check_for_spot = mid >= 1 && size >= 2
@@ -56,8 +58,8 @@ export class PriorityQueue<T> {
             })(this.m_ToNumber, this.m_Queue, el, cur_item)
 
             // in the event an index isn't found, checks to see if a new
-            // index should be evaluated. Also checks to see if the value of el
-            // equals the value of the current index
+            // index should be evaluated. Also checks to see if the value of 
+            // el == Queue[i] to avoid infinite loops
             let found_equal_val = found_index ? found_index : (function(el: number, cur_item: number) {
                 let should_break = false
                 let new_index = Math.trunc(mid_adjust / 2)

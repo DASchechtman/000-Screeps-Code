@@ -31,7 +31,7 @@ export class StructuresStack {
     }
 
     private PushToStack(struct: StructureWrapper<any>, index: StructStackIndex): void {
-        const is_timed = struct.GetType() === GameEntityTypes.TIMED_STRUCTURE
+        const is_timed = struct.GetType() === GameEntityTypes.DEGRADABLE_STRUCT
         const is_rampart = struct.GetStructure()?.structureType === STRUCTURE_RAMPART
  
         if (is_timed && is_rampart) {

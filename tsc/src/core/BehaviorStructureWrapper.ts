@@ -3,7 +3,7 @@ import { StructureWrapper } from "./StructureWrapper";
 
 export class BehaviorStructureWrapper<T extends StructureConstant> extends StructureWrapper<T> {
     constructor(struct: Id<Structure<T>>) {
-        super(struct)
+        super(struct, GameEntityTypes.BEHAVIOR_STRUCT)
     }
 
     OnRun(): void {
