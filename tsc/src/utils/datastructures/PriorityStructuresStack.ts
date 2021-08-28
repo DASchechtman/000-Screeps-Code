@@ -1,5 +1,6 @@
 import { GameEntityTypes } from "../../consts/GameConstants";
 import { StructureWrapper } from "../../core/StructureWrapper";
+import { BinaryHeap } from "./BinaryHeap";
 import { PriorityQueue } from "./PriorityQueue";
 
 export class PriorityStructuresStack {
@@ -40,7 +41,7 @@ export class PriorityStructuresStack {
         return this.m_Queue.Size()
     }
 
-    ToArray(): Array<StructureWrapper<any>> {
-        return this.m_Queue.ToArray()
+    ToHeap(): BinaryHeap<StructureWrapper<any>> {
+        return this.m_Queue.ToHeap()
     }
 }

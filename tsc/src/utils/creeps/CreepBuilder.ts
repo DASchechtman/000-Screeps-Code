@@ -19,7 +19,7 @@ export function BuildBody(enegy_cost_cap: number, body_parts: Array<BodyPartCons
         for (let part of body_parts) {
             const part_cost = GetEnergyConst(part)
 
-            if (part_cost + total >= enegy_cost_cap) {
+            if (part_cost + total > enegy_cost_cap) {
                 building = false
                 break
             }

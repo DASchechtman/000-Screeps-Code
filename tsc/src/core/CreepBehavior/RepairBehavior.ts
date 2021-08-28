@@ -85,7 +85,7 @@ export class RepairBehavior extends CreepBehavior {
 
             if (source) {
                 this.m_Data.source_id = source.id
-                this.Harvest(source)
+                this.Harvest(source, room)
             }
         }
 
@@ -105,7 +105,7 @@ export class RepairBehavior extends CreepBehavior {
         let was_processed = false
         const stack = this.GetStack()
 
-        const has_struct = stack.ToArray().some(val => val.GetID() === signal.sender.GetID())
+        const has_struct = stack.ToHeap().Has(val => val.GetID() === signal.sender.GetID())
 
         if (
             (signal.sender.GetType() === GameEntityTypes.BEHAVIOR_STRUCT

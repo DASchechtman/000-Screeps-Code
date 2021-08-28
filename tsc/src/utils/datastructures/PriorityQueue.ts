@@ -1,11 +1,12 @@
+import { BinaryHeap } from "./BinaryHeap"
 import { LinkedList } from "./LinkedList"
 
 export class PriorityQueue<T> {
-    private m_Queue: LinkedList<T>
+    private m_Queue: BinaryHeap<T>
     private m_ToNumber: (el: T) => number
 
     constructor(sort: (el: T) => number) {
-        this.m_Queue = new LinkedList()
+        this.m_Queue = new BinaryHeap(sort)
         this.m_ToNumber = sort
     }
 
@@ -24,83 +25,8 @@ export class PriorityQueue<T> {
         }
     }
 
-    private FindInsertIndex(val: T): number {
-        const size = this.m_Queue.Size()
-        let mid = Math.trunc(size / 2)
-        let mid_adjust = mid
-
-        const InLoopRange = function(index: number, size: number) { return index >= 0 && index < size }
-
-        while (InLoopRange(mid, size)) {
-            const el = this.m_ToNumber(val)
-            const cur_item = this.m_ToNumber(this.m_Queue.Get(mid)!!)
-
-            // checks to see if item to insert (el) is between the values of Queue[i-1] and Queue[i]
-            // if that is the case then it's clear that el should be inserted there
-            let found_index = (function(ToNum: (el: T) => number, queue: LinkedList<T>, el: number, cur_item: number) {
-                let should_break = false
-                const check_for_spot = mid >= 1 && size >= 2
-                const prev_element = queue.Get(mid - 1)
-
-                if (check_for_spot && prev_element) {
-                    const prev_item = ToNum(prev_element)
-                    if (el >= prev_item && el <= cur_item) {
-                        should_break = true
-                    }
-                }
-                else if (size < 2) {
-                    if (el <= cur_item) {
-                        should_break = true
-                    }
-                }
-
-                return should_break
-            })(this.m_ToNumber, this.m_Queue, el, cur_item)
-
-            // in the event an index isn't found, checks to see if a new
-            // index should be evaluated. Also checks to see if the value of 
-            // el == Queue[i] to avoid infinite loops
-            let found_equal_val = found_index ? found_index : (function(el: number, cur_item: number) {
-                let should_break = false
-                let new_index = Math.trunc(mid_adjust / 2)
-
-                if (new_index === 0) {
-                    new_index = 1
-                }
-
-                if (el > cur_item) {
-                    mid += new_index
-                }
-                else if (el < cur_item) {
-                    mid -= new_index
-                }
-                else {
-                    should_break = true
-                }
-
-                mid_adjust = new_index
-
-                return should_break
-            })(el, cur_item)
-
-            if (found_equal_val) {
-                break
-            }
-        }
-
-        if (mid < 0) {
-            mid = 0
-        }
-        else if (mid >= size) {
-            mid = size
-        }
-
-        return mid
-    }
-
     Push(el: T): void {
-        const index = this.FindInsertIndex(el)
-        this.m_Queue.Insert(index, el)
+        this.m_Queue.Add(el)
     }
 
     PushArray(el: T[]) {
@@ -126,25 +52,14 @@ export class PriorityQueue<T> {
     }
 
     Clear(): void {
-        this.m_Queue = new LinkedList()
+        this.m_Queue = new BinaryHeap(this.m_ToNumber)
     }
 
     Size(): number {
         return this.m_Queue.Size()
     }
 
-    ToArray(): Array<T> {
-        const cloned_array = new Array<T>()
-
-        for (let i = 0; i < this.m_Queue.Size(); i++) {
-            const el = this.m_Queue.Get(i)
-            if (el) {
-                cloned_array.push(el)
-            }
-        }
-
-        return cloned_array
+    ToHeap(): BinaryHeap<T> {
+        return this.m_Queue
     }
-
-
 }

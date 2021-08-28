@@ -60,7 +60,7 @@ export class BuildBehavior extends CreepBehavior {
             }
             else {
                 this.m_Data.id = source!!.id
-                this.Harvest(source!!)
+                this.Harvest(source!!, room)
             }
         }
         else {

@@ -11,7 +11,7 @@ import { BehaviorStructureWrapper } from "./BehaviorStructureWrapper";
 import { ColonyMember } from "./ColonyMember";
 import { CreepWrapper } from "./CreepWrapper";
 import { RoomWrapper } from "./room/RoomWrapper";
-import { Spawner } from "./Spawner";
+import { Spawner } from "../utils/creeps/Spawner";
 import { StructureWrapper } from "./StructureWrapper";
 import { DegradableStructureWrapper } from "./DegradableStructureWrapper";
 import { EventManager } from "../utils/event_handler/EventManager";

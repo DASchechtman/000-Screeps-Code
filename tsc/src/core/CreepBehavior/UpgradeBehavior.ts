@@ -33,7 +33,7 @@ export class UpgradeBehavior extends CreepBehavior {
                 this.Upgrade(creep, controller)
             }
             else if (this.m_Data.can_upgrade === false) {
-                this.Harvest(source)
+                this.Harvest(source, room)
             }
         }
     }

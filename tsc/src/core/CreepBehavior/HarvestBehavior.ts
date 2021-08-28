@@ -54,7 +54,7 @@ export class HarvestBehavior extends CreepBehavior {
                 this.DepositToContainer(creep, container)
             }
             else {
-                this.Harvest(source)
+                this.Harvest(source, room)
             }
         }
 

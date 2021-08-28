@@ -92,7 +92,7 @@ export abstract class CreepBehavior {
         return correct_source
     }
 
-    protected Harvest(source: Source): number {
+    protected Harvest(source: Source, room: RoomWrapper): number {
         let moved = 0
         const can_harvest = new SourceWrapper(source.id).HasFreeSpot()
         const creep = this.m_Wrapper.GetCreep()

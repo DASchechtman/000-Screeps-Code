@@ -1,3 +1,4 @@
+import path from "path/posix"
 import { CreepWrapper } from "../../core/CreepWrapper"
 import { TerrainTypes } from "../../types/Enums"
 import { GridNode, GridNodePoint, JsonObj, Point } from "../../types/Interfaces"
@@ -135,6 +136,7 @@ export class InRoomPathFinder {
     }
 
     private AddToOpen(queue: PriorityQueue<GridNode>, map: Map<GridNode, undefined>, val: GridNode) {
+        debugger
         queue.Push(val)
         map.set(val, undefined)
     }
@@ -232,7 +234,6 @@ export class InRoomPathFinder {
     }
 
     private SavePath(creep: CreepWrapper, data: JsonObj) {
-        debugger
         const path = HardDrive.Join(creep.GetPath(), "path")
         HardDrive.WriteFiles(path, data)
     }
@@ -246,17 +247,15 @@ export class InRoomPathFinder {
         }
     }
 
-    GeneratePath(wrapper: CreepWrapper, obj: RoomPos, dist: number = 1): boolean {
+    GeneratePath(wrapper: CreepWrapper, obj: RoomPos, dist: number = 1): number {
         const creep = wrapper.GetCreep()
-        let moved = false
+        let path_generated = -1
 
         if (creep) {
             const obj_point = this.GetPoint(obj)
             const creep_point = this.GetPoint(creep)
 
             if (!this.InRange(creep_point, obj_point, dist)) {
-
-
                 const start_node: GridNode = {
                     G: 0,
                     H: 0,
@@ -274,6 +273,7 @@ export class InRoomPathFinder {
                 }
 
                 if (path_array.length === 0) {
+                    path_generated = 1
                     const grid_key = creep.room.name
                     if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
                         InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
@@ -290,18 +290,22 @@ export class InRoomPathFinder {
                         path_array.push(direction)
                     }
                 }
+                else {
+                    path_generated = 0
+                }
 
                 this.SavePath(wrapper, {
                     index: path_index,
                     steps: path_array
                 })
-
-                //this.MarkPathAsUsed(path_index, dir)
-
             }
         }
 
-        return moved
+        return path_generated
+    }
+
+    ClearPath(wrapper: CreepWrapper) {
+        this.SavePath(wrapper, {})
     }
 
     MoveTo(wrapper: CreepWrapper): boolean {

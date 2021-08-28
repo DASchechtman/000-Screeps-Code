@@ -1,7 +1,7 @@
-import { Behavior } from "../consts/CreepBehaviorConsts"
-import { PriorityQueue } from "../utils/datastructures/PriorityQueue"
-import { CreepWrapper } from "./CreepWrapper"
-import { RoomWrapper } from "./room/RoomWrapper"
+import { Behavior } from "../../consts/CreepBehaviorConsts"
+import { PriorityQueue } from "../datastructures/PriorityQueue"
+import { CreepWrapper } from "../../core/CreepWrapper"
+import { RoomWrapper } from "../../core/room/RoomWrapper"
 
 enum PriorityLevel {
     ULTRA_HIGH,
@@ -157,7 +157,7 @@ export class Spawner {
         queue.PushArray(this.BuilderRule())
         queue.PushArray(this.RepairRule())
 
-        let arr = queue.ToArray().map((val) => {return val.behavior})
+        let arr = queue.ToHeap().Map((val) => {return val.behavior})
         return arr
     }
 }
