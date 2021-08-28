@@ -94,6 +94,7 @@ export class RepairBehavior extends CreepBehavior {
 
     Save(creep: Creep): void {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
+        //this.m_Struct_Stack = null
     }
 
     Destroy(creep: Creep | null): void {
@@ -103,12 +104,14 @@ export class RepairBehavior extends CreepBehavior {
     ReceiveSignal(signal: SignalMessage): boolean {
         let was_processed = false
         const stack = this.GetStack()
-        const struct_list = stack.ToArray()
+
+        const has_struct = stack.ToArray().some(val => val.GetID() === signal.sender.GetID())
+
         if (
             (signal.sender.GetType() === GameEntityTypes.BEHAVIOR_STRUCT
             || signal.sender.GetType() === GameEntityTypes.STRUCT
             || signal.sender.GetType() === GameEntityTypes.DEGRADABLE_STRUCT)
-            && !struct_list.includes(signal.sender as StructureWrapper<any>)
+            && !has_struct
         ) {
             was_processed = true
             stack.Add(signal.sender as StructureWrapper<any>)

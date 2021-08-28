@@ -18,6 +18,8 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     Init(creep: Creep): void {
+        // just a test of the event management system. Will remove it in
+        // future development iterations
         EventManager.GetInst().AddEventMethod(EventTypes.INVASION, this.OnInvasion)
     }
 
