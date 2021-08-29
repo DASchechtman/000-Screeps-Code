@@ -28,9 +28,9 @@ export class RepairBehavior extends CreepBehavior {
         return this.m_Struct_Stack
     }
 
-    Init(creep: Creep): void {}
+    InitCreep(creep: Creep): void {}
 
-    Load(creep: Creep): void {
+    InitTick(creep: Creep): void {
 
         const data_behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
         const cur_state = data_behavior?.full === undefined ? false : data_behavior.full as boolean
@@ -51,7 +51,7 @@ export class RepairBehavior extends CreepBehavior {
         }
     }
 
-    Run(creep: Creep, room: RoomWrapper): void {
+    RunTick(creep: Creep, room: RoomWrapper): void {
         let source = Game.getObjectById(this.m_Data.source_id as Id<Source>)
 
 
@@ -92,12 +92,12 @@ export class RepairBehavior extends CreepBehavior {
 
     }
 
-    Save(creep: Creep): void {
+    FinishTick(creep: Creep): void {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
-        //this.m_Struct_Stack = null
+        this.m_Struct_Stack?.Clear()
     }
 
-    Destroy(creep: Creep | null): void {
+    DestroyCreep(creep: Creep | null): void {
         this.m_Struct_Stack = null
     }
 
@@ -105,13 +105,10 @@ export class RepairBehavior extends CreepBehavior {
         let was_processed = false
         const stack = this.GetStack()
 
-        const has_struct = stack.ToHeap().Has(val => val.GetID() === signal.sender.GetID())
-
         if (
             (signal.sender.GetType() === GameEntityTypes.BEHAVIOR_STRUCT
             || signal.sender.GetType() === GameEntityTypes.STRUCT
             || signal.sender.GetType() === GameEntityTypes.DEGRADABLE_STRUCT)
-            && !has_struct
         ) {
             was_processed = true
             stack.Add(signal.sender as StructureWrapper<any>)

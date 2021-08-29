@@ -29,9 +29,9 @@ export class BuildBehavior extends CreepBehavior {
         })
     }
 
-    Init(creep: Creep): void {}
+    InitCreep(creep: Creep): void {}
 
-    Load(creep: Creep): void {
+    InitTick(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
         const cur_state = Boolean(behavior?.can_build)
         const source_id = String(behavior?.id)
@@ -41,7 +41,7 @@ export class BuildBehavior extends CreepBehavior {
         }
     }
 
-    Run(creep: Creep, room: RoomWrapper): void {
+    RunTick(creep: Creep, room: RoomWrapper): void {
         const sites = room.GetConstructionSites()[0]
 
         if (sites) {
@@ -69,11 +69,11 @@ export class BuildBehavior extends CreepBehavior {
         }
     }
 
-    Save(creep: Creep): void {
+    FinishTick(creep: Creep): void {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
     }
 
-    Destroy(creep: Creep | null): void {}
+    DestroyCreep(creep: Creep | null): void {}
 
 
     private Build(creep: Creep, build_site: ConstructionSite): void {

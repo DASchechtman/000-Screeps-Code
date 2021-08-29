@@ -170,6 +170,22 @@ export class HardDrive {
         this.DeleteData(data, part, !this.IsJsonType(data[part]), "Error: Trying to delete a folder")
     }
 
+    static CreateFolder(path: string): void {
+        const disk = this.GetInfoAt(path)
+        const folder = disk.disk
+        const name = disk.data_id
+        
+        folder[name] = {}
+    }
+
+    static Has(path: string): boolean {
+        const disk = this.GetInfoAt(path)
+        const data = disk.disk
+        const name = disk.data_id
+
+        return data[name] !== undefined
+    }
+
     static CommitChanges(): void {
         if (HardDrive.disk_data) {
             RawMemory.set(JSON.stringify(HardDrive.disk_data))

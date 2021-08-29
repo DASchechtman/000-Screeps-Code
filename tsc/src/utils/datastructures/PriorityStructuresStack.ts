@@ -44,4 +44,8 @@ export class PriorityStructuresStack {
     ToHeap(): BinaryHeap<StructureWrapper<any>> {
         return this.m_Queue.ToHeap()
     }
+
+    Clear(): void {
+        this.m_Queue.Clear()
+    }
 }

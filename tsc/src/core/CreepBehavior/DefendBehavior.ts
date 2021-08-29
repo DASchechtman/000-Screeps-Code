@@ -12,13 +12,13 @@ export class DefendBehavior extends CreepBehavior {
         super(wrapper)
     }
 
-    Init(creep: Creep): void {}
+    InitCreep(creep: Creep): void {}
    
-    Load(creep: Creep): void {}
+    InitTick(creep: Creep): void {}
 
-    Save(creep: Creep): void {}
+    FinishTick(creep: Creep): void {}
 
-    Run(creep: Creep, room: RoomWrapper): void {
+    RunTick(creep: Creep, room: RoomWrapper): void {
         const hostile_creeps = room.GetHostileCreeps()
 
         if(hostile_creeps.length > 0) {
@@ -36,6 +36,6 @@ export class DefendBehavior extends CreepBehavior {
         }
     }
 
-    Destroy(creep: Creep | null): void {}
+    DestroyCreep(creep: Creep | null): void {}
 
 }

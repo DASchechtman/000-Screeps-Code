@@ -68,16 +68,16 @@ export class CreepWrapper extends ColonyMember {
             const room = new RoomWrapper(creep.room.name)
 
             if (this.m_Not_run_yet) {
-                this.m_Behavior.Init(creep)
+                this.m_Behavior.InitCreep(creep)
                 this.m_Not_run_yet = false
             }
 
-            this.m_Behavior.Load(creep)
-            this.m_Behavior.Run(creep, room)
-            this.m_Behavior.Save(creep)
+            this.m_Behavior.InitTick(creep)
+            this.m_Behavior.RunTick(creep, room)
+            this.m_Behavior.FinishTick(creep)
         }
         else {
-            this.m_Behavior?.Destroy(null)
+            this.m_Behavior?.DestroyCreep(null)
             HardDrive.DeleteFolder(this.m_Base_path)
             this.m_Signal = {
                 data: this.m_Name,

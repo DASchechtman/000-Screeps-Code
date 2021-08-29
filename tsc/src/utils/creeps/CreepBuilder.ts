@@ -1,3 +1,6 @@
+export const WORKER_BODY = [WORK, MOVE, CARRY, MOVE]
+export const DEFENDER_BODY = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH]
+
 export function GetEnergyConst(part: BodyPartConstant): number {
     return BODYPART_COST[part]
 }
@@ -43,12 +46,10 @@ export function GetBodyCost(body: Array<BodyPartConstant>): number {
 }
 
 export function BuildScalableWorker(avalible_energy: number) {
-    const WORKER_BODY = [WORK, MOVE, CARRY, MOVE]
     return BuildScalable(avalible_energy, WORKER_BODY)
 }
 
 export function BuildScalableDefender(avalible_energy: number) {
-    const DEFENDER_BODY = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH]
     return BuildScalable(avalible_energy, DEFENDER_BODY, 1800)
 }
 

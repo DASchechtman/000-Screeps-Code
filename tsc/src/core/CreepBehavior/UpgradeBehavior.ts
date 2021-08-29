@@ -13,9 +13,9 @@ export class UpgradeBehavior extends CreepBehavior {
         super(wrapper)
     }
 
-    Init(creep: Creep): void {}
+    InitCreep(creep: Creep): void {}
 
-    Load(creep: Creep): void {
+    InitTick(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
         const cur_state = Boolean(behavior?.can_upgrade)
         this.m_Data = {
@@ -23,7 +23,7 @@ export class UpgradeBehavior extends CreepBehavior {
         }
     }
 
-    Run(creep: Creep, room: RoomWrapper): void {
+    RunTick(creep: Creep, room: RoomWrapper): void {
         const controller = room.GetController()
 
         if (controller) {
@@ -38,11 +38,11 @@ export class UpgradeBehavior extends CreepBehavior {
         }
     }
 
-    Save(creep: Creep): void {
+    FinishTick(creep: Creep): void {
         HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
     }
 
-    Destroy(creep: Creep | null): void {}
+    DestroyCreep(creep: Creep | null): void {}
 
     Upgrade(creep: Creep, controller: StructureController) {
 

@@ -3,7 +3,7 @@ import { Behavior } from "../consts/CreepBehaviorConsts";
 import { EventTypes, GameEntityTypes } from "../consts/GameConstants";
 import { JsonObj, SignalMessage } from "../types/Interfaces";
 import { JsonList, JsonType } from "../types/Types";
-import { BuildScalableDefender, BuildScalableWorker } from "../utils/creeps/CreepBuilder";
+import { BuildScalableDefender, BuildScalableWorker, WORKER_BODY } from "../utils/creeps/CreepBuilder";
 import { ColonyMemberMap } from "../utils/datastructures/ColonyMemberMap";
 import { PriorityStructuresStack } from "../utils/datastructures/PriorityStructuresStack";
 import { HardDrive } from "../utils/harddrive/HardDrive";
@@ -51,6 +51,7 @@ export class Colony extends ColonyMember {
 
     private Spawn(spawn_type: number): void {
         const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
+        const num_of_creeps = this.m_Room.GetMyCreeps().length
         const energy_cap = this.m_Room.GetEnergyCapacity()
         const name = `${this.m_Room.GetName()} - ${Date.now()}`
         let body: Array<BodyPartConstant>
@@ -61,10 +62,17 @@ export class Colony extends ColonyMember {
         else {
             body = BuildScalableWorker(energy_cap)
         }
+        let ret = spawn.spawnCreep(body, name)
 
-        if (spawn.spawnCreep(body, name) === OK) {
+        if (ret === OK) {
             console.log(`saving behavior to ${Behavior[spawn_type]}`)
             this.RememberCreepDetails(name, spawn_type)
+        }
+        else if (ret === ERR_NOT_ENOUGH_ENERGY && num_of_creeps === 0) {
+            ret = spawn.spawnCreep(WORKER_BODY, name)
+            if (ret === OK) {
+                this.RememberCreepDetails(name, spawn_type)
+            }
         }
 
     }
@@ -159,6 +167,9 @@ export class Colony extends ColonyMember {
     }
 
     OnLoad(): void {
+        if (!HardDrive.Has(this.m_Room.GetName())) {
+            HardDrive.CreateFolder(this.m_Room.GetName())
+        }
         const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
         const limit = 10;
 
