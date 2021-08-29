@@ -144,6 +144,15 @@ export class Spawner {
         }
     }
 
+    public GetTrackedType(behavior: Behavior): number  {
+        let type = this.m_Type_tracker.get(behavior)
+        if (type === undefined) {
+            type = -1
+        }
+
+        return type
+    }
+
     public UntrackCreepTypes(): void {
         this.m_Type_tracker.clear()
     }

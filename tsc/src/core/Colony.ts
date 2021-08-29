@@ -49,9 +49,9 @@ export class Colony extends ColonyMember {
 
 
 
-    private Spawn(spawn_type: number): void {
+    private Spawn(spawn_type: number, tracker: Spawner): void {
         const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
-        const num_of_creeps = this.m_Room.GetMyCreeps().length
+        const num_of_harvesters = tracker.GetTrackedType(Behavior.HARVEST)
         const energy_cap = this.m_Room.GetEnergyCapacity()
         const name = `${this.m_Room.GetName()} - ${Date.now()}`
         let body: Array<BodyPartConstant>
@@ -68,7 +68,7 @@ export class Colony extends ColonyMember {
             console.log(`saving behavior to ${Behavior[spawn_type]}`)
             this.RememberCreepDetails(name, spawn_type)
         }
-        else if (ret === ERR_NOT_ENOUGH_ENERGY && num_of_creeps === 0) {
+        else if (ret === ERR_NOT_ENOUGH_ENERGY && num_of_harvesters === 0) {
             ret = spawn.spawnCreep(WORKER_BODY, name)
             if (ret === OK) {
                 this.RememberCreepDetails(name, spawn_type)
@@ -272,7 +272,7 @@ export class Colony extends ColonyMember {
 
         const spawn_list = spawner.CreateSpawnList()
         if (spawn_list.length > 0) {
-            this.Spawn(spawn_list[0])
+            this.Spawn(spawn_list[0], spawner)
         }
 
         const run_members = (member: ColonyMember): void => {
