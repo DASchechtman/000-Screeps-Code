@@ -4,17 +4,17 @@ import { ColonyMemberKey, HoleyArray } from "../../types/Types";
 
 export class ColonyMemberMap {
     private m_Member_map: Map<string, ColonyMember>
-    private m_Type_map: HoleyArray<Array<ColonyMember>>
+    private m_Type_map: HoleyArray<ColonyMember[]>
 
     constructor() {
         this.m_Member_map = new Map()
-        this.m_Type_map = new Array()
+        this.m_Type_map = []
     }
 
     Put(member: ColonyMember): void {
         let type_array = this.m_Type_map[member.GetType()]
         if (!type_array) {
-            type_array = new Array()
+            type_array = []
             this.m_Type_map[member.GetType()] = type_array
         }
 

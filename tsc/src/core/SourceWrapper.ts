@@ -11,7 +11,7 @@ export class SourceWrapper {
     }
 
     private GetSurroundingCoords(source: Source): Point[] {
-        const points = new Array<Point>()
+        const points: Point[] = []
 
         points.push({ x: source.pos.x - 1, y: source.pos.y })
         points.push({ x: source.pos.x + 1, y: source.pos.y })

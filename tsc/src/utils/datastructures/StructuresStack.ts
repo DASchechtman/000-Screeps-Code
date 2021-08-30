@@ -51,7 +51,7 @@ export class StructuresStack {
         const new_index: StructStackIndex = {
             index: struct.GetCurHealth(),
             timed_defense_index: 0,
-            array: new Array()
+            array: []
         }
 
         this.m_Stack.set(new_index.index, new_index)

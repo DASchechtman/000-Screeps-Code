@@ -1,8 +1,8 @@
 export class Queue<T> {
-    private m_Stack: Array<T>
+    private m_Stack: T[]
 
     constructor() {
-        this.m_Stack = new Array()
+        this.m_Stack = []
     }
 
     private AccessIndex(): number {
@@ -40,7 +40,7 @@ export class Queue<T> {
     }
 
     Clear(): void {
-        this.m_Stack = new Array()
+        this.m_Stack = []
     }
 
     IsEmpty(): boolean {

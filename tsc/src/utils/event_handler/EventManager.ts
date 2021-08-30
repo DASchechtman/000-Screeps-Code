@@ -4,10 +4,10 @@ import { HoleyArray } from "../../types/Types";
 export class EventManager {
     private static inst: EventManager | null = null
     
-    private events_list: HoleyArray<Array<(() => void)>>
+    private events_list: HoleyArray<(() => void)[]>
     
     private constructor() {
-        this.events_list = new Array()
+        this.events_list = []
     }
 
     public static GetInst(): EventManager {
@@ -27,7 +27,7 @@ export class EventManager {
 
     AddEventMethod(event: EventTypes, call_back: () => void) {
         if (!this.events_list[event]) {
-            this.events_list[event] = new Array()
+            this.events_list[event] = []
         }
 
         this.events_list[event]?.push(call_back)

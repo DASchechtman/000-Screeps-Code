@@ -43,8 +43,8 @@ export class ObjectsInRoom {
 
     AddSet(key: number, val: string) {
         this.AddKey(key, this.SET_TYPE)
-        const array = this.m_Objects.get(key) as Set<string>
-        array.add(val)
+        const set = this.m_Objects.get(key) as Set<string>
+        set.add(val)
     }
 
     GetMap(key: number): Map<string, Set<string>> | undefined {

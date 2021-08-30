@@ -11,6 +11,7 @@ import { InRoomGrid } from "./PathGrid"
 export class InRoomPathFinder {
     private static m_Room_grids: Map<string, InRoomGrid>
     private m_Grid: InRoomGrid | null = null
+    private m_Generator: Generator<{ dir: DirectionConstant, p: Point } | Point[] | undefined> | null = null
 
 
     constructor() {
@@ -37,7 +38,7 @@ export class InRoomPathFinder {
         }
     }
 
-    private GetNodesList(): Array<GridNodePoint> {
+    private GetNodesList(): GridNodePoint[] {
         return [
             {
                 point: this.m_Grid!!.GetPositionTop(),
@@ -111,8 +112,8 @@ export class InRoomPathFinder {
         return r_x <= range && r_y <= range
     }
 
-    private CreatePath(current: GridNode | null | undefined): Array<{ dir: DirectionConstant, p: Point }> {
-        const path = new Array<{ dir: DirectionConstant, p: Point }>()
+    private CreatePath(current: GridNode | null | undefined): { dir: DirectionConstant, p: Point }[] {
+        const path: { dir: DirectionConstant, p: Point }[] = []
         const color_blue = "#ADD8E6"
 
         while (current) {
@@ -136,9 +137,14 @@ export class InRoomPathFinder {
     }
 
     private AddToOpen(queue: PriorityQueue<GridNode>, map: Map<GridNode, undefined>, val: GridNode) {
-        debugger
         queue.Push(val)
         map.set(val, undefined)
+    }
+
+    private Clear(queue: PriorityQueue<GridNode>, open: Map<GridNode, undefined>, close: Map<GridNode, undefined>): void {
+        queue.Clear()
+        open.clear()
+        close.clear()
     }
 
     private RemoveFromOpen(queue: PriorityQueue<GridNode>, map: Map<GridNode, undefined>): GridNode | null {
@@ -154,9 +160,8 @@ export class InRoomPathFinder {
         dest: Point,
         range: number,
         creep: Creep,
-        steps: number = 10
-    ) {
-        let path = new Array<{ dir: DirectionConstant, p: Point } | null>()
+        steps: number
+    ): { dir: DirectionConstant, p: Point }[] {
 
         const open = new Map<GridNode, undefined>()
         const close = new Map<GridNode, undefined>()
@@ -165,18 +170,14 @@ export class InRoomPathFinder {
 
         this.AddToOpen(queue, open, cur_node)
         let i = 0
-        let found = false
         let current: GridNode | null = null
-
-        while (queue.Size() > 0) {
+        debugger
+        while (true) {
+            debugger
             current = this.RemoveFromOpen(queue, open)!!
 
-            if (this.InRange(current.pos, dest, range)) {
-                found = true
+            if (this.InRange(current.pos, dest, range) || i === steps) {
                 break
-            }
-            else {
-                i++
             }
 
             this.ShowSearch(current.pos, color_red)
@@ -214,18 +215,11 @@ export class InRoomPathFinder {
             }
 
             close.set(current, undefined)
+
+            i++
         }
 
-        if (!found) {
-            while (path.length < 15) {
-                path.push(null)
-            }
-        }
-        else {
-            path = this.CreatePath(current)
-        }
-
-        return path
+        return this.CreatePath(current)
     }
 
     private GetPath(creep: CreepWrapper): JsonObj {
@@ -238,7 +232,7 @@ export class InRoomPathFinder {
         HardDrive.WriteFiles(path, data)
     }
 
-    private MarkPathAsUsed(array: Array<{ dir: DirectionConstant, p: Point } | null>) {
+    private MarkPathAsUsed(array: ({ dir: DirectionConstant, p: Point } | null)[]) {
         for (let i = 0; i < array.length; i++) {
             const spot = array[i]
             if (spot) {
@@ -265,11 +259,11 @@ export class InRoomPathFinder {
 
                 const data = this.GetPath(wrapper)
 
-                let path_array = data.steps as Array<DirectionConstant | null>
+                let path_array = data.steps as (DirectionConstant | null)[]
                 let path_index = data.index as number
 
                 if (!path_array) {
-                    path_array = new Array()
+                    path_array = []
                 }
 
                 if (path_array.length === 0) {
@@ -279,15 +273,13 @@ export class InRoomPathFinder {
                         InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
                     }
                     this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
-                    const path_steps = this.CalculatePath(start_node, obj_point, dist, creep, 128)
+                    const steps = 5
                     path_index = 0
 
-                    for (let node of path_steps) {
-                        let direction: DirectionConstant | null = null
-                        if (node) {
-                            direction = node.dir
-                        }
-                        path_array.push(direction)
+                    const path = this.CalculatePath(start_node, obj_point, dist, creep, steps)
+
+                    for(let step of path) {
+                        path_array.push(step.dir)
                     }
                 }
                 else {
@@ -313,7 +305,7 @@ export class InRoomPathFinder {
 
         const data = this.GetPath(wrapper)
         const creep = wrapper.GetCreep()
-        let path_array = data.steps as Array<DirectionConstant | null>
+        let path_array = data.steps as (DirectionConstant | null)[]
         let path_index = data.index as number
 
         if (creep && path_array && path_array[0]) {
@@ -334,7 +326,7 @@ export class InRoomPathFinder {
             path_data.index = path_index
         }
         else {
-            path_data.steps = new Array()
+            path_data.steps = []
             path_data.index = 0
         }
 

@@ -27,9 +27,9 @@ export class Spawner {
         this.m_Room = room
     }
 
-    private HavesterRule(): Array<RolePriority> {
+    private HavesterRule(): RolePriority[] {
         const limit = 2
-        const creep_list = new Array<RolePriority>()
+        const creep_list: RolePriority[] = []
         const harvesters_alive = this.m_Type_tracker.get(Behavior.HARVEST)!!
 
         for (let i = harvesters_alive; i < limit; i++) {
@@ -55,9 +55,9 @@ export class Spawner {
         return creep_list
     }
 
-    private UpgraderRule(): Array<RolePriority> {
+    private UpgraderRule(): RolePriority[] {
         const limit = 2
-        const creep_list = new Array<RolePriority>()
+        const creep_list: RolePriority[] = []
         const upgraders_alive = this.m_Type_tracker.get(Behavior.UPGRADER)!!
 
         for (let i = upgraders_alive; i < limit; i++) {
@@ -70,9 +70,9 @@ export class Spawner {
         return creep_list
     }
 
-    private DefenderRule(): Array<RolePriority> {
+    private DefenderRule(): RolePriority[] {
         const num_of_hostile = this.m_Room.GetHostileCreeps().length
-        const creep_list = new Array<RolePriority>()
+        const creep_list: RolePriority[] = []
         let priority_level
 
         if (num_of_hostile === 1) {
@@ -95,8 +95,8 @@ export class Spawner {
         return creep_list
     }
 
-    private BuilderRule(): Array<RolePriority> {
-        const creep_list = new Array<RolePriority>()
+    private BuilderRule(): RolePriority[] {
+        const creep_list: RolePriority[] = []
         const num_of_construction_sites = this.m_Room.GetConstructionSites().length
         const builders_alive = this.m_Type_tracker.get(Behavior.BUILDER)!!
 
@@ -110,8 +110,8 @@ export class Spawner {
         return creep_list
     }
 
-    private RepairRule(): Array<RolePriority> {
-        const creep_list = new Array<RolePriority>()
+    private RepairRule(): RolePriority[] {
+        const creep_list: RolePriority[] = []
         const filter = (struct: Structure<any>) => { return struct.hits < struct.hitsMax }
         const num_of_damaged_structs = this.m_Room.GetAllNonHostileStructs(filter).length
         const repair_alive = this.m_Type_tracker.get(Behavior.REPAIR)!!
@@ -157,7 +157,7 @@ export class Spawner {
         this.m_Type_tracker.clear()
     }
 
-    public CreateSpawnList(): Array<number> {
+    public CreateSpawnList(): number[] {
         const queue = new PriorityQueue<RolePriority>((el) => {return el.priority})
         let harvest_list = this.HavesterRule()
         queue.PushArray(harvest_list)

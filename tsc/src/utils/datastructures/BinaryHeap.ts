@@ -1,10 +1,10 @@
 export class BinaryHeap<T> {
-    private m_Heap: Array<T>
+    private m_Heap: T[]
     private m_ToNumber: (el: T) => number
     private m_Out_of_bouds_msg: string
 
     constructor(sort: (el: T) => number) {
-        this.m_Heap = new Array()
+        this.m_Heap = []
         this.m_ToNumber = sort
         this.m_Out_of_bouds_msg = "Error: index out of bounds"
     }
@@ -191,7 +191,7 @@ export class BinaryHeap<T> {
         return this.m_Heap.some(call_back)
     }
 
-    Map<K>(call_back: (el: T) => K): Array<K> {
+    Map<K>(call_back: (el: T) => K): K[] {
         return this.m_Heap.map(call_back)
     }
 

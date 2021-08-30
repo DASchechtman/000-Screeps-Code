@@ -113,7 +113,7 @@ export class RoomWrapper {
     }
 
     private GetStructures<T>(struct_type: string, map: Map<string, Set<string>> | undefined): T[] {
-        const found_structs = new Array<T>()
+        const found_structs: T[] = []
 
         if (map) {
             const list = map.get(struct_type)
@@ -135,8 +135,8 @@ export class RoomWrapper {
         return found_structs
     }
 
-    private GetResource<T>(key: number): Array<T> {
-        const resource_objects = new Array<T>()
+    private GetResource<T>(key: number): T[] {
+        const resource_objects: T[] = []
         const resource_array = this.m_Room_objects.GetSet(key)
 
         if (resource_array) {
@@ -180,7 +180,7 @@ export class RoomWrapper {
             ObjectsInRoom.UNOWNED_STRUCTS
         ]
 
-        const structs = new Array<Structure<any>>()
+        const structs: Structure<any>[] = []
         this.LoadOwnedStructs()
         this.LoadUnownedStructs()
 
@@ -240,7 +240,7 @@ export class RoomWrapper {
 
         const whitelist = COLONY_ALLIES
         const foreign_creeps = this.GetResource<Creep>(key)
-        const hostile_creep = new Array<Creep>()
+        const hostile_creep: Creep[] = []
 
         for (let creep of foreign_creeps) {
             let is_enemy = true

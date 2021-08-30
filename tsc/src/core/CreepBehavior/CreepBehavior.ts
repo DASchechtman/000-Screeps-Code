@@ -46,7 +46,7 @@ export abstract class CreepBehavior {
         HardDrive.DeleteFolder(this.GetFolderPath(creep))
     }
 
-    private SourceNextTo(creep: Creep, sources: Array<Source>): Source | undefined {
+    private SourceNextTo(creep: Creep, sources: Source[]): Source | undefined {
         let possible_source = undefined
 
         for (let source of sources) {

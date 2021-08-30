@@ -3,7 +3,7 @@ import { COLONY_OWNER, DEBUG_ROOM_NAME } from "./consts/GameConstants"
 import { Colony } from "./core/Colony"
 import { HardDrive } from "./utils/harddrive/HardDrive"
 
-const colonies: Array<Colony> = new Array()
+const colonies: Colony[] = []
 
 for (let name in Game.rooms) {
     const room = Game.rooms[name]

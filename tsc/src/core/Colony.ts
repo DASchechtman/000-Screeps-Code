@@ -23,14 +23,14 @@ interface CreepDetails {
 
 export class Colony extends ColonyMember {
     private m_Members: ColonyMemberMap
-    private m_Creeps_in_colony: Array<CreepDetails>
+    private m_Creeps_in_colony: CreepDetails[]
     private m_Room: RoomWrapper
 
     constructor(room_name: string) {
         super(GameEntityTypes.COLONY, room_name)
         this.m_Members = new ColonyMemberMap()
         this.m_Room = new RoomWrapper(room_name)
-        this.m_Creeps_in_colony = new Array()
+        this.m_Creeps_in_colony = []
     }
 
     private RememberCreepDetails(name: string, type: number): void {
@@ -54,7 +54,7 @@ export class Colony extends ColonyMember {
         const num_of_harvesters = tracker.GetTrackedType(Behavior.HARVEST)
         const energy_cap = this.m_Room.GetEnergyCapacity()
         const name = `${this.m_Room.GetName()} - ${Date.now()}`
-        let body: Array<BodyPartConstant>
+        let body: BodyPartConstant[]
 
         if (spawn_type === Behavior.DEFENDER) {
             body = BuildScalableDefender(energy_cap)
@@ -63,6 +63,8 @@ export class Colony extends ColonyMember {
             body = BuildScalableWorker(energy_cap)
         }
         let ret = spawn.spawnCreep(body, name)
+
+        console.log(num_of_harvesters)
 
         if (ret === OK) {
             console.log(`saving behavior to ${Behavior[spawn_type]}`)
@@ -118,10 +120,10 @@ export class Colony extends ColonyMember {
         }
     }
 
-    private RecallCreepDetails() {
+    private RecallCreepDetails(): CreepDetails[] {
         const path = HardDrive.Join(this.m_Room.GetName(), "creep_list")
         const details_list: JsonList = HardDrive.ReadFile(path) as JsonList
-        const creep_details = new Array<CreepDetails>()
+        const creep_details: CreepDetails[] = []
 
         if (details_list) {
             for (let detail of details_list) {

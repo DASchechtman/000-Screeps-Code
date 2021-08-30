@@ -7,7 +7,7 @@ import { Filter, JsonType, Method } from "./Types";
 export interface StructStackIndex {
     index: number,
     timed_defense_index: number
-    array: Array<StructureWrapper<any>>
+    array: StructureWrapper<any>[]
 }
 
 export interface CreepType {
@@ -18,7 +18,7 @@ export interface CreepType {
 export interface CreepTypeCollection {
     level: number,
     count: number,
-    collection: Map<number, Array<CreepType>>
+    collection: Map<number, CreepType[]>
 }
 
 export interface JsonObj {

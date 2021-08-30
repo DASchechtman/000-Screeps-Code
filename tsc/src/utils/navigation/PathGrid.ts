@@ -63,7 +63,7 @@ export class InRoomGrid {
     }
 
     private IsWalkableStructure(struct: Structure | ConstructionSite): boolean {
-        const walkable_structs: Array<StructureConstant> = [
+        const walkable_structs: StructureConstant[] = [
             STRUCTURE_ROAD,
             STRUCTURE_RAMPART,
             STRUCTURE_CONTAINER

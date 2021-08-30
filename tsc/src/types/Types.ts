@@ -8,7 +8,7 @@ export type Container = (
     | StructureTower
 )
 
-export type HoleyArray<T> = Array<T | undefined>
+export type HoleyArray<T> = (T | undefined)[]
 
 export type Filter = (sender: Signal, other: ColonyMember) => boolean
 
