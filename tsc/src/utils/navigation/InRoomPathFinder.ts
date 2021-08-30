@@ -280,6 +280,7 @@ export class InRoomPathFinder {
 
                     for(let step of path) {
                         path_array.push(step.dir)
+                        creep.room.createConstructionSite(step.p.x, step.p.y, STRUCTURE_ROAD)
                     }
                 }
                 else {
