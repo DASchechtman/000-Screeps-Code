@@ -63,9 +63,14 @@ export class RepairBehavior extends CreepBehavior {
             // a struct can be destroyed and so not
             // exist, but other structs still do
             // and need repairing
-            while(stack.Size() > 0 && !struct) {
+            const size = stack.Size()
+            for (let i = 0; i < size; i++) {
+                if (struct) {
+                    break
+                }
                 id = this.SetStruct()
                 struct = Game.getObjectById(id)
+                
             }
 
             if (struct) {

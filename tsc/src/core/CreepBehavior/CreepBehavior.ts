@@ -46,8 +46,8 @@ export abstract class CreepBehavior {
         HardDrive.DeleteFolder(this.GetFolderPath(creep))
     }
 
-    private SourceNextTo(creep: Creep, sources: Source[]): Source | undefined {
-        let possible_source = undefined
+    private SourceNextTo(creep: Creep, sources: Source[]): Source | null {
+        let possible_source = null
 
         for (let source of sources) {
             let next_to_source = creep.pos.inRangeTo(source, ActionDistance.HARVEST)
@@ -67,24 +67,18 @@ export abstract class CreepBehavior {
 
     }
 
-    protected GetSource(creep: Creep, room: RoomWrapper): Source {
+    protected GetSource(creep: Creep, room: RoomWrapper): Source | null {
         let i = 0
         const sources = room.GetSources()
 
         let correct_source = this.SourceNextTo(creep, sources)
 
         if (correct_source === undefined) {
-            correct_source = sources[i]
-            let wrapper = new SourceWrapper(correct_source.id)
 
-            while (!wrapper.HasFreeSpot()) {
-                i++
-                if (i < sources.length) {
-                    correct_source = sources[i]
-                    wrapper = new SourceWrapper(correct_source.id)
-                }
-                else {
-                    break
+            for (let source of sources) {
+                const wrapper = new SourceWrapper(source.id)
+                if (wrapper.HasFreeSpot()) {
+                    correct_source = source
                 }
             }
         }

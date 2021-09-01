@@ -1,7 +1,7 @@
 
 import { Behavior } from "../consts/CreepBehaviorConsts";
-import { EventTypes, GameEntityTypes } from "../consts/GameConstants";
-import { JsonObj, SignalMessage } from "../types/Interfaces";
+import { DEFENSE_DEV_LEVELS, EventTypes, GameEntityTypes } from "../consts/GameConstants";
+import { JsonObj, Point, SignalMessage } from "../types/Interfaces";
 import { JsonList, JsonType } from "../types/Types";
 import { BuildScalableDefender, BuildScalableWorker, WORKER_BODY } from "../utils/creeps/CreepBuilder";
 import { ColonyMemberMap } from "../utils/datastructures/ColonyMemberMap";
@@ -15,6 +15,8 @@ import { Spawner } from "../utils/creeps/Spawner";
 import { StructureWrapper } from "./StructureWrapper";
 import { DegradableStructureWrapper } from "./DegradableStructureWrapper";
 import { EventManager } from "../utils/event_handler/EventManager";
+import { xor } from "lodash";
+import { ColonyPlanner } from "../utils/automation/ColonyPlanner";
 
 interface CreepDetails {
     name: string,
@@ -25,12 +27,22 @@ export class Colony extends ColonyMember {
     private m_Members: ColonyMemberMap
     private m_Creeps_in_colony: CreepDetails[]
     private m_Room: RoomWrapper
+    private m_Wall_made_file: string
+    private m_Room_level_path: string
+    private m_Spawn_type_tracker: Spawner
 
     constructor(room_name: string) {
         super(GameEntityTypes.COLONY, room_name)
         this.m_Members = new ColonyMemberMap()
         this.m_Room = new RoomWrapper(room_name)
         this.m_Creeps_in_colony = []
+        this.m_Spawn_type_tracker = new Spawner(this.m_Room)
+        this.m_Wall_made_file = HardDrive.Join(this.m_Room.GetName(), "wall-made")
+        this.m_Room_level_path = HardDrive.Join(this.m_Room.GetName(), "level")
+        const walls_build = HardDrive.ReadFile(this.m_Wall_made_file)
+        const level = HardDrive.ReadFile(this.m_Room_level_path)
+        HardDrive.WriteFile(this.m_Wall_made_file, walls_build === null ? false : walls_build)
+        HardDrive.WriteFile(this.m_Room_level_path, level === null ? 1 : level)
     }
 
     private RememberCreepDetails(name: string, type: number): void {
@@ -128,10 +140,13 @@ export class Colony extends ColonyMember {
         if (details_list) {
             for (let detail of details_list) {
                 const list = detail as JsonList
-                creep_details.push({
-                    name: list[0] as string,
-                    type: list[1] as number
-                })
+
+                if (list instanceof Array && list.length >= 2) {
+                    creep_details.push({
+                        name: list[0] as string,
+                        type: list[1] as number
+                    })
+                }
             }
         }
 
@@ -168,12 +183,33 @@ export class Colony extends ColonyMember {
         }
     }
 
-    OnLoad(): void {
+    private UpgradeRoomResources(spawn: StructureSpawn): void {
+        const controller = this.m_Room.GetController()
+        const walls_made = HardDrive.ReadFile(this.m_Wall_made_file) as boolean
+        const level = HardDrive.ReadFile(this.m_Room_level_path) as number
+        const multiplyer = DEFENSE_DEV_LEVELS
+
+        if (controller && controller?.level !== level && level < multiplyer) {
+            console.log("building room", level)
+            const spawn_point: Point = {
+                x: spawn.pos.x,
+                y: spawn.pos.y
+            }
+            const room_builder = ColonyPlanner.GetInst(this.m_Room.GetName())
+            room_builder.Build(controller.level * multiplyer, spawn_point, this.m_Room)
+            HardDrive.WriteFile(this.m_Room_level_path, controller.level)
+        }
+    }
+
+    OnTickStart(): void {
+        this.m_Spawn_type_tracker.TrackCreepTypes()
         if (!HardDrive.Has(this.m_Room.GetName())) {
             HardDrive.CreateFolder(this.m_Room.GetName())
         }
         const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
         const limit = 10;
+
+        this.UpgradeRoomResources(spawn)
 
         // finding the 10 most damaged structs (and structs with behaviors like towers)
         // and adding them to the colony member list so they can run
@@ -254,9 +290,7 @@ export class Colony extends ColonyMember {
 
     }
 
-    OnRun(): void {
-        const spawner = new Spawner(this.m_Room)
-        spawner.TrackCreepTypes()
+    OnTickRun(): void {
 
         // checks for any events that need to be run
         {
@@ -272,15 +306,15 @@ export class Colony extends ColonyMember {
             }
         }
 
-        const spawn_list = spawner.CreateSpawnList()
+        const spawn_list = this.m_Spawn_type_tracker.CreateSpawnList()
         if (spawn_list.length > 0) {
-            this.Spawn(spawn_list[0], spawner)
+            this.Spawn(spawn_list[0], this.m_Spawn_type_tracker)
         }
 
         const run_members = (member: ColonyMember): void => {
-            member.OnLoad()
-            member.OnRun()
-            member.OnSave()
+            member.OnTickStart()
+            member.OnTickRun()
+            member.OnTickEnd()
             member.OnDestroy()
 
             const signal = member.GetSignal()
@@ -297,11 +331,11 @@ export class Colony extends ColonyMember {
         this.m_Members.ForEachByType(GameEntityTypes.DEGRADABLE_STRUCT, run_members)
         this.m_Members.ForEachByType(GameEntityTypes.BEHAVIOR_STRUCT, run_members)
         this.m_Members.ForEachByType(GameEntityTypes.CREEP, run_members)
-
-        spawner.UntrackCreepTypes()
     }
 
-    OnSave(): void { }
+    OnTickEnd(): void { 
+        this.m_Spawn_type_tracker.UntrackCreepTypes()
+    }
 
     OnDestroy(): void {
         this.m_Members.DeleteByType(GameEntityTypes.STRUCT)

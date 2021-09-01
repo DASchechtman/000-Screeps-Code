@@ -23,9 +23,9 @@ module.exports.loop = (): void => {
 
     for(let colony of colonies) {
         const start = Game.cpu.getUsed()
-        colony.OnLoad()
-        colony.OnRun()
-        colony.OnSave()
+        colony.OnTickStart()
+        colony.OnTickRun()
+        colony.OnTickEnd()
         colony.OnDestroy()
         
         if (colony.GetID() !== DEBUG_ROOM_NAME) {

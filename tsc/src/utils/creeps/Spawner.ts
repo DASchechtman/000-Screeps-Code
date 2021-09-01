@@ -16,13 +16,18 @@ interface RolePriority {
     priority: number
 }
 
+interface CreepAmmount {
+    current: number,
+    max: number | null
+}
+
 
 export class Spawner {
-    private m_Type_tracker: Map<number, number>
+    private m_Type_tracker: Map<number, CreepAmmount>
     private m_Room: RoomWrapper
 
     constructor(room: RoomWrapper) {
-       
+
         this.m_Type_tracker = new Map()
         this.m_Room = room
     }
@@ -31,14 +36,15 @@ export class Spawner {
         const limit = 2
         const creep_list: RolePriority[] = []
         const harvesters_alive = this.m_Type_tracker.get(Behavior.HARVEST)!!
+        harvesters_alive.max = limit
 
-        for (let i = harvesters_alive; i < limit; i++) {
+        for (let i = harvesters_alive.current; i < limit; i++) {
             const creep: RolePriority = {
                 behavior: Behavior.HARVEST,
                 priority: PriorityLevel.ULTRA_LOW
             }
 
-            switch(harvesters_alive) {
+            switch (harvesters_alive.current) {
                 case 0: {
                     creep.priority = PriorityLevel.HIGH
                     break
@@ -59,8 +65,9 @@ export class Spawner {
         const limit = 2
         const creep_list: RolePriority[] = []
         const upgraders_alive = this.m_Type_tracker.get(Behavior.UPGRADER)!!
+        upgraders_alive.max = limit
 
-        for (let i = upgraders_alive; i < limit; i++) {
+        for (let i = upgraders_alive.current; i < limit; i++) {
             creep_list.push({
                 behavior: Behavior.UPGRADER,
                 priority: PriorityLevel.MED
@@ -85,7 +92,7 @@ export class Spawner {
             priority_level = PriorityLevel.ULTRA_LOW - num_of_hostile
         }
 
-        for(let i = 0; i < num_of_hostile; i++) {
+        for (let i = 0; i < num_of_hostile; i++) {
             creep_list.push({
                 behavior: Behavior.DEFENDER,
                 priority: priority_level
@@ -99,8 +106,9 @@ export class Spawner {
         const creep_list: RolePriority[] = []
         const num_of_construction_sites = this.m_Room.GetConstructionSites().length
         const builders_alive = this.m_Type_tracker.get(Behavior.BUILDER)!!
+        builders_alive.max = 1
 
-        if (num_of_construction_sites > 0 && builders_alive === 0) {
+        if (num_of_construction_sites > 0 && builders_alive.current === 0) {
             creep_list.push({
                 behavior: Behavior.BUILDER,
                 priority: PriorityLevel.LOW
@@ -116,7 +124,9 @@ export class Spawner {
         const num_of_damaged_structs = this.m_Room.GetAllNonHostileStructs(filter).length
         const repair_alive = this.m_Type_tracker.get(Behavior.REPAIR)!!
 
-        if (num_of_damaged_structs > 0 && repair_alive === 0) {
+        repair_alive.max = 1
+
+        if (num_of_damaged_structs > 0 && repair_alive.current === 0) {
             creep_list.push({
                 behavior: Behavior.REPAIR,
                 priority: PriorityLevel.LOW
@@ -129,7 +139,7 @@ export class Spawner {
     public TrackCreepTypes(): void {
         for (let behavior in Behavior) {
             if (Number(behavior) !== Behavior.NONE && !this.m_Type_tracker.has(Number(behavior))) {
-                this.m_Type_tracker.set(Number(behavior), 0)
+                this.m_Type_tracker.set(Number(behavior), { current: 0, max: null })
             }
         }
 
@@ -137,17 +147,34 @@ export class Spawner {
 
         for (const creep of creep_list) {
             const wrapper = new CreepWrapper(creep.name)
-            wrapper.OnLoad()
+            wrapper.OnTickStart()
             const behavior = wrapper.GetBehavior()
             const cur_count = this.m_Type_tracker.get(behavior)!!
-            this.m_Type_tracker.set(behavior, cur_count+1)
+
+            if (cur_count) {
+                this.m_Type_tracker.set(behavior, {
+                    current: cur_count.current + 1,
+                    max: cur_count.max
+                })
+            }
         }
     }
 
-    public GetTrackedType(behavior: Behavior): number  {
-        let type = this.m_Type_tracker.get(behavior)
+    public GetTrackedType(behavior: Behavior): number {
+        let type = this.m_Type_tracker.get(behavior)?.current
         if (type === undefined) {
             type = -1
+        }
+
+        return type
+    }
+
+    public GetNeededType(): number {
+        let type = Behavior.NONE
+        for (let [key, val] of this.m_Type_tracker) {
+            if (val.max && val.current < val.max) {
+                type = key
+            }
         }
 
         return type
@@ -158,7 +185,7 @@ export class Spawner {
     }
 
     public CreateSpawnList(): number[] {
-        const queue = new PriorityQueue<RolePriority>((el) => {return el.priority})
+        const queue = new PriorityQueue<RolePriority>((el) => { return el.priority })
         let harvest_list = this.HavesterRule()
         queue.PushArray(harvest_list)
         queue.PushArray(this.UpgraderRule())
@@ -166,7 +193,7 @@ export class Spawner {
         queue.PushArray(this.BuilderRule())
         queue.PushArray(this.RepairRule())
 
-        let arr = queue.ToHeap().Map((val) => {return val.behavior})
+        let arr = queue.ToHeap().Map((val) => { return val.behavior })
         return arr
     }
 }

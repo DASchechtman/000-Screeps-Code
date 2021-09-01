@@ -26,7 +26,7 @@ export class StructureWrapper<T extends StructureConstant> extends ColonyMember 
         return Game.getObjectById(id)
     }
 
-    OnRun(): void {
+    OnTickRun(): void {
         if (this.GetCurHealth() < this.GetMaxHealth()) {
             this.m_Signal = {
                 data: Behavior.REPAIR,
@@ -42,9 +42,9 @@ export class StructureWrapper<T extends StructureConstant> extends ColonyMember 
         }
      }
 
-    OnLoad(): void { }
+    OnTickStart(): void { }
 
-    OnSave(): void { }
+    OnTickEnd(): void { }
 
     OnDestroy(): void {}
 

@@ -6,7 +6,7 @@ export class BehaviorStructureWrapper<T extends StructureConstant> extends Struc
         super(struct, GameEntityTypes.BEHAVIOR_STRUCT)
     }
 
-    OnRun(): void {
-        super.OnRun()
+    OnTickRun(): void {
+        super.OnTickRun()
     }
 }

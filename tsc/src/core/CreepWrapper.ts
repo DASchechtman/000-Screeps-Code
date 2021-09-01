@@ -53,7 +53,7 @@ export class CreepWrapper extends ColonyMember {
         return this.m_Creep
     }
 
-    public OnLoad(): void {
+    public OnTickStart(): void {
         const type = HardDrive.ReadFile(this.type_file_path)
         if (typeof type === 'number') {
             this.m_Behavior_type = type
@@ -62,7 +62,7 @@ export class CreepWrapper extends ColonyMember {
 
     }
 
-    public OnRun(): void {
+    public OnTickRun(): void {
         const creep = this.GetCreep()
         if (creep && this.m_Behavior) {
             const room = new RoomWrapper(creep.room.name)
@@ -87,7 +87,7 @@ export class CreepWrapper extends ColonyMember {
         }
     }
 
-    public OnSave(): void {
+    public OnTickEnd(): void {
         if (this.GetCreep()) {
             HardDrive.WriteFile(this.type_file_path, this.m_Behavior_type)
         }

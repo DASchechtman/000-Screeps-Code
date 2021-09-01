@@ -1,11 +1,13 @@
 import path from "path/posix"
+import { DEFENSE_DEV_LEVELS } from "../../consts/GameConstants"
 import { CreepWrapper } from "../../core/CreepWrapper"
+import { RoomWrapper } from "../../core/room/RoomWrapper"
 import { TerrainTypes } from "../../types/Enums"
 import { GridNode, GridNodePoint, JsonObj, Point } from "../../types/Interfaces"
 import { RoomPos, RoomPosObj } from "../../types/Types"
 import { PriorityQueue } from "../datastructures/PriorityQueue"
 import { HardDrive } from "../harddrive/HardDrive"
-import { InRoomGrid } from "./PathGrid"
+import { InRoomGrid } from "./RoomGrid"
 
 
 export class InRoomPathFinder {
@@ -161,22 +163,22 @@ export class InRoomPathFinder {
         range: number,
         creep: Creep,
         steps: number
-    ): { dir: DirectionConstant, p: Point }[] {
+    ): ({ dir: DirectionConstant, p: Point } | undefined)[] {
 
         const open = new Map<GridNode, undefined>()
         const close = new Map<GridNode, undefined>()
         const queue = this.GetQueue()
         const color_red = "#FF0000"
+        let found = false
 
         this.AddToOpen(queue, open, cur_node)
         let i = 0
         let current: GridNode | null = null
-        debugger
-        while (true) {
-            debugger
+        while (queue.Size() > 0) {
             current = this.RemoveFromOpen(queue, open)!!
 
             if (this.InRange(current.pos, dest, range) || i === steps) {
+                found = true
                 break
             }
 
@@ -219,7 +221,7 @@ export class InRoomPathFinder {
             i++
         }
 
-        return this.CreatePath(current)
+        return found ? this.CreatePath(current) : new Array(15)
     }
 
     private GetPath(creep: CreepWrapper): JsonObj {
@@ -267,21 +269,35 @@ export class InRoomPathFinder {
                 }
 
                 if (path_array.length === 0) {
-                    path_generated = 1
-                    const grid_key = creep.room.name
-                    if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
-                        InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
-                    }
-                    this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
-                    const steps = 5
-                    path_index = 0
+                    // path_generated = 1
+                    // const grid_key = creep.room.name
+                    // if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
+                    //     InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
+                    // }
+                    // this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
+                    // const steps = Number.MAX_SAFE_INTEGER
+                    // path_index = 0
 
-                    const path = this.CalculatePath(start_node, obj_point, dist, creep, steps)
+                    // //const path = this.CalculatePath(start_node, obj_point, dist, creep, steps)
 
-                    for(let step of path) {
-                        path_array.push(step.dir)
-                        creep.room.createConstructionSite(step.p.x, step.p.y, STRUCTURE_ROAD)
-                    }
+                    // for (let step of path) {
+                    //     if (step) {
+                    //         path_array.push(step.dir)
+                    //         const room = new RoomWrapper(creep.room.name)
+
+                    //         // if (room.GetController() && room.GetController()!!.level >= DEFENSE_DEV_LEVELS) {
+                    //         //     creep.room.createConstructionSite(step.p.x, step.p.y, STRUCTURE_ROAD)
+                    //         // }
+                    //     }
+                    //     else {
+                    //         path_array.push(null)
+                    //     }
+                    // }
+                    let path = creep.pos.findPathTo(obj, {
+                        maxRooms: 1
+                    })
+
+                    path_array = path.slice(0, path.length-dist).map(s => s.direction)
                 }
                 else {
                     path_generated = 0

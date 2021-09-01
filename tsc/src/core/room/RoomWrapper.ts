@@ -285,4 +285,8 @@ export class RoomWrapper {
         return this.m_Name
     }
 
+    CreateConstructionSite(x: number, y: number, type: BuildableStructureConstant) {
+        return this.GetRoom()?.createConstructionSite(x, y, type)
+    }
+
 }

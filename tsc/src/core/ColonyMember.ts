@@ -12,9 +12,9 @@ export abstract class ColonyMember {
         this.m_Signal = null
     }
 
-    abstract OnRun(): void
-    abstract OnLoad(): void
-    abstract OnSave(): void
+    abstract OnTickRun(): void
+    abstract OnTickStart(): void
+    abstract OnTickEnd(): void
     abstract OnDestroy(): void
 
     GetType(): GameEntityTypes {

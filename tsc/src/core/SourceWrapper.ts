@@ -25,13 +25,16 @@ export class SourceWrapper {
         return points
     }
 
-    private IsWalkableStruct(site: Structure | ConstructionSite): boolean {
+    private IsWalkableStruct(site: Structure | ConstructionSite | undefined): boolean {
         let is_walkable = false
-        if (
-            site.structureType === STRUCTURE_CONTAINER
+        if ( site &&
+            (site.structureType === STRUCTURE_CONTAINER
             || site.structureType === STRUCTURE_ROAD
-            || site.structureType === STRUCTURE_RAMPART
+            || site.structureType === STRUCTURE_RAMPART)
         ) {
+            is_walkable = true
+        }
+        else if(site === undefined) {
             is_walkable = true
         }
 
@@ -52,8 +55,17 @@ export class SourceWrapper {
 
             for (let point of points) {
                 const spot = room.lookAt(point.x, point.y)
+                const terrain_index = spot.length-1
+                const obj_index = 0
+                const Walkable = this.IsWalkableStruct
                 
-                if (spot.length > 1 || spot[0].terrain === "wall") {
+                if (spot[terrain_index].terrain === "wall") {
+                    has_free_spot = false
+                }
+                else if (!Walkable(spot[obj_index].constructionSite) || !Walkable(spot[obj_index].structure)) {
+                    has_free_spot = false
+                }
+                else if (spot[obj_index].creep || spot[obj_index].powerCreep) {
                     has_free_spot = false
                 }
                 else {

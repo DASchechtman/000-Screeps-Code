@@ -18,8 +18,10 @@ export class UpgradeBehavior extends CreepBehavior {
     InitTick(creep: Creep): void {
         const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
         const cur_state = Boolean(behavior?.can_upgrade)
+        const id = String(behavior?.id)
         this.m_Data = {
-            can_upgrade: this.UpdateWorkState(creep, cur_state)
+            can_upgrade: this.UpdateWorkState(creep, cur_state),
+            id: id
         }
     }
 
@@ -27,12 +29,17 @@ export class UpgradeBehavior extends CreepBehavior {
         const controller = room.GetController()
 
         if (controller) {
-            const source = this.GetSource(creep, room)
+            let source = Game.getObjectById(this.m_Data.id as Id<Source>)
+
+            if (!source) {
+                source = creep.pos.findClosestByPath(FIND_SOURCES)
+                this.m_Data.id = String(source?.id)
+            }
 
             if (this.m_Data.can_upgrade === true) {
                 this.Upgrade(creep, controller)
             }
-            else if (this.m_Data.can_upgrade === false) {
+            else if (this.m_Data.can_upgrade === false && source) {
                 this.Harvest(source, room)
             }
         }
