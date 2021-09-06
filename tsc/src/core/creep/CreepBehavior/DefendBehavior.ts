@@ -1,8 +1,6 @@
-import { ActionDistance } from "../../consts/CreepBehaviorConsts"
-import { SignalMessage } from "../../types/Interfaces"
-import { HardDrive } from "../../utils/harddrive/HardDrive"
-import { CreepWrapper } from "../CreepWrapper"
-import { RoomWrapper } from "../room/RoomWrapper"
+import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
+import { CreepWrapper } from "../../creep/CreepWrapper"
+import { RoomWrapper } from "../../room/RoomWrapper"
 import { CreepBehavior } from "./CreepBehavior"
 
 

@@ -1,6 +1,6 @@
 import { GameEntityTypes } from "../consts/GameConstants";
 import { ColonyMember } from "../core/ColonyMember";
-import { StructureWrapper } from "../core/StructureWrapper";
+import { StructureWrapper } from "../core/structure/StructureWrapper";
 import { Queue } from "../utils/datastructures/Queue";
 import { Filter, JsonType, Method } from "./Types";
 

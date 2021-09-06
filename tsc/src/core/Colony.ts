@@ -7,15 +7,14 @@ import { BuildScalableDefender, BuildScalableWorker, WORKER_BODY } from "../util
 import { ColonyMemberMap } from "../utils/datastructures/ColonyMemberMap";
 import { PriorityStructuresStack } from "../utils/datastructures/PriorityStructuresStack";
 import { HardDrive } from "../utils/harddrive/HardDrive";
-import { BehaviorStructureWrapper } from "./BehaviorStructureWrapper";
+import { BehaviorStructureWrapper } from "./structure/BehaviorStructureWrapper";
 import { ColonyMember } from "./ColonyMember";
-import { CreepWrapper } from "./CreepWrapper";
+import { CreepWrapper } from "./creep/CreepWrapper";
 import { RoomWrapper } from "./room/RoomWrapper";
 import { Spawner } from "../utils/creeps/Spawner";
-import { StructureWrapper } from "./StructureWrapper";
-import { DegradableStructureWrapper } from "./DegradableStructureWrapper";
+import { StructureWrapper } from "./structure/StructureWrapper";
+import { DegradableStructureWrapper } from "./structure/DegradableStructureWrapper";
 import { EventManager } from "../utils/event_handler/EventManager";
-import { xor } from "lodash";
 import { ColonyPlanner } from "../utils/automation/ColonyPlanner";
 
 interface CreepDetails {
@@ -62,33 +61,7 @@ export class Colony extends ColonyMember {
 
 
     private Spawn(spawn_type: number, tracker: Spawner): void {
-        const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
-        const num_of_harvesters = tracker.GetTrackedType(Behavior.HARVEST)
-        const energy_cap = this.m_Room.GetEnergyCapacity()
-        const name = `${this.m_Room.GetName()} - ${Date.now()}`
-        let body: BodyPartConstant[]
-
-        if (spawn_type === Behavior.DEFENDER) {
-            body = BuildScalableDefender(energy_cap)
-        }
-        else {
-            body = BuildScalableWorker(energy_cap)
-        }
-        let ret = spawn.spawnCreep(body, name)
-
-        console.log(num_of_harvesters)
-
-        if (ret === OK) {
-            console.log(`saving behavior to ${Behavior[spawn_type]}`)
-            this.RememberCreepDetails(name, spawn_type)
-        }
-        else if (ret === ERR_NOT_ENOUGH_ENERGY && num_of_harvesters === 0) {
-            ret = spawn.spawnCreep(WORKER_BODY, name)
-            if (ret === OK) {
-                this.RememberCreepDetails(name, spawn_type)
-            }
-        }
-
+        
     }
 
     private ProcessSignal(signal: SignalMessage, colony: Colony) {
@@ -191,12 +164,9 @@ export class Colony extends ColonyMember {
 
         if (controller && controller?.level !== level && level < multiplyer) {
             console.log("building room", level)
-            const spawn_point: Point = {
-                x: spawn.pos.x,
-                y: spawn.pos.y
-            }
+            const spawn_point = spawn.pos.ToPoint()
             const room_builder = ColonyPlanner.GetInst(this.m_Room.GetName())
-            room_builder.Build(controller.level * multiplyer, spawn_point, this.m_Room)
+            room_builder.Build(controller.level, spawn_point, this.m_Room)
             HardDrive.WriteFile(this.m_Room_level_path, controller.level)
         }
     }
@@ -333,7 +303,7 @@ export class Colony extends ColonyMember {
         this.m_Members.ForEachByType(GameEntityTypes.CREEP, run_members)
     }
 
-    OnTickEnd(): void { 
+    OnTickEnd(): void {
         this.m_Spawn_type_tracker.UntrackCreepTypes()
     }
 

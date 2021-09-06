@@ -1,6 +1,6 @@
 import path from "path/posix"
 import { DEFENSE_DEV_LEVELS } from "../../consts/GameConstants"
-import { CreepWrapper } from "../../core/CreepWrapper"
+import { CreepWrapper } from "../../core/creep/CreepWrapper"
 import { RoomWrapper } from "../../core/room/RoomWrapper"
 import { TerrainTypes } from "../../types/Enums"
 import { GridNode, GridNodePoint, JsonObj, Point } from "../../types/Interfaces"
@@ -21,23 +21,17 @@ export class InRoomPathFinder {
     }
 
     private GetPoint(obj: RoomPos) {
-        let x = (obj as RoomPosObj).pos.x
-        let y = (obj as RoomPosObj).pos.y
+        let point: Point
 
-
-        if (typeof x !== 'number') {
-            x = (obj as RoomPosition).x
+        try {
+            point = (obj as RoomPosObj).pos.ToPoint()
         }
-
-        if (typeof y !== 'number') {
-            y = (obj as RoomPosition).y
+        catch {
+            point = (obj as RoomPosition).ToPoint()
         }
 
 
-        return {
-            x: x,
-            y: y
-        }
+        return point
     }
 
     private GetNodesList(): GridNodePoint[] {
@@ -269,35 +263,20 @@ export class InRoomPathFinder {
                 }
 
                 if (path_array.length === 0) {
-                    // path_generated = 1
-                    // const grid_key = creep.room.name
-                    // if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
-                    //     InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
-                    // }
-                    // this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
-                    // const steps = Number.MAX_SAFE_INTEGER
-                    // path_index = 0
+                    path_generated = 1
+                    const grid_key = creep.room.name
+                    if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
+                        InRoomPathFinder.m_Room_grids.set(grid_key, new InRoomGrid(grid_key))
+                    }
+                    this.m_Grid = InRoomPathFinder.m_Room_grids.get(grid_key)!!
+                    const steps = Number.MAX_SAFE_INTEGER
+                    path_index = 0
 
-                    // //const path = this.CalculatePath(start_node, obj_point, dist, creep, steps)
+                    //const path = this.CalculatePath(start_node, obj_point, dist, creep, steps)
+                    const path = creep.pos.findPathTo(obj, {maxRooms: 1})
 
-                    // for (let step of path) {
-                    //     if (step) {
-                    //         path_array.push(step.dir)
-                    //         const room = new RoomWrapper(creep.room.name)
-
-                    //         // if (room.GetController() && room.GetController()!!.level >= DEFENSE_DEV_LEVELS) {
-                    //         //     creep.room.createConstructionSite(step.p.x, step.p.y, STRUCTURE_ROAD)
-                    //         // }
-                    //     }
-                    //     else {
-                    //         path_array.push(null)
-                    //     }
-                    // }
-                    let path = creep.pos.findPathTo(obj, {
-                        maxRooms: 1
-                    })
-
-                    path_array = path.slice(0, path.length-dist).map(s => s.direction)
+                    //path_array = path.map(s => s?.dir ? s.dir : null)
+                    path_array = path.slice(0, path.length - dist).map(s => s.direction)
                 }
                 else {
                     path_generated = 0

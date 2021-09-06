@@ -1,12 +1,11 @@
-import { ActionDistance } from "../../consts/CreepBehaviorConsts"
-import { JsonObj, Signal, SignalMessage } from "../../types/Interfaces"
-import { RoomPos } from "../../types/Types"
-import { HardDrive } from "../../utils/harddrive/HardDrive"
-import { InRoomPathFinder } from "../../utils/navigation/InRoomPathFinder"
-import { ColonyMember } from "../ColonyMember"
-import { CreepWrapper } from "../CreepWrapper"
-import { RoomWrapper } from "../room/RoomWrapper"
-import { SourceWrapper } from "../SourceWrapper"
+import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
+import { SignalMessage } from "../../../types/Interfaces"
+import { RoomPos } from "../../../types/Types"
+import { HardDrive } from "../../../utils/harddrive/HardDrive"
+import { InRoomPathFinder } from "../../../utils/navigation/InRoomPathFinder"
+import { CreepWrapper } from "../../creep/CreepWrapper"
+import { RoomWrapper } from "../../room/RoomWrapper"
+import { SourceWrapper } from "../../SourceWrapper"
 
 
 
@@ -95,14 +94,14 @@ export abstract class CreepBehavior {
             const is_close_to_source = creep.pos.inRangeTo(source, ActionDistance.HARVEST)
             const path_finder = new InRoomPathFinder()
 
-            if (can_harvest) {
+            if (can_harvest && !is_close_to_source) {
                 path_finder.GeneratePath(this.m_Wrapper, source, ActionDistance.HARVEST)
                 if (!path_finder.MoveTo(this.m_Wrapper)) {
                     moved = 1
                     creep.harvest(source)
                 }
             }
-            else if (!can_harvest && is_close_to_source) {
+            else if (is_close_to_source) {
                 creep.harvest(source)
             }
         }

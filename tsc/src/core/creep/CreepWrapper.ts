@@ -1,19 +1,18 @@
-import { Behavior } from "../consts/CreepBehaviorConsts";
-import { GameEntityTypes } from "../consts/GameConstants";
-import { SignalMessage } from "../types/Interfaces";
-import { HardDrive } from "../utils/harddrive/HardDrive";
-import { ColonyMember } from "./ColonyMember";
+import { Behavior } from "../../consts/CreepBehaviorConsts";
+import { GameEntityTypes } from "../../consts/GameConstants";
+import { SignalMessage } from "../../types/Interfaces";
+import { HardDrive } from "../../utils/harddrive/HardDrive";
+import { ColonyMember } from "../ColonyMember";
 import { BuildBehavior } from "./CreepBehavior/BuildBehavior";
 import { CreepBehavior } from "./CreepBehavior/CreepBehavior";
 import { DefendBehavior } from "./CreepBehavior/DefendBehavior";
 import { HarvestBehavior } from "./CreepBehavior/HarvestBehavior";
 import { RepairBehavior } from "./CreepBehavior/RepairBehavior";
 import { UpgradeBehavior } from "./CreepBehavior/UpgradeBehavior";
-import { RoomWrapper } from "./room/RoomWrapper";
+import { RoomWrapper } from "../room/RoomWrapper";
 
 export class CreepWrapper extends ColonyMember {
     private behaviors = new Map<Behavior, CreepBehavior>()
-
     private m_Name: string
     private m_Behavior_type: Behavior = Behavior.NONE
     private m_Behavior: CreepBehavior | undefined = undefined

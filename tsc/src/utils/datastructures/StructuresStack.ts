@@ -1,5 +1,5 @@
 import { GameEntityTypes } from "../../consts/GameConstants"
-import { StructureWrapper } from "../../core/StructureWrapper"
+import { StructureWrapper } from "../../core/structure/StructureWrapper"
 import { StructStackIndex } from "../../types/Interfaces"
 
 

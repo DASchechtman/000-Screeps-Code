@@ -1,14 +1,30 @@
+import { DEFENSE_DEV_LEVELS } from "../../consts/GameConstants";
 import { RoomWrapper } from "../../core/room/RoomWrapper";
 import { Point } from "../../types/Interfaces";
 import { InRoomGrid } from "../navigation/RoomGrid";
+import { PlanLayer } from "./PlanLayer";
+
+interface BuildInfo {
+    type: BuildableStructureConstant,
+    amount: number
+}
 
 export class ColonyPlanner {
     private static m_Inst: Map<string, ColonyPlanner> = new Map()
 
-    private m_Grid: InRoomGrid
+    private m_Layers: PlanLayer[]
+    private m_Room_name: string
+    private m_Struct_list: BuildInfo[]
 
     private constructor(room_name: string) {
-        this.m_Grid = new InRoomGrid(room_name)
+        this.m_Layers = []
+        this.m_Room_name = room_name
+        this.m_Struct_list = new Array()
+
+        this.m_Struct_list.push({
+            type: STRUCTURE_EXTENSION,
+            amount: 5
+        })
     }
 
     public static GetInst(room_name: string): ColonyPlanner {
@@ -42,47 +58,17 @@ export class ColonyPlanner {
         return corners
     }
 
-    private CreateParameter(corners: [Point, Point, Point, Point], room: RoomWrapper): void {
-        const first_corner = corners[0]
-        const second_corner = corners[1]
-        const third_corner = corners[2]
-        const fourth_corner = corners[3]
-
-        const cur_corner: Point = {
-            x: first_corner.x,
-            y: first_corner.y
-        }
-
-        const y = fourth_corner.y - first_corner.y
-        const x = fourth_corner.x = first_corner.x
-
-        // creates a square made of barriers row by row (kinda like printing a square)
-        for (let column = 0; column < y; column++) {
-            for (let row = 0; row < x; row++) {
-                // builds horizontal lines of a square
-                if (cur_corner.y === first_corner.y || cur_corner.y === third_corner.y) {
-                    room.CreateConstructionSite(cur_corner.x, cur_corner.y, STRUCTURE_RAMPART)
-                }
-                // builds virtical lines of square
-                else if (cur_corner.x === first_corner.x || cur_corner.x === second_corner.x) {
-                    room.CreateConstructionSite(cur_corner.x, cur_corner.y, STRUCTURE_RAMPART)
-                }
-                // teleports to last x pos to save on looping iterations
-                else {
-                    cur_corner.x = second_corner.x
-                    room.CreateConstructionSite(cur_corner.x, cur_corner.y, STRUCTURE_RAMPART)
-                    break
-                }
-                cur_corner.x++
-            }
-            cur_corner.x = first_corner.x
-            cur_corner.y++
-        }
-    }
-
 
     public Build(level: number, spawn_point: Point, room: RoomWrapper): void {
-        const corners = this.GetCornersOfSquare(level, spawn_point)
-        this.CreateParameter(corners, room)
+        const corners = this.GetCornersOfSquare(level * DEFENSE_DEV_LEVELS, spawn_point)
+        if (this.m_Layers.length === 0) {
+            const layer = new PlanLayer(corners, this.m_Room_name)
+            layer.MakePerimeter(room)
+            this.m_Layers.push(layer)
+
+            for (let i = 0; i < this.m_Struct_list[level-2].amount; i++) {
+                layer.SetStructure(room, this.m_Struct_list[level-2].type)
+            }
+        }
     }
 }

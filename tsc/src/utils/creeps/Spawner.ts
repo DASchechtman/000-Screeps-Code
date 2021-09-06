@@ -1,6 +1,6 @@
 import { Behavior } from "../../consts/CreepBehaviorConsts"
 import { PriorityQueue } from "../datastructures/PriorityQueue"
-import { CreepWrapper } from "../../core/CreepWrapper"
+import { CreepWrapper } from "../../core/creep/CreepWrapper"
 import { RoomWrapper } from "../../core/room/RoomWrapper"
 
 enum PriorityLevel {

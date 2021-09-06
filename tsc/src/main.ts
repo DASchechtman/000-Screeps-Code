@@ -1,7 +1,10 @@
 import { Behavior } from "./consts/CreepBehaviorConsts"
 import { COLONY_OWNER, DEBUG_ROOM_NAME } from "./consts/GameConstants"
+import { ExtendProperties } from "./Prototypes/Prototypes"
 import { Colony } from "./core/Colony"
 import { HardDrive } from "./utils/harddrive/HardDrive"
+
+ExtendProperties()
 
 const colonies: Colony[] = []
 

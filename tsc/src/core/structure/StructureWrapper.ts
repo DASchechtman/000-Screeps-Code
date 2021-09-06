@@ -1,8 +1,8 @@
-import { Behavior } from "../consts/CreepBehaviorConsts"
-import { GameEntityTypes } from "../consts/GameConstants"
-import { SignalMessage } from "../types/Interfaces"
-import { ColonyMember } from "./ColonyMember"
-import { CreepWrapper } from "./CreepWrapper"
+import { Behavior } from "../../consts/CreepBehaviorConsts"
+import { GameEntityTypes } from "../../consts/GameConstants"
+import { SignalMessage } from "../../types/Interfaces"
+import { ColonyMember } from "../ColonyMember"
+import { CreepWrapper } from "../creep/CreepWrapper"
 
 export class StructureWrapper<T extends StructureConstant> extends ColonyMember {
 
@@ -13,17 +13,9 @@ export class StructureWrapper<T extends StructureConstant> extends ColonyMember 
         this.m_Repair_creep_id = null
     }
 
-    private ConvertNanToNum(val: number | null | undefined): number {
-        let num_val = Number.MAX_SAFE_INTEGER
-        if (typeof val === 'number' && val > 0) {
-            num_val = val
-        }
-        return num_val
-    }
-
     private GetWrapperStruct(): Structure<T> | null {
         const id = this.m_Id as Id<Structure<T>>
-        return Game.getObjectById(id)
+        return Structure.prototype.Get(id)
     }
 
     OnTickRun(): void {
@@ -67,11 +59,13 @@ export class StructureWrapper<T extends StructureConstant> extends ColonyMember 
     }
 
     GetCurHealth(): number {
-        return this.ConvertNanToNum(this.GetWrapperStruct()?.hits)
+        const struct = this.GetWrapperStruct()
+        return struct ? struct.CurHealth() : Number.MAX_SAFE_INTEGER
     }
 
     GetMaxHealth(): number {
-        return this.ConvertNanToNum(this.GetWrapperStruct()?.hitsMax)
+        const struct = this.GetWrapperStruct()
+        return struct ? struct.MaxHealth() : Number.MAX_SAFE_INTEGER
     }
 
     GetStructure(): Structure<T> | null {

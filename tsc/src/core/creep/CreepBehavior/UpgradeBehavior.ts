@@ -1,8 +1,8 @@
-import { ActionDistance } from "../../consts/CreepBehaviorConsts"
-import { JsonObj, SignalMessage } from "../../types/Interfaces"
-import { HardDrive } from "../../utils/harddrive/HardDrive"
-import { CreepWrapper } from "../CreepWrapper"
-import { RoomWrapper } from "../room/RoomWrapper"
+import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
+import { JsonObj } from "../../../types/Interfaces"
+import { HardDrive } from "../../../utils/harddrive/HardDrive"
+import { CreepWrapper } from "../../creep/CreepWrapper"
+import { RoomWrapper } from "../../room/RoomWrapper"
 import { CreepBehavior } from "./CreepBehavior"
 
 

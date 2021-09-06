@@ -1,5 +1,5 @@
 import { GameEntityTypes } from "../../consts/GameConstants";
-import { StructureWrapper } from "../../core/StructureWrapper";
+import { StructureWrapper } from "../../core/structure/StructureWrapper";
 import { BinaryHeap } from "./BinaryHeap";
 import { PriorityQueue } from "./PriorityQueue";
 
