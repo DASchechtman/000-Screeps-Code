@@ -58,7 +58,6 @@ export class CreepWrapper extends ColonyMember {
             this.m_Behavior_type = type
             this.m_Behavior = this.behaviors.get(this.m_Behavior_type)
         }
-
     }
 
     public OnTickRun(): void {

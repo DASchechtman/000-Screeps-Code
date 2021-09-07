@@ -58,12 +58,6 @@ export class Colony extends ColonyMember {
         HardDrive.WriteFile(path, details_list)
     }
 
-
-
-    private Spawn(spawn_type: number, tracker: Spawner): void {
-        
-    }
-
     private ProcessSignal(signal: SignalMessage, colony: Colony) {
         const id = signal.reciever_name
         const type = signal.receiver_type
@@ -126,6 +120,29 @@ export class Colony extends ColonyMember {
         return creep_details
     }
 
+    private IsTuple(data: unknown, types: string[]): boolean {
+        const is_right_type_and_len = data instanceof Array && data.length === types.length
+
+        if (!is_right_type_and_len) {
+            return false
+        }
+
+        let is_tuple = false
+        const tuple = data as Array<any>
+        
+        for (let i = 0; i < tuple.length; i++) {
+            if (typeof tuple[i] === types[i]) {
+                is_tuple = true
+            }
+            else {
+                is_tuple = false
+                break
+            }
+        }
+
+        return is_tuple
+    }
+
     OnInit(): void {
         console.log("running init", this.m_Members.Size());
 
@@ -133,21 +150,11 @@ export class Colony extends ColonyMember {
 
         for (let creep of creeps) {
 
-            // checking to see if a creep's detail should be added to the list
-            const CheckForMissingCreeps = function (col_creep: CreepDetails) {
-                let exists_in_list: CreepDetails | undefined = undefined
-
-                if (col_creep.name === creep.name) {
-                    exists_in_list = col_creep
-                }
-
-                return exists_in_list
-            }
-
-            const creep_not_found = this.m_Creeps_in_colony.find(CheckForMissingCreeps)
+            const creep_not_found = !this.m_Creeps_in_colony.some(c => c.name === creep.name)
 
             if (creep_not_found) {
                 const wrapper = new CreepWrapper(creep.name)
+                wrapper.OnTickStart()
                 this.m_Creeps_in_colony.push({
                     name: creep.name,
                     type: wrapper.GetBehavior()
@@ -276,11 +283,6 @@ export class Colony extends ColonyMember {
             }
         }
 
-        const spawn_list = this.m_Spawn_type_tracker.CreateSpawnList()
-        if (spawn_list.length > 0) {
-            this.Spawn(spawn_list[0], this.m_Spawn_type_tracker)
-        }
-
         const run_members = (member: ColonyMember): void => {
             member.OnTickStart()
             member.OnTickRun()
@@ -354,12 +356,11 @@ export class Colony extends ColonyMember {
 
         // checks if spawn successfully created a new creep
         // and sent a signal to remember that creep's details
-        else if (signal.data instanceof Array && signal.data.length === 2) {
-            const item_1 = signal.data[0]
-            const item_2 = signal.data[1]
-            if (typeof item_1 === 'string' && typeof item_2 === 'number') {
-                this.RememberCreepDetails(item_1, item_2)
-            }
+        else if (this.IsTuple(signal.data, [typeof '', typeof 0])) {
+            const tuple = signal.data as Array<any>
+            const name = tuple[0]
+            const type = tuple[1]
+            this.RememberCreepDetails(name, type)
         }
 
         return received
