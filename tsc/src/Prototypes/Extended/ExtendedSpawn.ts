@@ -6,7 +6,6 @@ export class ExtendedSpawn extends StructureSpawn {
     }
 
     RunBehavior(...args: unknown[]): number { 
-        console.log(`spawn behavior: ${this.extended_id}`)
         return 1
     }
 

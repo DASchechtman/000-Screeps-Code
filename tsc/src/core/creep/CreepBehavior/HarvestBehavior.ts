@@ -3,7 +3,7 @@ import { EventTypes } from "../../../consts/GameConstants"
 import { JsonObj } from "../../../types/Interfaces"
 import { Container } from "../../../types/Types"
 import { EventManager } from "../../../utils/event_handler/EventManager"
-import { HardDrive } from "../../../utils/harddrive/HardDrive"
+import { JsonMap } from "../../../utils/harddrive/JsonTreeNode"
 import { CreepWrapper } from "../../creep/CreepWrapper"
 import { RoomWrapper } from "../../room/RoomWrapper"
 import { SourceWrapper } from "../../SourceWrapper"
@@ -11,10 +11,17 @@ import { CreepBehavior } from "./CreepBehavior"
 
 
 export class HarvestBehavior extends CreepBehavior {
-    private m_Data: JsonObj = {}
 
-    constructor(wrapper: CreepWrapper) {
-        super(wrapper)
+    private b_full = false
+    private s_source_id = ""
+    private s_container_id = ""
+
+    private readonly s_full_key = "full"
+    private readonly s_source_id_key = "source id"
+    private readonly s_container_id_key = "container id"
+
+    constructor(wrapper: CreepWrapper, behavior_data: JsonMap) {
+        super(wrapper, behavior_data)
     }
 
     InitCreep(creep: Creep): void {
@@ -24,29 +31,30 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     InitTick(creep: Creep): void {
-        const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
-        const cur_state = Boolean(behavior?.full)
-        const free_container = String(behavior?.free_container)
-        this.m_Data = {
-            id: String(behavior?.id),
-            full: this.UpdateWorkState(creep, cur_state),
-            free_container: free_container,
-            "test-data": "testing testing 1, 2, 3"
-        }
+        this.b_full = this.GetJsonDataIfAvalible(this.s_full_key, this.b_full) as boolean
+        this.s_source_id = this.GetJsonDataIfAvalible(this.s_source_id_key, this.s_source_id) as string
+        this.s_container_id = this.GetJsonDataIfAvalible(this.s_container_id_key, this.s_container_id) as string
     }
 
     RunTick(creep: Creep, room: RoomWrapper): void {
         const source = this.GetEnergySource(creep, room)
         if (source) {
-            this.m_Data.id = source.id
+            this.s_source_id = source.id
 
-            if (this.m_Data.full) {
-                let id = this.m_Data.free_container as Id<Container>
+            if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                this.b_full = false
+            }
+            else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === creep.store.getCapacity()) {
+                this.b_full = true
+            }
+
+            if (this.b_full) {
+                let id = this.s_container_id as Id<Container>
                 let container = Game.getObjectById(id)
 
                 if (!container || container.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
                     this.SetFreeContainer(room)
-                    id = this.m_Data.free_container as Id<Container>
+                    id = this.s_container_id as Id<Container>
                     container = Game.getObjectById(id)!!
 
                 }
@@ -61,7 +69,10 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     FinishTick(creep: Creep): void {
-        HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data)
+        this.StoreDataInJsonMap(
+            [this.s_full_key, this.s_source_id_key, this.s_container_id_key],
+            [this.b_full, this.s_source_id, this.s_container_id]
+            )
     }
 
     DestroyCreep(creep: Creep | null): void {
@@ -100,17 +111,17 @@ export class HarvestBehavior extends CreepBehavior {
             }
         }
 
-        this.m_Data.free_container = container.id
+        this.s_container_id = container.id
     }
 
     private DepositToContainer(creep: Creep, container: Container) {
-        if (!this.MoveTo(ActionDistance.TRANSFER, container)) {
+        this.MoveTo(creep, container, ActionDistance.TRANSFER, () => {
             creep.transfer(container, RESOURCE_ENERGY)
-        }
+        })
     }
 
     private GetEnergySource(creep: Creep, room: RoomWrapper): Source | null {
-        const source_id = this.m_Data?.id as Id<Source>
+        const source_id = this.s_source_id as Id<Source>
 
         let source = Game.getObjectById(source_id ? source_id: "" as Id<Source>)
 
@@ -124,7 +135,7 @@ export class HarvestBehavior extends CreepBehavior {
     }
 
     private OnInvasion() {
-        console.log("WE'RE UNDER ATTACK")
+        
     }
 
 }

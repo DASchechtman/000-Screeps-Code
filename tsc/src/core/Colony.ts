@@ -2,8 +2,6 @@
 import { Behavior } from "../consts/CreepBehaviorConsts";
 import { DEFENSE_DEV_LEVELS, EventTypes, GameEntityTypes } from "../consts/GameConstants";
 import { JsonObj, Point, SignalMessage } from "../types/Interfaces";
-import { JsonList, JsonType } from "../types/Types";
-import { BuildScalableDefender, BuildScalableWorker, WORKER_BODY } from "../utils/creeps/CreepBuilder";
 import { ColonyMemberMap } from "../utils/datastructures/ColonyMemberMap";
 import { PriorityStructuresStack } from "../utils/datastructures/PriorityStructuresStack";
 import { HardDrive } from "../utils/harddrive/HardDrive";
@@ -16,6 +14,10 @@ import { StructureWrapper } from "./structure/StructureWrapper";
 import { DegradableStructureWrapper } from "./structure/DegradableStructureWrapper";
 import { EventManager } from "../utils/event_handler/EventManager";
 import { ColonyPlanner } from "../utils/automation/ColonyPlanner";
+import { JsonArray, JsonMap, JsonTreeNode, NodeTypes } from "../utils/harddrive/JsonTreeNode";
+import { spawn } from "child_process";
+import { IsTuple } from "../utils/TypeHelpers/ArrayTypeHelpers";
+import { CreepBehavior } from "./creep/CreepBehavior/CreepBehavior";
 
 interface CreepDetails {
     name: string,
@@ -46,14 +48,32 @@ export class Colony extends ColonyMember {
 
     private RememberCreepDetails(name: string, type: number): void {
         const path = HardDrive.Join(this.m_Room.GetName(), "creep_list")
-        let details_list: JsonList = HardDrive.ReadFile(path) as JsonList
+        let details_list: JsonArray = HardDrive.ReadFile(path) as JsonArray
 
         if (details_list === null) {
             details_list = []
         }
 
-        const creep_details: [string, number] = [name, type]
-        details_list.push(creep_details)
+        const creep_details = [new JsonTreeNode(name), new JsonTreeNode(type)]
+        const detail_index = details_list.findIndex((value, index, obj) => {
+            const is_array = value.Type() === NodeTypes.JSON_ARRAY
+            if (!is_array) { return false }
+
+            const data = value.GetData()
+            if (!data) { return false }
+
+            const details = data as JsonArray
+
+            return details[0].GetData() === creep_details[0].GetData() && details[1].GetData() === creep_details[1].GetData()
+
+        })
+
+        if (detail_index != -1) {
+            details_list[detail_index] = new JsonTreeNode(creep_details)
+        }
+        else {
+            details_list.push(new JsonTreeNode(creep_details))
+        }
 
         HardDrive.WriteFile(path, details_list)
     }
@@ -79,15 +99,15 @@ export class Colony extends ColonyMember {
         }
         else if (type !== undefined) {
             const members = this.m_Members.GetByType(type)
-            if (members && members.length > 0) {
-                for (let member of members) {
+
+            if (!members) {
+                return
+            }
+
+            for (let member of members) {
+                if (RunSignal(member, signal)) {
                     receiver = member
-                    if (RunSignal(receiver, signal)) {
-                        break
-                    }
-                    else {
-                        receiver = undefined
-                    }
+                    break
                 }
             }
         }
@@ -101,76 +121,67 @@ export class Colony extends ColonyMember {
 
     private RecallCreepDetails(): CreepDetails[] {
         const path = HardDrive.Join(this.m_Room.GetName(), "creep_list")
-        const details_list: JsonList = HardDrive.ReadFile(path) as JsonList
+        const details_list = HardDrive.ReadFile(path) as JsonArray
         const creep_details: CreepDetails[] = []
 
-        if (details_list) {
-            for (let detail of details_list) {
-                const list = detail as JsonList
+        if (!details_list) {
+            return []
+        }
 
-                if (list instanceof Array && list.length >= 2) {
-                    creep_details.push({
-                        name: list[0] as string,
-                        type: list[1] as number
-                    })
-                }
+
+        for (let detail of details_list) {
+            const list = detail.GetData() as JsonArray
+
+            const is_creeps_detail = (
+                detail.Type() === NodeTypes.JSON_ARRAY
+                && list.length >= 2
+            )
+
+            if (is_creeps_detail) {
+                creep_details.push({
+                    name: list[0].GetData() as string,
+                    type: list[1].GetData() as number
+                })
             }
         }
+
 
         return creep_details
     }
 
-    private IsTuple(data: unknown, types: string[]): boolean {
-        const is_right_type_and_len = data instanceof Array && data.length === types.length
-
-        if (!is_right_type_and_len) {
-            return false
+    private GetCreepData(creep_name: string): JsonMap {
+        let creep_data = HardDrive.ReadFile(`${this.m_Room.GetName()}/${creep_name}`)
+        if (!(creep_data instanceof Map)) {
+            creep_data = new Map() as JsonMap
         }
 
-        let is_tuple = false
-        const tuple = data as Array<any>
-        
-        for (let i = 0; i < tuple.length; i++) {
-            if (typeof tuple[i] === types[i]) {
-                is_tuple = true
-            }
-            else {
-                is_tuple = false
-                break
-            }
-        }
-
-        return is_tuple
+        return creep_data
     }
 
     OnInit(): void {
-        console.log("running init", this.m_Members.Size());
-
         const creeps = this.m_Room.GetMyCreeps()
-
         for (let creep of creeps) {
 
             const creep_not_found = !this.m_Creeps_in_colony.some(c => c.name === creep.name)
 
             if (creep_not_found) {
-                const wrapper = new CreepWrapper(creep.name)
+                const wrapper = new CreepWrapper(creep.name, this.GetCreepData(creep.name))
                 wrapper.OnTickStart()
                 this.m_Creeps_in_colony.push({
                     name: creep.name,
                     type: wrapper.GetBehavior()
                 })
+                this.m_Members.Put(wrapper)
             }
         }
     }
 
     private UpgradeRoomResources(spawn: StructureSpawn): void {
         const controller = this.m_Room.GetController()
-        const walls_made = HardDrive.ReadFile(this.m_Wall_made_file) as boolean
         const level = HardDrive.ReadFile(this.m_Room_level_path) as number
         const multiplyer = DEFENSE_DEV_LEVELS
 
         if (controller && controller?.level !== level && level < multiplyer) {
-            console.log("building room", level)
             const spawn_point = spawn.pos.ToPoint()
             const room_builder = ColonyPlanner.GetInst(this.m_Room.GetName())
             room_builder.Build(controller.level, spawn_point, this.m_Room)
@@ -180,9 +191,6 @@ export class Colony extends ColonyMember {
 
     OnTickStart(): void {
         this.m_Spawn_type_tracker.TrackCreepTypes()
-        if (!HardDrive.Has(this.m_Room.GetName())) {
-            HardDrive.CreateFolder(this.m_Room.GetName())
-        }
         const spawn = this.m_Room.GetOwnedStructures<StructureSpawn>(STRUCTURE_SPAWN)[0]
         const limit = 10;
 
@@ -191,9 +199,9 @@ export class Colony extends ColonyMember {
         // finding the 10 most damaged structs (and structs with behaviors like towers)
         // and adding them to the colony member list so they can run
         {
-            // generate a queue of structure stacks made of all structs that
-            // are mine or unowned
+            // creates a queue of structures that are unowned or mine
             const CreatePriorityStructQueue = () => {
+                
                 const structs_in_room = this.m_Room.GetAllNonHostileStructs()
                 const stack = new PriorityStructuresStack()
 
@@ -250,17 +258,16 @@ export class Colony extends ColonyMember {
         {
             // gets the list of creep name and behavior types [string, Behavior].
             // used later to test if the creep is dead
-            const recalled_creep_details = this.RecallCreepDetails()
+            const recalled_creep_details = this.m_Room.GetMyCreeps()
 
             for (let creep_entry of recalled_creep_details) {
-                const does_not_have_member = !this.m_Members.HasMember(creep_entry.name)
-                const not_spawning = creep_entry.name !== spawn.spawning?.name
 
-                if (does_not_have_member && not_spawning) {
-                    const wrapper = new CreepWrapper(creep_entry.name)
-                    wrapper.SetBehavior(creep_entry.type)
-                    this.m_Members.Put(wrapper)
-                }
+                const details = creep_entry.name.split("-")
+                const type = Number.parseInt(details[details.length-1])
+
+                const wrapper = new CreepWrapper(creep_entry.name, this.GetCreepData(creep_entry.name))
+                wrapper.SetBehavior(type)
+                this.m_Members.Put(wrapper)
             }
         }
 
@@ -289,11 +296,21 @@ export class Colony extends ColonyMember {
             member.OnTickEnd()
             member.OnDestroy()
 
+
             const signal = member.GetSignal()
 
             if (signal) {
                 this.ProcessSignal(signal, this)
                 member.SetSignal(null)
+            }
+
+
+            const path = `${this.m_Room.GetName()}/${member.GetID()}`
+            if (member.GetDataToRecord() !== null) {
+                HardDrive.WriteFile(path, member.GetDataToRecord())
+            }
+            else if (HardDrive.HasFile(path)) {
+                HardDrive.DeleteFile(path)
             }
         }
 
@@ -307,6 +324,8 @@ export class Colony extends ColonyMember {
 
     OnTickEnd(): void {
         this.m_Spawn_type_tracker.UntrackCreepTypes()
+        this.m_Room.Clear()
+        this.m_Members.Clear()
     }
 
     OnDestroy(): void {
@@ -318,9 +337,10 @@ export class Colony extends ColonyMember {
     ReceiveSignal(signal: SignalMessage): boolean {
         let received = false
 
-        // checks for if a creep died and sent a
-        // signal to delete it from disk/memory
-        if (typeof signal.data === 'string') {
+        const spawn_made_creep = IsTuple(signal.data, [typeof '', typeof 0])
+        const creep_died = typeof signal.data === 'string'
+
+        if (creep_died) {
             const ForgetCreep = (name: string) => {
                 let forgot = false
                 const creeps = this.RecallCreepDetails()
@@ -348,19 +368,17 @@ export class Colony extends ColonyMember {
                 return forgot
             }
 
-            if (ForgetCreep(signal.data)) {
+            if (ForgetCreep(signal.data as string)) {
                 received = true
                 this.m_Members.DeleteById(signal.sender.GetID())
             }
         }
-
-        // checks if spawn successfully created a new creep
-        // and sent a signal to remember that creep's details
-        else if (this.IsTuple(signal.data, [typeof '', typeof 0])) {
+        else if (spawn_made_creep) {
             const tuple = signal.data as Array<any>
             const name = tuple[0]
             const type = tuple[1]
             this.RememberCreepDetails(name, type)
+            received = true
         }
 
         return received

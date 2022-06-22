@@ -1,4 +1,5 @@
 import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
+import { JsonMap } from "../../../utils/harddrive/JsonTreeNode"
 import { CreepWrapper } from "../../creep/CreepWrapper"
 import { RoomWrapper } from "../../room/RoomWrapper"
 import { CreepBehavior } from "./CreepBehavior"
@@ -6,8 +7,8 @@ import { CreepBehavior } from "./CreepBehavior"
 
 export class DefendBehavior extends CreepBehavior {
 
-    constructor(wrapper: CreepWrapper) {
-        super(wrapper)
+    constructor(wrapper: CreepWrapper, behavior_data: JsonMap) {
+        super(wrapper, behavior_data)
     }
 
     InitCreep(creep: Creep): void {}

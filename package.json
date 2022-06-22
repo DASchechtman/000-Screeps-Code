@@ -16,10 +16,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "del-files": "rmdir /Q/S \"./js\" & rmdir /Q/S \"./dist\"",
-    "compile": "npm run del-files & tsc && python flatten.py",
+    "compile": "tsc && python3 flatten.py",
     "upload-m": "npm run compile && grunt screeps --branch=0",
-    "upload-d": "npm run compile && grunt screeps --branch=1"
+    "upload-d": "npm run compile && xcopy \"./js\" \"C:/Users/dsche/AppData/Local/Screeps/scripts/localhost___21025/default\" /y > nul 2>&1 "
   },
   "author": "Daniel Schechtman",
   "license": "ISC"

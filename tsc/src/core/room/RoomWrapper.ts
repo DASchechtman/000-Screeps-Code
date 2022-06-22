@@ -28,11 +28,12 @@ export class RoomWrapper {
     private LoadOwnedStructs(): void {
         const struct = this.m_Room()?.find(FIND_MY_STRUCTURES)
 
-        if (struct) {
-            for (let s of struct) {
-                this.LoadStructs(ObjectsInRoom.MY_STRUCTS, s.structureType, s.id)
-            }
+        if (!struct) { return }
+
+        for (let s of struct) {
+            this.LoadStructs(ObjectsInRoom.MY_STRUCTS, s.structureType, s.id)
         }
+
     }
 
     private LoadHostileStructs() {
@@ -80,8 +81,13 @@ export class RoomWrapper {
 
     private LoadMyCreeps() {
         const creeps = this.m_Room()?.find(FIND_MY_CREEPS)
+        const spawn = this.m_Room()?.find(FIND_MY_STRUCTURES, {
+            filter: { structureType: StructureSpawn }
+        })?.find((val, index, obj) => { return true })
+
         if (creeps) {
             for (let creep of creeps) {
+                //if (creep.name === (spawn as StructureSpawn)?.spawning?.name) { continue }
                 this.LoadResources(ObjectsInRoom.MY_CREEPS, creep.id)
             }
         }
@@ -101,15 +107,15 @@ export class RoomWrapper {
     }
 
     private IsOwned(struct: Structure): boolean {
-        const struct_owner = this.GetOwnerName(struct)
+        const struct_owner = String(this.GetOwnerName(struct))
         const string_type = typeof struct_owner === 'string'
-        return Boolean(string_type && struct_owner === COLONY_OWNER)
+        return Boolean(string_type && COLONY_OWNER.includes(struct_owner))
     }
 
     private IsHostile(struct: Structure): boolean {
-        const struct_owner = this.GetOwnerName(struct)
+        const struct_owner = String(this.GetOwnerName(struct))
         const string_type = typeof struct_owner === 'string'
-        return Boolean(string_type && struct_owner !== COLONY_OWNER)
+        return Boolean(string_type && COLONY_OWNER.includes(struct_owner))
     }
 
     private GetStructures<T>(struct_type: string, map: Map<string, Set<string>> | undefined): T[] {
@@ -190,12 +196,8 @@ export class RoomWrapper {
                     const struct_id = id as Id<any>
                     const room_struct = Game.getObjectById(struct_id)
 
-                    const is_filter = room_struct && filter && filter(room_struct)
-                    const isnt_filter = room_struct && filter === undefined
-
-                    if (is_filter || isnt_filter) {
-                        structs.push(room_struct)
-                    }
+                    if (!room_struct || (filter && !filter(room_struct))) { continue }
+                    structs.push(room_struct)
                 }
             })
         }
@@ -287,6 +289,10 @@ export class RoomWrapper {
 
     CreateConstructionSite(x: number, y: number, type: BuildableStructureConstant) {
         return this.GetRoom()?.createConstructionSite(x, y, type)
+    }
+
+    Clear() {
+        this.m_Room_objects.Clear()
     }
 
 }

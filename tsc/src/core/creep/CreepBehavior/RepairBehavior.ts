@@ -2,7 +2,7 @@ import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
 import { GameEntityTypes } from "../../../consts/GameConstants"
 import { JsonObj, SignalMessage } from "../../../types/Interfaces"
 import { PriorityStructuresStack } from "../../../utils/datastructures/PriorityStructuresStack"
-import { HardDrive } from "../../../utils/harddrive/HardDrive"
+import { JsonMap } from "../../../utils/harddrive/JsonTreeNode"
 import { CreepWrapper } from "../../creep/CreepWrapper"
 import { RoomWrapper } from "../../room/RoomWrapper"
 import { SourceWrapper } from "../../SourceWrapper"
@@ -12,12 +12,23 @@ import { CreepBehavior } from "./CreepBehavior"
 
 export class RepairBehavior extends CreepBehavior {
 
-    private m_Data: JsonObj = {}
     private m_Struct_Stack: PriorityStructuresStack | null = null
     private m_Max_time = 10
 
-    constructor(wrapper: CreepWrapper) {
-        super(wrapper)
+    private s_source_id = ""
+    private s_struct_id = ""
+    private b_full = false
+    private b_get_new_id = true
+    private n_tick = 0
+
+    private readonly s_source_id_key = "source id"
+    private readonly s_struct_id_key = "struct id"
+    private readonly s_full_key = "full"
+    private readonly s_get_new_id_key = "new id"
+    private readonly s_tick_key = "tick count"
+
+    constructor(wrapper: CreepWrapper, behavior_data: JsonMap) {
+        super(wrapper, behavior_data)
     }
 
     private GetStack(): PriorityStructuresStack {
@@ -31,34 +42,35 @@ export class RepairBehavior extends CreepBehavior {
     InitCreep(creep: Creep): void {}
 
     InitTick(creep: Creep): void {
-
-        const data_behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
-        const cur_state = data_behavior?.full === undefined ? false : data_behavior.full as boolean
-        const cur_tick = typeof data_behavior?.tick === 'number' ? data_behavior.tick : 0
-        let new_id = data_behavior?.new_id as boolean
-        const source_id = String(data_behavior?.source_id)
-
-        if (new_id === undefined) {
-            new_id = true
-        }
-
-        this.m_Data = {
-            id: String(data_behavior?.id),
-            full: this.UpdateWorkState(creep, cur_state),
-            tick: cur_tick,
-            new_id: new_id,
-            source_id: source_id
-        }
+        this.s_source_id = this.GetJsonDataIfAvalible(this.s_source_id_key, this.s_source_id) as string
+        this.s_struct_id = this.GetJsonDataIfAvalible(this.s_struct_id_key, this.s_struct_id) as string
+        this.b_full = this.GetJsonDataIfAvalible(this.s_full_key, this.b_full) as boolean
+        this.b_get_new_id = this.GetJsonDataIfAvalible(this.s_get_new_id_key, this.b_get_new_id) as boolean
+        this.n_tick = this.GetJsonDataIfAvalible(this.s_tick_key, this.n_tick) as number
     }
 
     RunTick(creep: Creep, room: RoomWrapper): void {
-        let source = Game.getObjectById(this.m_Data.source_id as Id<Source>)
+        let source = Game.getObjectById(this.s_source_id as Id<Source>)
+
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            this.b_full = false
+        }
+        else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === creep.store.getCapacity()) {
+            this.b_full = true
+        }
+
+        
 
 
-        if (this.m_Data.full) {
+        if (this.b_full) {
             let id = this.SetStruct()
             let struct = Game.getObjectById(id)
             const stack = this.GetStack()
+
+            const GetNextStruct = () => {
+                id = this.SetStruct()
+                struct = Game.getObjectById(id)
+            }
 
             // a struct can be destroyed and so not
             // exist, but other structs still do
@@ -68,16 +80,14 @@ export class RepairBehavior extends CreepBehavior {
                 if (struct) {
                     break
                 }
-                id = this.SetStruct()
-                struct = Game.getObjectById(id)
-                
+                this.b_get_new_id = true
+                GetNextStruct()
             }
+
+            console.log("repair info", size, struct)
 
             if (struct) {
                 this.Repair(creep, struct)
-            }
-            else {
-                creep.suicide()
             }
         }
         else {
@@ -89,7 +99,7 @@ export class RepairBehavior extends CreepBehavior {
             }
 
             if (source) {
-                this.m_Data.source_id = source.id
+                this.s_source_id = source.id
                 this.Harvest(source, room)
             }
         }
@@ -98,8 +108,11 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     FinishTick(creep: Creep): void {
-        HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
         this.m_Struct_Stack?.Clear()
+        this.StoreDataInJsonMap(
+            [this.s_full_key, this.s_tick_key, this.s_source_id_key, this.s_struct_id_key, this.s_get_new_id_key],
+            [this.b_full, this.n_tick, this.s_source_id, this.s_struct_id, this.b_get_new_id]
+        )
     }
 
     DestroyCreep(creep: Creep | null): void {
@@ -123,34 +136,34 @@ export class RepairBehavior extends CreepBehavior {
     }
 
     private Repair(creep: Creep, struct: Structure<any>) {
-        if (!this.MoveTo(ActionDistance.REPAIR, struct)) {
-            creep.repair(struct)
-            this.IncCounter()
-        }
+       this.MoveTo(creep, struct, ActionDistance.REPAIR, () => {
+        this.IncCounter()
+        creep.repair(struct)
+       })
     }
 
     private IncCounter(): void {
-        this.m_Data.tick = (this.m_Data.tick as number) + 1
-        if (this.m_Data!!.tick === this.m_Max_time) {
-            this.m_Data.tick = 0
-            this.m_Data.new_id = true
+        this.n_tick++
+        if (this.n_tick === this.m_Max_time) {
+            this.n_tick = 0
+            this.b_get_new_id = true
         }
     }
 
     private SetStruct(): Id<any> {
-        let id: Id<any> = this.m_Data.id as Id<any>
+        let id: Id<any> = this.s_struct_id as Id<any>
         const stack = this.GetStack()
 
-        if (this.m_Data.new_id) {
+        if (this.b_get_new_id) {
             const struct_wrapper = stack.Pop()
 
             if (struct_wrapper) {
                 const new_id = String(struct_wrapper.GetStructure()?.id)
-                this.m_Data.id = new_id
+                this.s_struct_id = new_id
                 id = new_id as Id<any>
             }
 
-            this.m_Data.new_id = false
+            this.b_get_new_id = false
         }
 
         return id

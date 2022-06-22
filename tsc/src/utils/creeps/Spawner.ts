@@ -146,9 +146,8 @@ export class Spawner {
         const creep_list = this.m_Room.GetMyCreeps()
 
         for (const creep of creep_list) {
-            const wrapper = new CreepWrapper(creep.name)
-            wrapper.OnTickStart()
-            const behavior = wrapper.GetBehavior()
+            const name_parts = creep.name.split('-')
+            const behavior = Number.parseInt(name_parts[name_parts.length-1])
             const cur_count = this.m_Type_tracker.get(behavior)!!
 
             if (cur_count) {
@@ -186,12 +185,18 @@ export class Spawner {
 
     public CreateSpawnList(): number[] {
         const queue = new PriorityQueue<RolePriority>((el) => { return el.priority })
-        let harvest_list = this.HavesterRule()
-        queue.PushArray(harvest_list)
-        queue.PushArray(this.UpgraderRule())
-        queue.PushArray(this.DefenderRule())
-        queue.PushArray(this.BuilderRule())
-        queue.PushArray(this.RepairRule())
+        const list = [
+            this.HavesterRule(),
+            this.UpgraderRule(),
+            this.DefenderRule(),
+            this.BuilderRule(),
+            this.RepairRule()
+        ]
+        queue.PushArray(list[0])
+        queue.PushArray(list[1])
+        queue.PushArray(list[2])
+        queue.PushArray(list[3])
+        queue.PushArray(list[4])
 
         let arr = queue.ToHeap().Map((val) => { return val.behavior })
         return arr

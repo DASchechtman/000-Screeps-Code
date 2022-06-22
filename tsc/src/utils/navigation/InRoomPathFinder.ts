@@ -7,6 +7,7 @@ import { GridNode, GridNodePoint, JsonObj, Point } from "../../types/Interfaces"
 import { RoomPos, RoomPosObj } from "../../types/Types"
 import { PriorityQueue } from "../datastructures/PriorityQueue"
 import { HardDrive } from "../harddrive/HardDrive"
+import { JsonArray, JsonTreeNode, NodeTypes } from "../harddrive/JsonTreeNode"
 import { InRoomGrid } from "./RoomGrid"
 
 
@@ -219,13 +220,16 @@ export class InRoomPathFinder {
     }
 
     private GetPath(creep: CreepWrapper): JsonObj {
-        const path = HardDrive.Join(creep.GetPath(), "path")
-        return HardDrive.ReadFolder(path)
+        //const path = HardDrive.Join(creep.GetPath(), "path")
+        //return HardDrive.ReadFolder(path)
+
+        return {} as JsonObj
     }
 
     private SavePath(creep: CreepWrapper, data: JsonObj) {
-        const path = HardDrive.Join(creep.GetPath(), "path")
-        HardDrive.WriteFiles(path, data)
+        //const path = HardDrive.Join(creep.GetPath(), "path")
+        //HardDrive.WriteFiles(path, data)
+        return {} as JsonObj
     }
 
     private MarkPathAsUsed(array: ({ dir: DirectionConstant, p: Point } | null)[]) {
@@ -255,7 +259,7 @@ export class InRoomPathFinder {
 
                 const data = this.GetPath(wrapper)
 
-                let path_array = data.steps as (DirectionConstant | null)[]
+                let path_array = data.steps as JsonArray
                 let path_index = data.index as number
 
                 if (!path_array) {
@@ -263,6 +267,8 @@ export class InRoomPathFinder {
                 }
 
                 if (path_array.length === 0) {
+
+                    
                     path_generated = 1
                     const grid_key = creep.room.name
                     if (!InRoomPathFinder.m_Room_grids.has(grid_key)) {
@@ -276,7 +282,10 @@ export class InRoomPathFinder {
                     const path = creep.pos.findPathTo(obj, {maxRooms: 1})
 
                     //path_array = path.map(s => s?.dir ? s.dir : null)
-                    path_array = path.slice(0, path.length - dist).map(s => s.direction)
+                    let directions = path.slice(0, path.length - dist).map(s => s.direction)
+                    for(let d of directions) {
+                        path_array.push(new JsonTreeNode(d))
+                    }
                 }
                 else {
                     path_generated = 0
@@ -301,11 +310,11 @@ export class InRoomPathFinder {
 
         const data = this.GetPath(wrapper)
         const creep = wrapper.GetCreep()
-        let path_array = data.steps as (DirectionConstant | null)[]
+        let path_array = data.steps as JsonArray
         let path_index = data.index as number
 
-        if (creep && path_array && path_array[0]) {
-            const ret = creep.move(path_array[0])
+        if (creep && path_array && path_array[0]?.Type() === NodeTypes.JSON_NUM) {
+            const ret = creep.move(path_array[0].GetData() as DirectionConstant)
             if (ret === OK) {
                 moved = true
                 path_array.shift()

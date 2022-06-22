@@ -1,8 +1,8 @@
 import { GameEntityTypes } from "../consts/GameConstants";
 import { ColonyMember } from "../core/ColonyMember";
 import { StructureWrapper } from "../core/structure/StructureWrapper";
-import { Queue } from "../utils/datastructures/Queue";
-import { Filter, JsonType, Method } from "./Types";
+import { JsonType } from "../utils/harddrive/JsonTreeNode";
+import { Filter, Method } from "./Types";
 
 export interface StructStackIndex {
     index: number,

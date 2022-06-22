@@ -80,4 +80,9 @@ export class ColonyMemberMap {
     Size(): number {
         return this.m_Member_map.size
     }
+
+    Clear() {
+        this.m_Member_map.clear()
+        this.m_Type_map.splice(0, this.m_Type_map.length)
+    }
 }

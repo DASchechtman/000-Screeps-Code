@@ -19,7 +19,6 @@ export class EventManager {
     }
 
     RunEvent(event: EventTypes) {
-        console.log(this.events_list[event]?.length)
         this.events_list[event]?.forEach((call_back) => {
             call_back()
         })

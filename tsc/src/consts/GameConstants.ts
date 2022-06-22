@@ -1,4 +1,4 @@
-export const COLONY_OWNER = "DasBootLoader2"
+export const COLONY_OWNER = ["DasBootLoader2", "mee"]
 export const DEBUG_ROOM_NAME = "sim"
 export const DEFENSE_DEV_LEVELS = 3
 

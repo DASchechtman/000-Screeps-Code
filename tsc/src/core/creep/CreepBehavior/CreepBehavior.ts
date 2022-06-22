@@ -1,8 +1,7 @@
 import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
 import { SignalMessage } from "../../../types/Interfaces"
-import { RoomPos } from "../../../types/Types"
-import { HardDrive } from "../../../utils/harddrive/HardDrive"
-import { InRoomPathFinder } from "../../../utils/navigation/InRoomPathFinder"
+import { RoomPos, RoomPosObj } from "../../../types/Types"
+import { JsonMap, JsonTreeNode, JsonType } from "../../../utils/harddrive/JsonTreeNode"
 import { CreepWrapper } from "../../creep/CreepWrapper"
 import { RoomWrapper } from "../../room/RoomWrapper"
 import { SourceWrapper } from "../../SourceWrapper"
@@ -12,9 +11,11 @@ import { SourceWrapper } from "../../SourceWrapper"
 export abstract class CreepBehavior {
 
     private m_Wrapper: CreepWrapper
+    protected jm_data: JsonMap
 
-    constructor(wrapper: CreepWrapper) {
+    constructor(wrapper: CreepWrapper, behavior_data: JsonMap) {
         this.m_Wrapper = wrapper
+        this.jm_data = behavior_data
     }
 
     /**
@@ -41,9 +42,7 @@ export abstract class CreepBehavior {
         return false
     }
 
-    ClearDiskData(creep: Creep): void {
-        HardDrive.DeleteFolder(this.GetFolderPath(creep))
-    }
+    ClearDiskData(creep: Creep): void {}
 
     private SourceNextTo(creep: Creep, sources: Source[]): Source | null {
         let possible_source = null
@@ -59,11 +58,20 @@ export abstract class CreepBehavior {
         return possible_source
     }
 
-    protected MoveTo(distance: number, location: RoomPos) {
-        const p = new InRoomPathFinder()
-        p.GeneratePath(this.m_Wrapper, location, distance)
-        return p.MoveTo(this.m_Wrapper)
+    protected InRangeOf(distance: number, location: RoomPos, move_for: boolean = true) {
+        let loc_x = 0
+        let loc_y = 0
 
+        try {
+            loc_x = (location as RoomPosObj).pos.x
+            loc_y = (location as RoomPosObj).pos.y
+        }
+        catch (e) {
+            loc_x = (location as RoomPosition).x
+            loc_y = (location as RoomPosition).y
+        }
+
+        return this.m_Wrapper.GetCreep()!!.pos.inRangeTo(loc_x, loc_y, distance)
     }
 
     protected GetSource(creep: Creep, room: RoomWrapper): Source | null {
@@ -87,24 +95,13 @@ export abstract class CreepBehavior {
 
     protected Harvest(source: Source, room: RoomWrapper): number {
         let moved = 0
-        const can_harvest = new SourceWrapper(source.id).HasFreeSpot()
         const creep = this.m_Wrapper.GetCreep()
 
-        if (creep) {
-            const is_close_to_source = creep.pos.inRangeTo(source, ActionDistance.HARVEST)
-            const path_finder = new InRoomPathFinder()
+        if (!creep) { return 1 }
 
-            if (can_harvest && !is_close_to_source) {
-                path_finder.GeneratePath(this.m_Wrapper, source, ActionDistance.HARVEST)
-                if (!path_finder.MoveTo(this.m_Wrapper)) {
-                    moved = 1
-                    creep.harvest(source)
-                }
-            }
-            else if (is_close_to_source) {
-                creep.harvest(source)
-            }
-        }
+        this.MoveTo(creep, source, ActionDistance.HARVEST, () => {
+            creep.harvest(source)
+        })
 
         return moved
     }
@@ -127,6 +124,39 @@ export abstract class CreepBehavior {
     }
 
     protected GetFolderPath(creep: Creep) {
-        return HardDrive.Join(this.m_Wrapper.GetPath(), "behavior-data")
+        return ""
+    }
+
+    protected StoreDataInJsonMap(keys: string[], vals: JsonType[]) {
+        let LessThenBothLens = (i: number) => {
+            return i < keys.length && i < vals.length
+        }
+
+        for (let i = 0; LessThenBothLens(i); i++) {
+
+            if (!this.jm_data.has(keys[i])) {
+                this.jm_data.set(keys[i], new JsonTreeNode(vals[i]))
+            }
+
+            this.jm_data.get(keys[i])!!.SetData(vals[i])
+        }
+    }
+
+    protected GetJsonDataIfAvalible(key: string, original_val: JsonType) {
+        if (this.jm_data.has(key)) {
+            return this.jm_data.get(key)!!.GetData()
+        }
+        return original_val
+    }
+
+    protected MoveTo(creep: Creep, dest: RoomPos, distance: number, InRangeAction: () => void) {
+        const in_range = this.InRangeOf(distance, dest)
+
+        if (in_range) {
+            InRangeAction()
+        }
+        else {
+            creep.moveTo(dest)
+        }
     }
 }

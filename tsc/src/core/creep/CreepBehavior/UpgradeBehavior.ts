@@ -1,52 +1,65 @@
 import { ActionDistance } from "../../../consts/CreepBehaviorConsts"
 import { JsonObj } from "../../../types/Interfaces"
-import { HardDrive } from "../../../utils/harddrive/HardDrive"
+import { JsonMap, JsonTreeNode } from "../../../utils/harddrive/JsonTreeNode"
 import { CreepWrapper } from "../../creep/CreepWrapper"
 import { RoomWrapper } from "../../room/RoomWrapper"
 import { CreepBehavior } from "./CreepBehavior"
 
 
 export class UpgradeBehavior extends CreepBehavior {
-    private m_Data: JsonObj = {}
+    private readonly s_can_upgrade = "can upgrade"
+    private readonly s_id = "id"
+    private b_can_upgrade = false
+    private s_id_val = ""
 
-    constructor(wrapper: CreepWrapper) {
-        super(wrapper)
+    constructor(wrapper: CreepWrapper, behavior_data: JsonMap) {
+        super(wrapper, behavior_data)
     }
 
     InitCreep(creep: Creep): void {}
 
     InitTick(creep: Creep): void {
-        const behavior = HardDrive.ReadFolder(this.GetFolderPath(creep))
-        const cur_state = Boolean(behavior?.can_upgrade)
-        const id = String(behavior?.id)
-        this.m_Data = {
-            can_upgrade: this.UpdateWorkState(creep, cur_state),
-            id: id
-        }
+        this.b_can_upgrade = this.GetJsonDataIfAvalible(this.s_can_upgrade, this.b_can_upgrade) as boolean
+        this.s_id_val = this.GetJsonDataIfAvalible(this.s_id, this.s_id_val) as string
     }
 
     RunTick(creep: Creep, room: RoomWrapper): void {
         const controller = room.GetController()
 
         if (controller) {
-            let source = Game.getObjectById(this.m_Data.id as Id<Source>)
+            let source = Game.getObjectById(this.s_id_val as Id<Source>)
 
             if (!source) {
                 source = creep.pos.findClosestByPath(FIND_SOURCES)
-                this.m_Data.id = String(source?.id)
+                this.s_id_val = String(source?.id)
             }
 
-            if (this.m_Data.can_upgrade === true) {
+            const used_capacity = creep.store.getUsedCapacity(RESOURCE_ENERGY)
+            const max_capacity = creep.store.getCapacity()
+            let should_upgrade = false
+
+            if (used_capacity === 0) {
+                this.b_can_upgrade = false
+            }
+            else if (used_capacity === max_capacity) {
+                this.b_can_upgrade = true
+            }
+
+            if (this.b_can_upgrade && controller) {
                 this.Upgrade(creep, controller)
             }
-            else if (this.m_Data.can_upgrade === false && source) {
+            else if (source) {
                 this.Harvest(source, room)
             }
+
         }
     }
 
     FinishTick(creep: Creep): void {
-        HardDrive.WriteFiles(this.GetFolderPath(creep), this.m_Data) 
+        this.StoreDataInJsonMap(
+            [this.s_can_upgrade, this.s_id],
+            [this.b_can_upgrade, this.s_id_val]
+        )
     }
 
     DestroyCreep(creep: Creep | null): void {}
@@ -63,14 +76,15 @@ export class UpgradeBehavior extends CreepBehavior {
             dist = ActionDistance.CHANGE_SIGN
         }
 
-        if (!this.MoveTo(dist, controller)) {
+        this.MoveTo(creep, controller, dist, () => {
             if (dist === ActionDistance.CHANGE_SIGN) {
                 creep.signController(controller, msg)
             }
             else {
                 creep.upgradeController(controller)
             }
-        }
+        })
+        
     }
 
 }

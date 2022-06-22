@@ -1,50 +1,119 @@
 import { JsonObj } from "../../types/Interfaces"
-import { JsonList, JsonType } from "../../types/Types"
+import { JsonArray, JsonMap, JsonTreeNode, JsonType, NodeTypes } from "./JsonTreeNode"
 
-interface DiskInfo {
-    disk: JsonObj
-    data_id: string
-}
 
 export class HardDrive {
-    private static disk_data: JsonObj | null = null
+    private static m_json_root: JsonTreeNode = new JsonTreeNode(new Map())
     private static readonly sep: string = '/'
-    private static readonly folder_attr: string = "folder"
 
-    private static LoadData(): JsonObj {
-        if (!HardDrive.disk_data) {
-            try {
-                HardDrive.disk_data = JSON.parse(RawMemory.get())
+    private static CreateJsonArray(arr: Array<any>): JsonTreeNode {
+        let ret = new JsonTreeNode(new Array())
+
+        for (let i of arr) {
+            if (i instanceof Array) {
+                ret.PushBackNode(this.CreateJsonArray(i))
             }
-            catch {
-                HardDrive.disk_data = {}
+            else if (typeof i === 'object') {
+                let root = new JsonTreeNode(new Map())
+                this.CreateJsonTree(root, i)
+                ret.PushBackNode(root)
+            }
+            else {
+                ret.PushBackData(i as JsonType)
             }
         }
-        return HardDrive.disk_data!!
+
+        return ret
     }
 
-    private static GetInfoAt(path_name: string): DiskInfo {
-        const path = path_name.split(this.sep)
-        const data: DiskInfo = {
-            disk: this.LoadData(),
-            data_id: ""
+    private static CreateJsonTree(json_root: JsonTreeNode, tree: any = undefined): void {
+
+        if (tree === undefined) {
+            let data = RawMemory.get();
+            if (data.length === 0) { data = "{}"}
+            tree = JSON.parse(data)
         }
 
-        for (let i = 0; i < path.length - 1; i++) {
-
-            let path_part = data.disk[path[i]]
-            const make_folder = !Boolean(path_part)
-            if (make_folder) {
-                data.disk[path[i]] = {}
-                path_part = data.disk[path[i]];
-                (path_part as JsonObj)[this.folder_attr] = true
+        for(let entry of Object.entries(tree)) {
+            if (entry[1] instanceof Array) {
+                json_root.AddChild(entry[0], this.CreateJsonArray(entry[1]))
             }
-            data.disk = path_part as JsonObj
-
+            else if (typeof entry[1] === 'object') {
+               const child = new JsonTreeNode(new Map())
+               this.CreateJsonTree(child, entry[1])
+               json_root.AddChild(entry[0], child)
+            }
+            else {
+                json_root.CreateChild(entry[0], entry[1] as JsonType)
+            }
         }
 
-        data.data_id = path[path.length - 1]
-        return data
+    }
+
+    private static GetNode(path: Array<string>, exclude_from_end: number = 1) {
+        let node = this.m_json_root
+
+        for(let i = 0; i < path.length-exclude_from_end; i++) {
+            if (node.GetChild(path[i]).Type() === NodeTypes.JSON_EMPTY) {
+                node.CreateChild(path[i], new Map())
+            }
+            node = node.GetChild(path[i])
+        }
+
+        return node
+    }
+
+    private static StringifyNode(node: JsonTreeNode) {
+        let str_rep = ""
+        const last_access_time = node.LastAccessedAt()
+
+        switch(node.Type()) {
+            case NodeTypes.JSON_MAP: {
+                if (Game.time - last_access_time >= 50) { break }
+                str_rep = '{'
+                let index = 0
+                let map = (node.GetData() as JsonMap)
+                map.forEach((node, key, map) => {
+                    str_rep += `"${key}":${this.StringifyNode(node)}`
+                    if (index !== map.size - 1) {
+                        str_rep += ','
+                    }
+                    index++
+                })
+                str_rep += '}'
+                break
+            }
+            case NodeTypes.JSON_ARRAY: {
+                str_rep = '['
+                let arr = (node.GetData() as JsonArray)
+                arr.forEach((node, index, array) => {
+                    str_rep += this.StringifyNode(node)
+                    if (index !== array.length - 1) {
+                        str_rep += ','
+                    }
+                })
+                str_rep += ']'
+                break
+            }
+            case NodeTypes.JSON_NULL: {
+                str_rep = "null"
+                break
+            }
+            case NodeTypes.JSON_STR: {
+                str_rep = `"${node.GetData()}"`
+                break
+            }
+            default: {
+                str_rep = `${node.GetData()}`
+            }
+        }
+
+        return str_rep
+    }
+
+    static LoadData(): void {
+        if(this.m_json_root.SizeOfMap() > 0) { return }
+        this.CreateJsonTree(this.m_json_root)
     }
 
     static Join(...args: string[]) {
@@ -64,132 +133,68 @@ export class HardDrive {
         return path
     }
 
-    private static IsJsonType(data: JsonObj | JsonType): boolean {
-        let is_json_type = false
-        const type = typeof data
-
-        if (type === 'object' && (data === null || data instanceof Array)) {
-            is_json_type = true
-        }
-        else if (type !== 'object') {
-            is_json_type = true
-        }
-
-        return is_json_type
-    }
-
-    private static DeleteData(data: JsonObj, id: string, is_wrong_data: boolean, msg: string): void {
-        try {
-            if (data[id] !== undefined) {
-                if (is_wrong_data) {
-                    throw new Error(msg)
-                }
-
-                delete data[id]
-            }
-        }
-        catch(e) {
-            const error = e as Error
-            console.log(error.stack)
-        }
-    }
-
-    private static ReadData(
-        disk: JsonObj, 
-        part: string, 
-        filler_data: null | JsonObj, 
-        is_wrong_type: boolean, 
-        msg: string
-    ): JsonType | JsonObj {
-        let data_obj = disk[part]
-
-        try {
-            if (data_obj === undefined) {
-                data_obj = filler_data
-            }
-            else if (is_wrong_type) {
-                throw new Error(msg)
-            }
-        }
-        catch (e) {
-            const error = e as Error
-            data_obj = filler_data
-            console.log(error.stack)
-        }
-
-        return data_obj
-    }
-
     static WriteFile(file_path: string, data: JsonType): void {
-        const save_data = this.GetInfoAt(file_path)
-        const disk = save_data.disk
-        const file = save_data.data_id
-        disk[file] = data
+        let arr = file_path.split(this.sep)
+        this.GetNode(arr).CreateChild(arr[arr.length-1], data)
     }
 
     static ReadFile(file_path: string): JsonType {
-        const save_data = this.GetInfoAt(file_path)
-        const disk = save_data.disk
-        const file = save_data.data_id
-        const is_wrong_data = !this.IsJsonType(disk[file])
-
-        return this.ReadData(disk, file, null, is_wrong_data, "Error: Trying to read a folder") as JsonType
+        let arr = file_path.split(this.sep)
+        let data = this.GetNode(arr).GetChild(arr[arr.length-1]).GetData()
+        if (data === undefined) {
+            data = null
+        }
+        return data
     }
 
     static WriteFiles(path_base: string, files: JsonObj): void {
-        const keys_to_files = (val: string): [string, JsonType] => {return [val, files[val] as JsonType]}
-        const json_to_tuples = Object.getOwnPropertyNames(files).map(keys_to_files)
-
-        for(let file of json_to_tuples) {
-            const path = this.Join(path_base, file[0])
-            this.WriteFile(path, file[1])
-        }
+        let arr = path_base.split(this.sep)
+        let node = this.GetNode(arr, 0)
+        this.CreateJsonTree(node, files)
     }
 
     static ReadFolder(file_path: string): JsonObj  {
-        const disk_data = this.GetInfoAt(file_path)
-        const folder = disk_data.disk
-        const name = disk_data.data_id
-        const is_wrong_data = this.IsJsonType(folder[name])
-
-        return this.ReadData(folder, name, {}, is_wrong_data, "Error: Trying to read a file") as JsonObj
+        let node = this.GetNode(file_path.split(this.sep), 0)
+        let obj: JsonObj = {}
+        for(let key of node.GetMapKeys()) {
+            obj[key] = node.GetChild(key).GetData()!
+        }
+        return obj
     }
 
     static DeleteFolder(folder_path: string): void {
-        let disk = this.GetInfoAt(folder_path)
-        let data = disk.disk
-        let part = disk.data_id
+        let arr = folder_path.split(this.sep)
+        let node = this.GetNode(arr, 0)
+        let keys = node.GetMapKeys()
 
-        this.DeleteData(data, part, this.IsJsonType(data[part]), "Error: Trying to delete file")
+        for(let key of keys) {
+            node.RemoveChild(key)
+        }
+    }
+
+    static HasFile(file_path: string): boolean {
+        let has = true
+
+        let path_parts = file_path.split(this.sep)
+        let node = this.m_json_root
+
+        for(const part of path_parts) {
+            if (node.GetChild(part).Type() === NodeTypes.JSON_EMPTY) {
+                has = false
+                break
+            }
+        }
+
+        return has
     }
 
     static DeleteFile(file_path: string): void {
-        let disk = this.GetInfoAt(file_path)
-        let data = disk.disk
-        let part = disk.data_id
-        this.DeleteData(data, part, !this.IsJsonType(data[part]), "Error: Trying to delete a folder")
-    }
-
-    static CreateFolder(path: string): void {
-        const disk = this.GetInfoAt(path)
-        const folder = disk.disk
-        const name = disk.data_id
-        
-        folder[name] = {}
-    }
-
-    static Has(path: string): boolean {
-        const disk = this.GetInfoAt(path)
-        const data = disk.disk
-        const name = disk.data_id
-
-        return data[name] !== undefined
+        let arr = file_path.split(this.sep)
+        this.GetNode(arr).RemoveChild(arr[arr.length-1])
     }
 
     static CommitChanges(): void {
-        if (HardDrive.disk_data) {
-            RawMemory.set(JSON.stringify(HardDrive.disk_data))
-            HardDrive.disk_data = null
-        }
+        const data = this.StringifyNode(this.m_json_root)
+        RawMemory.set(data)
     }
 }

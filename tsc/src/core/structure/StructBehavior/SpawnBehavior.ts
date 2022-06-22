@@ -13,13 +13,12 @@ export class SpawnBehavior extends StructBehavior {
     RunTick(struct: StructureSpawn | StructureTower | StructureLink, room: RoomWrapper): void {
         const tracker = new Spawner(room)
         tracker.TrackCreepTypes()
-        debugger
         const types = tracker.CreateSpawnList()
 
         const spawn = struct as StructureSpawn
         const num_of_harvesters = tracker.GetTrackedType(Behavior.HARVEST)
         const energy_cap = room.GetEnergyCapacity()
-        const name = `${room.GetName()} - ${Date.now()}`
+        const name = `${room.GetName()}-${Date.now()}-${types[0]}`
         let body: BodyPartConstant[]
         let spawn_type = types[0]
 
@@ -29,12 +28,14 @@ export class SpawnBehavior extends StructBehavior {
         else {
             body = BuildScalableWorker(energy_cap)
         }
-        let ret = spawn.spawnCreep(body, name)
+        
+        let ret: ScreepsReturnCode = ERR_FULL
 
-        console.log(num_of_harvesters)
+        if (types.length > 0) {
+            ret = spawn.spawnCreep(body, name)
+        }
 
         if (ret === OK) {
-            console.log(`saving behavior to ${Behavior[spawn_type]}`)
             this.m_Data = [name, spawn_type]
         }
         else if (ret === ERR_NOT_ENOUGH_ENERGY && num_of_harvesters === 0) {

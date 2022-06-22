@@ -1,5 +1,6 @@
 import { GameEntityTypes } from "../consts/GameConstants";
 import { SignalMessage } from "../types/Interfaces";
+import { JsonType } from "../utils/harddrive/JsonTreeNode";
 
 export abstract class ColonyMember {
     protected m_Type: GameEntityTypes
@@ -17,23 +18,27 @@ export abstract class ColonyMember {
     abstract OnTickEnd(): void
     abstract OnDestroy(): void
 
-    GetType(): GameEntityTypes {
+    public GetType(): GameEntityTypes {
         return this.m_Type
     }
 
-    GetID(): string {
+    public GetID(): string {
         return this.m_Id
     }
 
-    GetSignal(): SignalMessage | null {
+    public GetSignal(): SignalMessage | null {
         return this.m_Signal
     }
 
-    SetSignal(signal: SignalMessage | null): void {
+    public SetSignal(signal: SignalMessage | null): void {
         this.m_Signal = signal
     }
 
-    ReceiveSignal(signal: SignalMessage): boolean {
+    public ReceiveSignal(signal: SignalMessage): boolean {
         return false
+    }
+
+    public GetDataToRecord(): JsonType {
+        return null
     }
 }
