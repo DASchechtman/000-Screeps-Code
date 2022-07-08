@@ -1,6 +1,7 @@
 import os
 
 lines_total = 0
+print("hello python")
 
 def ReadFile(path):
     global lines_total
@@ -56,9 +57,11 @@ def CopyFiles(path_from, path_to):
             WriteFile(changed_text, name, path_to)
     print(f"total number of lines: {lines_total}")
 
+print("checking if main")
 if __name__ == "__main__":
     path_to = "./js"
     path_from = "./dist"
+    print("starting flatten")
     if not os.path.exists(path_to):
         os.mkdir(path_to)
     CopyFiles(path_from, path_to)
