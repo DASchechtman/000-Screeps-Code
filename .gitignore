@@ -6,4 +6,4 @@ Screeps-Info.json
 /.vscode
 /dist
 /js
-/tsc/old/*
+/tsc/old/
