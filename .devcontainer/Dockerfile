@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:12-bullseye
 
 # Install dependencies
 RUN apt-get update && \
