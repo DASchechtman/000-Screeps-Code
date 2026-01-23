@@ -109,6 +109,8 @@ export class FileSystem {
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
         }
 
+        FILE.UpdateLastAccessed()
+
         return FILE
     }
 
