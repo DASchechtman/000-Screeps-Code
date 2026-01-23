@@ -1,3 +1,4 @@
+import { FileSystem } from "FileSystem/FileSystem";
 import { ErrorMapper } from "utils/ErrorMapper";
 
 declare global {
@@ -13,6 +14,7 @@ declare global {
   interface Memory {
     uuid: number;
     log: any;
+    [key: string]: any
   }
 
   interface CreepMemory {
@@ -27,15 +29,18 @@ declare const global: {
   log: any;
 }
 
+const CUR_TIME = Game.time
+
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`);
+  //console.log(`Current game tick is ${Game.time}`);
+  const FILE_SYSTEM = FileSystem.GetFileSystem()
+  const PATH = ['test', `file - ${Math.random() * 100}`]
 
-  // Automatically delete memory of missing creeps
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
-    }
+  if (!FILE_SYSTEM.DoesFileExist(PATH) && Game.time - CUR_TIME < 50) {
+    FILE_SYSTEM.GetFile(PATH).WriteToFile('id', Math.random() * 100)
   }
+
+  FILE_SYSTEM.Cleanup()
 });
