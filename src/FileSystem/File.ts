@@ -3,8 +3,8 @@ type JsonArray = Array<BaseJsonValue | JsonObj | JsonArray>
 interface JsonObj { [key: string]: BaseJsonValue | JsonObj | JsonArray }
 type Json = BaseJsonValue | JsonObj | JsonArray
 
-export const FILE_ENDING = ':file'
-export const FOLDER_ENDING = ':folder'
+export const FILE_ENDING = ':sfl'
+export const FOLDER_ENDING = ':sfldr'
 
 export class ScreepFile {
     private tick_last_accessed: number = -1
