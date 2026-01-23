@@ -42,5 +42,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     FILE_SYSTEM.GetFile(PATH).WriteToFile('id', Math.random() * 100)
   }
 
+  // hello world
+
   FILE_SYSTEM.Cleanup()
 });
