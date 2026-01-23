@@ -1,3 +1,5 @@
+import { HARVESTER_TYPE, UPGRADER_TYPE } from "Creeps/CreepBehaviors.ts/BehaviorTypes";
+import { CreepObjectManager } from "Creeps/CreepObjManager";
 import { FileSystem } from "FileSystem/FileSystem";
 import { ErrorMapper } from "utils/ErrorMapper";
 
@@ -29,17 +31,36 @@ declare const global: {
   log: any;
 }
 
-const CUR_TIME = Game.time
-
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  //console.log(`Current game tick is ${Game.time}`);
   const FILE_SYSTEM = FileSystem.GetFileSystem()
-  const PATH = ['test', `file - ${Math.random() * 100}`]
+  const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
 
-  if (!FILE_SYSTEM.DoesFileExist(PATH) && Game.time - CUR_TIME < 50) {
-    FILE_SYSTEM.GetFile(PATH).WriteToFile('id', Math.random() * 100)
+  for (let room_name in Game.rooms) {
+    const ROOM = Game.rooms[room_name]
+    const MY_CREEPS = ROOM.find(FIND_MY_CREEPS, {
+      filter: (c) => { return !c.spawning }
+    })
+
+    const SPAWN = ROOM.find(FIND_MY_SPAWNS)
+    const CREEP_NAME = `Creep - ${new Date().toUTCString()}`
+
+    let behavior_type = -1
+
+    if (MY_CREEPS.length < 2) {
+
+      SPAWN[0].spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
+      behavior_type = HARVESTER_TYPE
+    }
+    else if (MY_CREEPS.length < 3) {
+      SPAWN[0].spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
+      behavior_type = UPGRADER_TYPE
+    }
+
+    for (let creep of MY_CREEPS) { CREEP_MANAGER.AddCreepId(creep.id) }
+
+    CREEP_MANAGER.RunAllActiveCreeps()
   }
 
   FILE_SYSTEM.Cleanup()

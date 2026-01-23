@@ -76,7 +76,6 @@ export class FileSystem {
                     const FILE = this.file_obj_manager.GiveFile()
                     FILE.OverwriteFile(file[key])
                     if (FILE.ShouldDeleteFile()) {
-                        console.log(`deleting ${key}`)
                         delete file[key]
                     }
                     this.file_obj_manager.ReturnFile(FILE)

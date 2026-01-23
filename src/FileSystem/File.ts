@@ -1,7 +1,7 @@
 type BaseJsonValue = string | number | boolean | null
 type JsonArray = Array<BaseJsonValue | JsonObj | JsonArray>
-interface JsonObj { [key: string]: BaseJsonValue | JsonObj | JsonArray }
-type Json = BaseJsonValue | JsonObj | JsonArray
+export interface JsonObj { [key: string]: BaseJsonValue | JsonObj | JsonArray }
+export type Json = BaseJsonValue | JsonObj | JsonArray
 
 export const FILE_ENDING = ':sfl'
 export const FOLDER_ENDING = ':sfldr'
@@ -23,10 +23,8 @@ export class ScreepFile {
             this.path = prev_file_contents.path
         }
 
-        try {
-            this.data = JSON.parse(prev_file_contents.data)
-        } catch {
-            this.data = {}
+        if (prev_file_contents.data != null) {
+            this.data = prev_file_contents.data
         }
     }
 
@@ -56,11 +54,13 @@ export class ScreepFile {
         this.file_name = name
     }
 
-    public WriteToFile(key: string, value: Json) {
+    public WriteToFile(key: BaseJsonValue, value: Json) {
+        key = String(key)
         this.data[key] = value
     }
 
-    public ReadFromFile(key: string) {
+    public ReadFromFile(key: BaseJsonValue) {
+        key = String(key)
         if (this.data[key] === undefined) {
             throw new Error(`Accessing non-existent data ${key} in file ${this.file_name}`)
         }

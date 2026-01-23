@@ -23,7 +23,6 @@ export class FileObjectManager {
         const FILE = ITERATOR.next().value
 
         if (FILE === undefined) {
-            console.log("creating new file")
             const NEW_FILE = new ScreepFile()
             this.file_pool.push(NEW_FILE)
             this.reserved_files.set(NEW_FILE, this.file_pool.length - 1)

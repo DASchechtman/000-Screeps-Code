@@ -1,0 +1,66 @@
+import { CreepBehavior } from "Creeps/Creep"
+import { JsonObj, ScreepFile } from "FileSystem/File"
+
+export class UpgraderBehavior implements CreepBehavior {
+    private data: JsonObj
+    private state_key: string
+    private creep_id: string
+    private creep: Creep | null
+    private sources: Source[]
+    private controller: StructureController | undefined
+
+    constructor(creep_id: string) {
+        this.state_key = "state key"
+        this.data = {}
+        this.creep_id = creep_id
+        this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
+        this.sources = []
+        this.controller = undefined
+
+        if (this.creep != null) {
+            this.sources = this.creep.room.find(FIND_SOURCES)
+            this.controller = this.creep.room.controller
+        }
+    }
+
+    public Load(file: ScreepFile) {
+        try {
+            this.data[this.state_key] = file.ReadFromFile(this.state_key)
+        }
+        catch {
+            this.data[this.state_key] = false
+        }
+
+        return this.creep != null
+    }
+
+    public Run() {
+        if (this.creep == null || this.controller == null) { return }
+
+        const NO_ENERGY = this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
+        const ENERGY_FULL = this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+
+        if (NO_ENERGY) {
+            this.data[this.state_key] = false
+        }
+        else if (ENERGY_FULL) {
+            this.data[this.state_key] = true
+        }
+
+        if (!this.data[this.state_key]) {
+            if (this.creep.harvest(this.sources[1]) === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(this.sources[1])
+            }
+        }
+        else {
+            if (this.creep.upgradeController(this.controller) === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(this.controller)
+            }
+        }
+    }
+
+    public Cleanup(file: ScreepFile) {
+        file.WriteToFile(this.state_key, this.data[this.state_key])
+    }
+
+}
