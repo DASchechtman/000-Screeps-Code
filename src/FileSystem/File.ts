@@ -11,20 +11,35 @@ export class ScreepFile {
     private file_name: string = ""
     private path: string[] = []
     private data: JsonObj = {}
+    private can_delete: boolean = false
 
-    public OverwriteFile(prev_file_contents: any) {
-        this.OverwriteLastAccessed(prev_file_contents)
+    private hasProp(obj: unknown, key: string): obj is Record<string, unknown> {
+        return typeof obj === 'object' && obj !== null && key in obj
+    }
 
-        if (typeof prev_file_contents.file_name === 'string') {
+    public OverwriteFile(prev_file_contents: ScreepFile | unknown) {
+        if (prev_file_contents instanceof ScreepFile) {
+            this.tick_last_accessed = prev_file_contents.tick_last_accessed
+            this.file_name = prev_file_contents.file_name
+            this.path = prev_file_contents.path
+            this.data = prev_file_contents.data
+            return
+        }
+
+        if (this.hasProp(prev_file_contents, 'tick_last_accessed') && typeof prev_file_contents.tick_last_accessed === 'number') {
+            this.tick_last_accessed = prev_file_contents.tick_last_accessed
+        }
+
+        if (this.hasProp(prev_file_contents, 'file_name') && typeof prev_file_contents.file_name === 'string') {
             this.file_name = prev_file_contents.file_name
         }
 
-        if (Array.isArray(prev_file_contents.path) && prev_file_contents.path.every((x: any) => typeof x === 'string')) {
+        if (this.hasProp(prev_file_contents, 'path') && Array.isArray(prev_file_contents.path) && prev_file_contents.path.every(s => typeof s === 'string')) {
             this.path = prev_file_contents.path
         }
 
-        if (prev_file_contents.data != null) {
-            this.data = prev_file_contents.data
+        if (this.hasProp(prev_file_contents, 'data')) {
+            this.data = prev_file_contents.data as JsonObj
         }
     }
 
@@ -40,6 +55,10 @@ export class ScreepFile {
 
     public UpdateLastAccessed() {
         this.tick_last_accessed = Game.time
+    }
+
+    public MarkForDeletion() {
+        this.can_delete = true
     }
 
     public GetFileAge() {
@@ -69,20 +88,15 @@ export class ScreepFile {
     }
 
     public ToJson() {
-        return {
+        let json: any = {
             tick_last_accessed: this.tick_last_accessed,
             path: this.path,
             file_name: this.file_name,
             data: this.data
         }
-    }
 
-    public toString() {
-        return `{
-        tick_last_accessed: ${this.tick_last_accessed},
-        path: ${this.path},
-        file_name: ${this.file_name},
-        data: ${JSON.stringify(this.data)}
-        }`
+        if (this.can_delete) { json.can_delete = this.can_delete }
+
+        return json
     }
 }

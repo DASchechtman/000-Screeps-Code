@@ -56,14 +56,20 @@ export class FileSystem {
         this.file_obj_manager.Map((file) => {
             if (file.ShouldDeleteFile()) { return }
             const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(file.GetPath())
-            FOLDER_OBJ[FILE_NAME] = file.ToJson()
+            FOLDER_OBJ[FILE_NAME] = {
+                ...FOLDER_OBJ[FILE_NAME],
+                ...file.ToJson()
+            }
         })
     }
 
     private CleanUpMemory() {
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
-                if (key.endsWith(FOLDER_ENDING)) {
+                if (file[key].can_delete) {
+                    delete file[key]
+                }
+                else if (key.endsWith(FOLDER_ENDING)) {
                     const CONTAINS_FILES = Object.getOwnPropertyNames(file[key]).length > 0
                     if (CONTAINS_FILES) {
                         CheckAllFiles(file[key])
@@ -99,7 +105,8 @@ export class FileSystem {
                 tick_last_accessed: Game.time,
                 file_name: path.join('/'),
                 path: path,
-                data: {}
+                data: {},
+                can_delete: false
             })
 
             FOLDER_OBJ[FILE_NAME] = FILE
@@ -113,9 +120,32 @@ export class FileSystem {
         return FILE
     }
 
+    public GetExistingFile(path: string[]) {
+        const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
+        if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
+            const FILE = this.file_obj_manager.GiveFile()
+            FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
+            FILE.UpdateLastAccessed()
+            return FILE
+        }
+        return null
+    }
+
     public DoesFileExist(path: string[]) {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         return FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null
+    }
+
+    public DeleteFile(path: string[]) {
+        const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
+        if (FOLDER_OBJ != null) {
+            try {
+                FOLDER_OBJ[FILE_NAME].MarkForDeletion()
+            }
+            catch {
+                FOLDER_OBJ[FILE_NAME].can_delete = true
+            }
+        }
     }
 
     public Cleanup() {

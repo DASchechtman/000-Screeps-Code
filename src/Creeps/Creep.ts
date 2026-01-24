@@ -4,6 +4,9 @@ import { HARVESTER_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes
 import { HarvesterBehavior } from "./CreepBehaviors.ts/HarvesterBehavior"
 import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
 
+export const BEHAVIOR_KEY = "behavior"
+export const ORIG_BEHAVIOR_KEY = "original behavior"
+
 export interface CreepBehavior {
     Load: (file: ScreepFile) => boolean
     Run: () => void
@@ -25,13 +28,14 @@ export class CreepObj {
 
     public OverrideBehavior(behavior_type: number) {
         let creep_behavior = -1
-        let behavior_key = "behavior"
+        
         try {
-            creep_behavior = Number(this.file?.ReadFromFile(behavior_key))
+            creep_behavior = Number(this.file?.ReadFromFile(BEHAVIOR_KEY))
         }
         catch (e) {
             console.log(`Creep Error: ${e}`)
-            this.file?.WriteToFile(behavior_key, behavior_type)
+            this.file?.WriteToFile(BEHAVIOR_KEY, behavior_type)
+            this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, behavior_type)
             creep_behavior = behavior_type
         }
 

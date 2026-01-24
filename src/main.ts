@@ -1,7 +1,9 @@
 import { HARVESTER_TYPE, UPGRADER_TYPE } from "Creeps/CreepBehaviors.ts/BehaviorTypes";
 import { CreepObjectManager } from "Creeps/CreepObjManager";
 import { FileSystem } from "FileSystem/FileSystem";
+import { RoomData } from "Rooms/RoomData";
 import { ErrorMapper } from "utils/ErrorMapper";
+import { Timer } from "utils/Timer";
 
 declare global {
   /*
@@ -36,32 +38,24 @@ declare const global: {
 export const loop = ErrorMapper.wrapLoop(() => {
   const FILE_SYSTEM = FileSystem.GetFileSystem()
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
+  const ROOM_DATA = RoomData.GetRoomData()
 
   for (let room_name in Game.rooms) {
-    const ROOM = Game.rooms[room_name]
-    const MY_CREEPS = ROOM.find(FIND_MY_CREEPS, {
-      filter: (c) => { return !c.spawning }
-    })
+    ROOM_DATA.SetRoomName(room_name)
 
-    const SPAWN = ROOM.find(FIND_MY_SPAWNS)
+    const MY_CREEPS = ROOM_DATA.GetCreepIds()
+    const SPAWN = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_SPAWN)
     const CREEP_NAME = `Creep - ${new Date().toUTCString()}`
 
-    let behavior_type = -1
-
-    if (MY_CREEPS.length < 2) {
-
-      SPAWN[0].spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
-      behavior_type = HARVESTER_TYPE
-    }
-    else if (MY_CREEPS.length < 3) {
-      SPAWN[0].spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
-      behavior_type = UPGRADER_TYPE
+    if (!CREEP_MANAGER.HasSpawnedEnoughCreeps()) {
+      Game.getObjectById(SPAWN[0] as Id<StructureSpawn>)?.spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
     }
 
-    for (let creep of MY_CREEPS) { CREEP_MANAGER.AddCreepId(creep.id) }
+    for (let creep_id of MY_CREEPS) { CREEP_MANAGER.AddCreepId(creep_id) }
 
     CREEP_MANAGER.RunAllActiveCreeps()
   }
 
+  Timer.AdvanceAllTimers()
   FILE_SYSTEM.Cleanup()
 });

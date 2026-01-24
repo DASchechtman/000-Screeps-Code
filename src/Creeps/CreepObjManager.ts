@@ -15,16 +15,17 @@ export class CreepObjectManager {
     private available_creeps: Map<CreepObj, number>
     private reserved_creeps: Map<CreepObj, number>
     private file_path: string[]
+    private data_key: string
 
     private constructor() {
         this.creep_pool = []
         this.available_creeps = new Map()
         this.reserved_creeps = new Map()
         this.file_path = ['creeps', 'info']
+        this.data_key = 'role'
 
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        FILE.WriteToFile(HARVESTER_TYPE, [])
-        FILE.WriteToFile(UPGRADER_TYPE, [])
+        FILE.WriteToFile(this.data_key, [[], []])
     }
 
     private GiveCreep(id: string, behavior_type: number) {
@@ -58,7 +59,7 @@ export class CreepObjectManager {
         }
     }
 
-    private RunCreepCode(behavior: number, id_arr: string[], file: ScreepFile) {
+    private RunCreepCode(behavior: number, id_arr: string[]) {
         const IDS_TO_REMOVE = new Array<string>()
         for (let id of id_arr) {
             const CREEP = this.GiveCreep(id, behavior)
@@ -74,34 +75,41 @@ export class CreepObjectManager {
             const INDEX = id_arr.indexOf(id)
             if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
         }
-
-        file.WriteToFile(behavior, id_arr)
     }
 
     public RunAllActiveCreeps() {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const HARVESTER_IDS = FILE.ReadFromFile(HARVESTER_TYPE) as string[]
-        const UPGRADER_IDS = FILE.ReadFromFile(UPGRADER_TYPE) as string[]
+        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
 
-        this.RunCreepCode(HARVESTER_TYPE, HARVESTER_IDS, FILE)
-        this.RunCreepCode(UPGRADER_TYPE, UPGRADER_IDS, FILE)
+        this.RunCreepCode(HARVESTER_TYPE, ROLE_IDS[HARVESTER_TYPE])
+        this.RunCreepCode(UPGRADER_TYPE, ROLE_IDS[UPGRADER_TYPE])
+
+        FILE.WriteToFile(this.data_key, ROLE_IDS)
     }
 
     public AddCreepId(id: string) {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const HARVESTER_IDS = FILE.ReadFromFile(HARVESTER_TYPE) as string[]
-        const UPGRADER_IDS = FILE.ReadFromFile(UPGRADER_TYPE) as string[]
+        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
 
-        const IS_CREEP_ID_ALREADY_STORED = (
-            HARVESTER_IDS.includes(id)
-            || UPGRADER_IDS.includes(id)
-        )
-        if (IS_CREEP_ID_ALREADY_STORED) { return }
+        if (ROLE_IDS.some(id_arr => id_arr.includes(id))) {
+            return
+        }
 
-        if (HARVESTER_IDS.length < 2) { HARVESTER_IDS.push(id) }
-        else if (UPGRADER_IDS.length < 1) { UPGRADER_IDS.push(id) }
+        if (ROLE_IDS[HARVESTER_TYPE].length < 2) {
+            ROLE_IDS[HARVESTER_TYPE].push(id)
+        }
+        else if (ROLE_IDS[UPGRADER_TYPE].length < 2) {
+            ROLE_IDS[UPGRADER_TYPE].push(id)
+        }
 
-        FILE.WriteToFile(HARVESTER_TYPE, HARVESTER_IDS)
-        FILE.WriteToFile(UPGRADER_TYPE, UPGRADER_IDS)
+        FILE.WriteToFile(this.data_key, ROLE_IDS)
+    }
+
+    public HasSpawnedEnoughCreeps() {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
+
+        let total = ROLE_IDS.reduce((prev, arr) => prev + arr.length, 0)
+        return total >= 4
     }
 }
