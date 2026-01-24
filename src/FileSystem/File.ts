@@ -1,7 +1,4 @@
-type BaseJsonValue = string | number | boolean | null
-type JsonArray = Array<BaseJsonValue | JsonObj | JsonArray>
-export interface JsonObj { [key: string]: BaseJsonValue | JsonObj | JsonArray }
-export type Json = BaseJsonValue | JsonObj | JsonArray
+import { BaseJsonValue, Json, JsonObj } from "Consts"
 
 export const FILE_ENDING = ':sfl'
 export const FOLDER_ENDING = ':sfldr'

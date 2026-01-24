@@ -166,16 +166,16 @@ export class CreepObjectManager {
             this.creep_body = [MOVE, MOVE, ATTACK]
         }
         else if (HARVESER_IDS.length < 2) {
-            this.creep_body = [MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
         }
         else if (UPGRADER_IDS.length < 2) {
             this.creep_body = [MOVE, CARRY, WORK, WORK]
         }
         else if (BUILDER_IDS.length < 1 && CONSTRUCTION_SITE.length > 0) {
-            this.creep_body = [MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
         }
         else if (REPAIRER_IDS.length < 2) {
-            this.creep_body = [MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
         }
         else {
             this.creep_body = []

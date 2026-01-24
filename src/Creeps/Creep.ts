@@ -6,9 +6,8 @@ import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
 import { BuildBehavior } from "./CreepBehaviors.ts/BuildBehavior"
 import { RepairBehavior } from "./CreepBehaviors.ts/RepairBehavior"
 import { AttackBehavior } from "./CreepBehaviors.ts/AttackBehavior"
-
-export const BEHAVIOR_KEY = "behavior"
-export const ORIG_BEHAVIOR_KEY = "original behavior"
+import { BEHAVIOR_KEY, ORIG_BEHAVIOR_KEY } from "Consts"
+import { DebugLogger } from "utils/DebugLogger"
 
 export interface CreepBehavior {
     Load: (file: ScreepFile) => boolean
@@ -45,7 +44,7 @@ export class CreepObj {
             }
         }
         catch (e) {
-            console.log(`Creep Error: ${e}`)
+            DebugLogger.Log(`Creep Error: ${e}`)
             this.file?.WriteToFile(BEHAVIOR_KEY, behavior_type)
             this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, behavior_type)
             creep_behavior = behavior_type

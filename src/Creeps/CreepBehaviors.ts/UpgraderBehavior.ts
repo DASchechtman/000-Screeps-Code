@@ -1,5 +1,6 @@
+import { JsonObj } from "Consts"
 import { CreepBehavior } from "Creeps/Creep"
-import { JsonObj, ScreepFile } from "FileSystem/File"
+import { ScreepFile } from "FileSystem/File"
 
 export class UpgraderBehavior implements CreepBehavior {
     private data: JsonObj

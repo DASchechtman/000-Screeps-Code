@@ -44,13 +44,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   CREEP_MANAGER.LoadCreepData()
 
-  if (!FILE_SYSTEM.DoesFileExist(['debug', 'file'])) {
-    FILE_SYSTEM.GetFile(['debug', 'file']).WriteToFile('debug logs on?', true)
-  }
-  else {
-    FILE_SYSTEM.GetExistingFile(['debug', 'file'])
-  }
-
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
 

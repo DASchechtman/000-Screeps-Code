@@ -1,7 +1,8 @@
-import { BEHAVIOR_KEY, CreepBehavior, ORIG_BEHAVIOR_KEY } from "Creeps/Creep";
-import { JsonObj, ScreepFile } from "FileSystem/File";
+import { CreepBehavior } from "Creeps/Creep";
+import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { REPAIR_TYPE } from "./BehaviorTypes";
+import { BEHAVIOR_KEY, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
 
 export class BuildBehavior implements CreepBehavior {
     private creep: Creep | null

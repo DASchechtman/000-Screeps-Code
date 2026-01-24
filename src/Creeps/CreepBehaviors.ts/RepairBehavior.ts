@@ -1,5 +1,6 @@
+import { JsonObj } from "Consts";
 import { CreepBehavior } from "Creeps/Creep";
-import { JsonObj, ScreepFile } from "FileSystem/File";
+import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 
 export class RepairBehavior implements CreepBehavior {
