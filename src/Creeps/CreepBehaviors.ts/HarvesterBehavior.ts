@@ -7,7 +7,7 @@ export class HarvesterBehavior implements CreepBehavior {
     private creep_id: string
     private creep: Creep | null
     private sources: Source[]
-    private spawns: StructureSpawn[]
+    private spawns: (StructureSpawn | StructureExtension)[]
 
     constructor(creep_id: string) {
         this.data = {}
@@ -19,7 +19,11 @@ export class HarvesterBehavior implements CreepBehavior {
 
         if (this.creep !== null) {
             this.sources = this.creep.room.find(FIND_SOURCES)
-            this.spawns = this.creep.room.find(FIND_MY_SPAWNS)
+            let x = [
+                ...this.creep.room.find(FIND_MY_SPAWNS),
+                ...this.creep.room.find(FIND_STRUCTURES, {filter: s => s.structureType === STRUCTURE_EXTENSION})
+            ]
+            this.spawns = x as (StructureSpawn | StructureExtension)[]
         }
     }
 
@@ -49,12 +53,20 @@ export class HarvesterBehavior implements CreepBehavior {
 
         if (!this.data[this.state_key]) {
             if (this.creep.harvest(this.sources[0]) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.sources[0])
+                this.creep.moveTo(this.sources[0], { maxRooms: 1 })
             }
         }
         else {
-            if (this.creep.transfer(this.spawns[0], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.spawns[0])
+            let i = 0
+            let target = this.spawns[i]
+            while(i < this.spawns.length && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                target = this.spawns[++i]
+            }
+            if (target == null) {
+                target = this.spawns[0]
+            }
+            if (this.creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(target, { maxRooms: 1 })
             }
         }
     }

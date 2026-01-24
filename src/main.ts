@@ -2,6 +2,7 @@ import { HARVESTER_TYPE, UPGRADER_TYPE } from "Creeps/CreepBehaviors.ts/Behavior
 import { CreepObjectManager } from "Creeps/CreepObjManager";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
+import { DebugLogger } from "utils/DebugLogger";
 import { ErrorMapper } from "utils/ErrorMapper";
 import { Timer } from "utils/Timer";
 
@@ -36,9 +37,19 @@ declare const global: {
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
+  DebugLogger.InitLogger()
   const FILE_SYSTEM = FileSystem.GetFileSystem()
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
+
+  CREEP_MANAGER.LoadCreepData()
+
+  if (!FILE_SYSTEM.DoesFileExist(['debug', 'file'])) {
+    FILE_SYSTEM.GetFile(['debug', 'file']).WriteToFile('debug logs on?', true)
+  }
+  else {
+    FILE_SYSTEM.GetExistingFile(['debug', 'file'])
+  }
 
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
@@ -46,12 +57,15 @@ export const loop = ErrorMapper.wrapLoop(() => {
     const MY_CREEPS = ROOM_DATA.GetCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_SPAWN)
     const CREEP_NAME = `Creep - ${new Date().toUTCString()}`
+    const BODY = CREEP_MANAGER.GetSpawnBody()
 
-    if (!CREEP_MANAGER.HasSpawnedEnoughCreeps()) {
-      Game.getObjectById(SPAWN[0] as Id<StructureSpawn>)?.spawnCreep([MOVE, CARRY, WORK, WORK], CREEP_NAME)
+    if (BODY.length > 0) {
+      Game.getObjectById(SPAWN[0] as Id<StructureSpawn>)?.spawnCreep(BODY, CREEP_NAME)
     }
 
-    for (let creep_id of MY_CREEPS) { CREEP_MANAGER.AddCreepId(creep_id) }
+    for (let creep_id of MY_CREEPS) {
+      CREEP_MANAGER.AddCreepId(creep_id)
+    }
 
     CREEP_MANAGER.RunAllActiveCreeps()
   }

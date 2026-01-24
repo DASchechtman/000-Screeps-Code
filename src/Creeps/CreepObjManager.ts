@@ -1,7 +1,9 @@
 import { ScreepFile } from "FileSystem/File";
 import { CreepObj } from "./Creep";
-import { HARVESTER_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes";
+import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes";
 import { FileSystem } from "FileSystem/FileSystem";
+import { RoomData } from "Rooms/RoomData";
+import { DebugLogger } from "utils/DebugLogger";
 
 export class CreepObjectManager {
     private static manager: CreepObjectManager | null = null
@@ -14,18 +16,15 @@ export class CreepObjectManager {
     private creep_pool: Array<CreepObj>
     private available_creeps: Map<CreepObj, number>
     private reserved_creeps: Map<CreepObj, number>
+    private creep_body: BodyPartConstant[] = []
     private file_path: string[]
-    private data_key: string
+    private ids: string[][] = []
 
     private constructor() {
         this.creep_pool = []
         this.available_creeps = new Map()
         this.reserved_creeps = new Map()
         this.file_path = ['creeps', 'info']
-        this.data_key = 'role'
-
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        FILE.WriteToFile(this.data_key, [[], []])
     }
 
     private GiveCreep(id: string, behavior_type: number) {
@@ -59,7 +58,7 @@ export class CreepObjectManager {
         }
     }
 
-    private RunCreepCode(behavior: number, id_arr: string[]) {
+    private RunCreepCode(behavior: number, id_arr: string[], file: ScreepFile) {
         const IDS_TO_REMOVE = new Array<string>()
         for (let id of id_arr) {
             const CREEP = this.GiveCreep(id, behavior)
@@ -75,41 +74,113 @@ export class CreepObjectManager {
             const INDEX = id_arr.indexOf(id)
             if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
         }
+
+        if (id_arr.length > 0) {
+            file.WriteToFile(behavior, id_arr)
+        }
+    }
+
+    public LoadCreepData() {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        try {
+            this.ids[HARVESTER_TYPE] = FILE.ReadFromFile(HARVESTER_TYPE) as string[]
+            this.ids[UPGRADER_TYPE] = FILE.ReadFromFile(UPGRADER_TYPE) as string[]
+            this.ids[BUILDER_TYPE] = FILE.ReadFromFile(BUILDER_TYPE) as string[]
+            this.ids[REPAIR_TYPE] = FILE.ReadFromFile(REPAIR_TYPE) as string[]
+            this.ids[ATTACK_TYPE] = FILE.ReadFromFile(ATTACK_TYPE) as string[]
+        }
+        catch {
+            FILE.WriteToFile(HARVESTER_TYPE, [])
+            FILE.WriteToFile(UPGRADER_TYPE, [])
+            FILE.WriteToFile(BUILDER_TYPE, [])
+            FILE.WriteToFile(REPAIR_TYPE, [])
+            FILE.WriteToFile(ATTACK_TYPE, [])
+            this.ids = [[], [], [], [], []]
+        }
     }
 
     public RunAllActiveCreeps() {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
+        const HARVESER_IDS = this.ids[HARVESTER_TYPE]
+        const UPGRADER_IDS = this.ids[UPGRADER_TYPE]
+        const BUILDER_IDS = this.ids[BUILDER_TYPE]
+        const REPAIRER_IDS = this.ids[REPAIR_TYPE]
+        const ATTACKER_IDS = this.ids[ATTACK_TYPE]
 
-        this.RunCreepCode(HARVESTER_TYPE, ROLE_IDS[HARVESTER_TYPE])
-        this.RunCreepCode(UPGRADER_TYPE, ROLE_IDS[UPGRADER_TYPE])
-
-        FILE.WriteToFile(this.data_key, ROLE_IDS)
+        this.RunCreepCode(HARVESTER_TYPE, HARVESER_IDS, FILE)
+        this.RunCreepCode(UPGRADER_TYPE, UPGRADER_IDS, FILE)
+        this.RunCreepCode(BUILDER_TYPE, BUILDER_IDS, FILE)
+        this.RunCreepCode(REPAIR_TYPE, REPAIRER_IDS, FILE)
+        this.RunCreepCode(ATTACK_TYPE, ATTACKER_IDS, FILE)
     }
 
     public AddCreepId(id: string) {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
+        const HARVESER_IDS = this.ids[HARVESTER_TYPE]
+        const UPGRADER_IDS = this.ids[UPGRADER_TYPE]
+        const BUILDER_IDS = this.ids[BUILDER_TYPE]
+        const REPAIRER_IDS = this.ids[REPAIR_TYPE]
+        const ATTACKER_IDS = this.ids[ATTACK_TYPE]
+        const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
 
-        if (ROLE_IDS.some(id_arr => id_arr.includes(id))) {
-            return
+        if (this.ids.some(arr => arr.includes(id))) { return }
+
+        if (ATTACKER_IDS.length < 3) {
+            ATTACKER_IDS.push(id)
+        }
+        else if (HARVESER_IDS.length < 2) {
+            HARVESER_IDS.push(id)
+            DebugLogger.Log(`add id - ${id} - harvester`)
+        }
+        else if (UPGRADER_IDS.length < 2) {
+            UPGRADER_IDS.push(id)
+            DebugLogger.Log(`add id - ${id} - upgrader`)
+        }
+        else if (BUILDER_IDS.length < 1 && CONSTRUCTION_SITE.length > 0) {
+            BUILDER_IDS.push(id)
+            DebugLogger.Log(`add id - ${id} - builder`)
+        }
+        else if (REPAIRER_IDS.length < 2) {
+            REPAIRER_IDS.push(id)
+            DebugLogger.Log(`add id - ${id} - repairer`)
+        }
+        else {
+            this.creep_body = []
         }
 
-        if (ROLE_IDS[HARVESTER_TYPE].length < 2) {
-            ROLE_IDS[HARVESTER_TYPE].push(id)
-        }
-        else if (ROLE_IDS[UPGRADER_TYPE].length < 2) {
-            ROLE_IDS[UPGRADER_TYPE].push(id)
-        }
-
-        FILE.WriteToFile(this.data_key, ROLE_IDS)
+        FILE.WriteToFile(HARVESTER_TYPE, HARVESER_IDS)
+        FILE.WriteToFile(UPGRADER_TYPE, UPGRADER_IDS)
+        FILE.WriteToFile(BUILDER_TYPE, BUILDER_IDS)
+        FILE.WriteToFile(REPAIR_TYPE, REPAIRER_IDS)
     }
 
-    public HasSpawnedEnoughCreeps() {
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const ROLE_IDS = FILE.ReadFromFile(this.data_key) as string[][]
+    public GetSpawnBody() {
+        const HARVESER_IDS = this.ids[HARVESTER_TYPE]
+        const UPGRADER_IDS = this.ids[UPGRADER_TYPE]
+        const BUILDER_IDS = this.ids[BUILDER_TYPE]
+        const REPAIRER_IDS = this.ids[REPAIR_TYPE]
+        const ATTACKER_IDS = this.ids[ATTACK_TYPE]
+        const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
 
-        let total = ROLE_IDS.reduce((prev, arr) => prev + arr.length, 0)
-        return total >= 4
+        if (ATTACKER_IDS.length < 3) {
+            this.creep_body = [MOVE, MOVE, ATTACK]
+        }
+        else if (HARVESER_IDS.length < 2) {
+            this.creep_body = [MOVE, CARRY, WORK, WORK]
+        }
+        else if (UPGRADER_IDS.length < 2) {
+            this.creep_body = [MOVE, CARRY, WORK, WORK]
+        }
+        else if (BUILDER_IDS.length < 1 && CONSTRUCTION_SITE.length > 0) {
+            this.creep_body = [MOVE, CARRY, WORK, WORK]
+        }
+        else if (REPAIRER_IDS.length < 2) {
+            this.creep_body = [MOVE, CARRY, WORK, WORK]
+        }
+        else {
+            this.creep_body = []
+        }
+
+        return this.creep_body
     }
 }

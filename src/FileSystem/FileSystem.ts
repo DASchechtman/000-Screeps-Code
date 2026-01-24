@@ -54,6 +54,7 @@ export class FileSystem {
         this.file_obj_manager.Map((file) => {
             if (file.ShouldDeleteFile()) { return }
             const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(file.GetPath())
+
             FOLDER_OBJ[FILE_NAME] = {
                 ...FOLDER_OBJ[FILE_NAME],
                 ...file.ToJson()
@@ -106,14 +107,20 @@ export class FileSystem {
                 data: {},
                 can_delete: false
             })
-
-            FOLDER_OBJ[FILE_NAME] = FILE
+            FOLDER_OBJ[FILE_NAME] = {}
         }
         else {
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
         }
+        const Update = (file: ScreepFile) => {
+            FOLDER_OBJ[FILE_NAME] = {
+                ...FOLDER_OBJ[FILE_NAME],
+                ...file.ToJson()
+            }
+        }
 
         FILE.UpdateLastAccessed()
+        FILE.UpdateSaveFunction(Update)
 
         return FILE
     }
@@ -121,9 +128,16 @@ export class FileSystem {
     public GetExistingFile(path: string[]) {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
+            const Update = (file: ScreepFile) => {
+                FOLDER_OBJ[FILE_NAME] = {
+                    ...FOLDER_OBJ[FILE_NAME],
+                    ...file.ToJson()
+                }
+            }
             const FILE = this.file_obj_manager.GiveFile()
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
+            FILE.UpdateSaveFunction(Update)
             return FILE
         }
         return null
@@ -148,7 +162,6 @@ export class FileSystem {
 
     public Cleanup() {
         this.file_obj_manager.ReturnAllFiles()
-        this.SaveFilesToMemory()
         this.CleanUpMemory()
     }
 }

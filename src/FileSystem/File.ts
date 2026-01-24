@@ -12,6 +12,7 @@ export class ScreepFile {
     private path: string[] = []
     private data: JsonObj = {}
     private can_delete: boolean = false
+    private SaveToMemory: ((file: ScreepFile) => void) = (file: ScreepFile) => {}
 
     private hasProp(obj: unknown, key: string): obj is Record<string, unknown> {
         return typeof obj === 'object' && obj !== null && key in obj
@@ -49,6 +50,10 @@ export class ScreepFile {
         }
     }
 
+    public UpdateSaveFunction(fn: (file: ScreepFile) => void) {
+        this.SaveToMemory = fn
+    }
+
     public ShouldDeleteFile() {
         return Game.time - this.tick_last_accessed >= 10
     }
@@ -73,20 +78,6 @@ export class ScreepFile {
         this.file_name = name
     }
 
-    public WriteToFile(key: BaseJsonValue, value: Json) {
-        key = String(key)
-        this.data[key] = value
-    }
-
-    public ReadFromFile(key: BaseJsonValue) {
-        key = String(key)
-        if (this.data[key] === undefined) {
-            throw new Error(`Accessing non-existent data ${key} in file ${this.file_name}`)
-        }
-
-        return this.data[key]
-    }
-
     public ToJson() {
         let json: any = {
             tick_last_accessed: this.tick_last_accessed,
@@ -98,5 +89,20 @@ export class ScreepFile {
         if (this.can_delete) { json.can_delete = this.can_delete }
 
         return json
+    }
+
+    public WriteToFile(key: BaseJsonValue, value: Json) {
+        key = String(key)
+        this.data[key] = value
+        this.SaveToMemory(this)
+    }
+
+    public ReadFromFile(key: BaseJsonValue) {
+        key = String(key)
+        if (this.data[key] === undefined) {
+            throw new Error(`Accessing non-existent data ${key} in file ${this.file_name}`)
+        }
+
+        return this.data[key]
     }
 }

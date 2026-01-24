@@ -49,12 +49,12 @@ export class UpgraderBehavior implements CreepBehavior {
 
         if (!this.data[this.state_key]) {
             if (this.creep.harvest(this.sources[1]) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.sources[1])
+                this.creep.moveTo(this.sources[1], { maxRooms: 1 })
             }
         }
         else {
             if (this.creep.upgradeController(this.controller) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.controller)
+                this.creep.moveTo(this.controller, { maxRooms: 1 })
             }
         }
     }

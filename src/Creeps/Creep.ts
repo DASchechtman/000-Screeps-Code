@@ -1,8 +1,11 @@
 import { ScreepFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
-import { HARVESTER_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes"
+import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes"
 import { HarvesterBehavior } from "./CreepBehaviors.ts/HarvesterBehavior"
 import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
+import { BuildBehavior } from "./CreepBehaviors.ts/BuildBehavior"
+import { RepairBehavior } from "./CreepBehaviors.ts/RepairBehavior"
+import { AttackBehavior } from "./CreepBehaviors.ts/AttackBehavior"
 
 export const BEHAVIOR_KEY = "behavior"
 export const ORIG_BEHAVIOR_KEY = "original behavior"
@@ -28,9 +31,18 @@ export class CreepObj {
 
     public OverrideBehavior(behavior_type: number) {
         let creep_behavior = -1
-        
+        let creep_orig_behavior = -1
+
         try {
             creep_behavior = Number(this.file?.ReadFromFile(BEHAVIOR_KEY))
+            creep_orig_behavior = Number(this.file?.ReadFromFile(ORIG_BEHAVIOR_KEY))
+
+            if (creep_orig_behavior !== behavior_type) {
+                creep_behavior = behavior_type
+                creep_orig_behavior = behavior_type
+                this.file?.WriteToFile(BEHAVIOR_KEY, creep_behavior)
+                this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, creep_orig_behavior)
+            }
         }
         catch (e) {
             console.log(`Creep Error: ${e}`)
@@ -44,6 +56,15 @@ export class CreepObj {
         }
         else if (creep_behavior === UPGRADER_TYPE) {
             this.behavior = new UpgraderBehavior(this.id)
+        }
+        else if (creep_behavior === BUILDER_TYPE) {
+            this.behavior = new BuildBehavior(this.id)
+        }
+        else if (creep_behavior === REPAIR_TYPE) {
+            this.behavior = new RepairBehavior(this.id)
+        }
+        else if (creep_behavior === ATTACK_TYPE) {
+            this.behavior = new AttackBehavior(this.id)
         }
     }
 

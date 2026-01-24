@@ -1,3 +1,4 @@
+import { DebugLogger } from "utils/DebugLogger"
 import { Timer } from "utils/Timer"
 
 export class RoomData {
@@ -21,13 +22,18 @@ export class RoomData {
         this.room_name = room_name
         this.timer = new Timer(this.room_name)
 
-        this.timer.StartTimer(20)
+        this.timer.StartTimer(5)
 
         if (this.timer.IsTimerDone()) {
+            DebugLogger.Log('resetting room cache')
             this.creep_ids = []
             this.construction_site_ids = []
         }
 
+    }
+
+    public GetAllEnemyCreepIds() {
+        return Game.rooms[this.room_name].find(FIND_HOSTILE_CREEPS).map(hc => hc.id)
     }
 
     public GetCreepIds() {
@@ -42,10 +48,10 @@ export class RoomData {
         return this.creep_ids
     }
 
-    public GetOwnedStructureIds(struct_type: StructureConstant) {
+    public GetOwnedStructureIds(struct_type?: StructureConstant) {
         return Array.from(Object.values(Game.structures))
             .filter(s => s.room.name === this.room_name)
-            .filter(s => s.structureType === struct_type)
+            .filter(s => s.structureType === struct_type || struct_type == null)
             .map(s => s.id)
     }
 
