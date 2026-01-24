@@ -1,6 +1,7 @@
 import { JsonObj } from "Consts"
 import { CreepBehavior } from "Creeps/Creep"
 import { ScreepFile } from "FileSystem/File"
+import { SafelyReadFromFiletry } from "utils/UtilFuncs"
 
 export class UpgraderBehavior implements CreepBehavior {
     private data: JsonObj
@@ -25,13 +26,7 @@ export class UpgraderBehavior implements CreepBehavior {
     }
 
     public Load(file: ScreepFile) {
-        try {
-            this.data[this.state_key] = file.ReadFromFile(this.state_key)
-        }
-        catch {
-            this.data[this.state_key] = false
-        }
-
+        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
         return this.creep != null
     }
 

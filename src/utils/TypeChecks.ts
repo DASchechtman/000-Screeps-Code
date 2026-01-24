@@ -1,6 +1,6 @@
 import { Json } from "Consts";
 
-export function IsJsonObject(test_obj: any): test_obj is Json {
+export function IsJsonType(test_obj: any): test_obj is Json {
     const BASE_TYPES = ['number', 'string', 'boolean']
 
     const CheckIfBaseType = (obj: any) => {

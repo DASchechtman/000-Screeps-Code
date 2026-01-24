@@ -1,7 +1,7 @@
 import { Json } from "Consts"
 import { ScreepFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
-import { IsJsonObject as IsJsonType } from "./TypeChecks"
+import { IsJsonType } from "./TypeChecks"
 
 
 export class DebugLogger {

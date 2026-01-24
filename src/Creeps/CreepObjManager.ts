@@ -4,6 +4,7 @@ import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE }
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { DebugLogger } from "utils/DebugLogger";
+import { SafelyReadFromFiletry } from "utils/UtilFuncs";
 
 export class CreepObjectManager {
     private static manager: CreepObjectManager | null = null
@@ -82,21 +83,11 @@ export class CreepObjectManager {
 
     public LoadCreepData() {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        try {
-            this.ids[HARVESTER_TYPE] = FILE.ReadFromFile(HARVESTER_TYPE) as string[]
-            this.ids[UPGRADER_TYPE] = FILE.ReadFromFile(UPGRADER_TYPE) as string[]
-            this.ids[BUILDER_TYPE] = FILE.ReadFromFile(BUILDER_TYPE) as string[]
-            this.ids[REPAIR_TYPE] = FILE.ReadFromFile(REPAIR_TYPE) as string[]
-            this.ids[ATTACK_TYPE] = FILE.ReadFromFile(ATTACK_TYPE) as string[]
-        }
-        catch {
-            FILE.WriteToFile(HARVESTER_TYPE, [])
-            FILE.WriteToFile(UPGRADER_TYPE, [])
-            FILE.WriteToFile(BUILDER_TYPE, [])
-            FILE.WriteToFile(REPAIR_TYPE, [])
-            FILE.WriteToFile(ATTACK_TYPE, [])
-            this.ids = [[], [], [], [], []]
-        }
+        this.ids[HARVESTER_TYPE] = SafelyReadFromFiletry(FILE, HARVESTER_TYPE, new Array<string>())
+        this.ids[UPGRADER_TYPE] = SafelyReadFromFiletry(FILE, UPGRADER_TYPE, new Array<string>())
+        this.ids[BUILDER_TYPE] = SafelyReadFromFiletry(FILE, BUILDER_TYPE, new Array<string>())
+        this.ids[REPAIR_TYPE] = SafelyReadFromFiletry(FILE, REPAIR_TYPE, new Array<string>())
+        this.ids[ATTACK_TYPE] = SafelyReadFromFiletry(FILE, ATTACK_TYPE, new Array<string>())
     }
 
     public RunAllActiveCreeps() {
@@ -165,17 +156,20 @@ export class CreepObjectManager {
         if (ATTACKER_IDS.length < 3) {
             this.creep_body = [MOVE, MOVE, ATTACK]
         }
+        else if (HARVESER_IDS.length === 0) {
+            this.creep_body = [MOVE, MOVE, CARRY, WORK]
+        }
         else if (HARVESER_IDS.length < 2) {
-            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, CARRY, WORK, WORK]
         }
         else if (UPGRADER_IDS.length < 2) {
             this.creep_body = [MOVE, CARRY, WORK, WORK]
         }
         else if (BUILDER_IDS.length < 1 && CONSTRUCTION_SITE.length > 0) {
-            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, CARRY, WORK, WORK]
         }
         else if (REPAIRER_IDS.length < 2) {
-            this.creep_body = [MOVE, MOVE, CARRY, WORK, WORK]
+            this.creep_body = [MOVE, MOVE, CARRY, CARRY, WORK, WORK]
         }
         else {
             this.creep_body = []

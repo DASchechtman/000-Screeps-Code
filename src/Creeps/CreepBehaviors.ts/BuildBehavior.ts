@@ -3,6 +3,7 @@ import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { REPAIR_TYPE } from "./BehaviorTypes";
 import { BEHAVIOR_KEY, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
+import { SafelyReadFromFiletry } from "utils/UtilFuncs";
 
 export class BuildBehavior implements CreepBehavior {
     private creep: Creep | null
@@ -24,12 +25,7 @@ export class BuildBehavior implements CreepBehavior {
     }
 
     public Load(file: ScreepFile) {
-        try {
-            this.data[this.state_key] = file.ReadFromFile(this.state_key)
-        } catch {
-            file.WriteToFile(this.state_key, false)
-            this.data[this.state_key] = false
-        }
+        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
         return this.creep != null
     }
 
