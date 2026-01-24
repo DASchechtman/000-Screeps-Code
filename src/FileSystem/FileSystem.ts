@@ -10,11 +10,9 @@ export class FileSystem {
     }
 
     private file_obj_manager: FileObjectManager
-    private files: Map<string, ScreepFile>
 
     private constructor() {
         this.file_obj_manager = FileObjectManager.GetManager()
-        this.files = new Map()
     }
 
     private GetFileDataFromMemory(path: string[], creating_file: boolean = true): [any, string] {
