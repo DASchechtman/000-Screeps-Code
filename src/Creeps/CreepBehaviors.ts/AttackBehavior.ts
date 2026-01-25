@@ -1,23 +1,45 @@
+import { JsonObj } from "Consts";
 import { CreepBehavior } from "Creeps/Creep";
 import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
+import { SafelyReadFromFiletry } from "utils/UtilFuncs";
 
 export class AttackBehavior implements CreepBehavior {
     private creep: Creep | null
     private enemy_creep_ids: string[]
+    private ally_creeps: string[]
+    private data: JsonObj
+    private state_key: string
+    
     constructor(id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
         this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
+        this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
+
+        this.data = {}
+        this.state_key = "state"
     }
 
     public Load(file: ScreepFile) {
+        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
         return this.creep != null
     }
 
     public Run() {
         if (this.creep == null) { return }
 
-        if (this.enemy_creep_ids.length > 0) {
+        const INJURED_CREEP_COUNT = this.ally_creeps
+            .map(c => Game.getObjectById(c as Id<Creep>))
+            .filter(c => c != null && c.hits < c.hitsMax).length
+
+        if (INJURED_CREEP_COUNT > 0) {
+            this.data[this.state_key] = true
+        }
+        else {
+            this.data[this.state_key] = false
+        }
+
+        if (this.enemy_creep_ids.length > 0 && this.data[this.state_key]) {
             const ENEMY = Game.getObjectById(this.enemy_creep_ids[0] as Id<Creep>)
             if (!ENEMY) { return }
 
@@ -30,5 +52,7 @@ export class AttackBehavior implements CreepBehavior {
         }
     }
 
-    public Cleanup(file: ScreepFile) {}
+    public Cleanup(file: ScreepFile) {
+        file.WriteToFile(this.state_key, this.data[this.state_key])
+    }
 }

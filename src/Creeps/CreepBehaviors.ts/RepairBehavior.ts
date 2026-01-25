@@ -68,7 +68,7 @@ export class RepairBehavior implements CreepBehavior {
             }
         }
         else {
-            const BUILDING = this.structures[0]
+            const BUILDING = this.structures.at(0)
 
             if (BUILDING == null) { return}
 

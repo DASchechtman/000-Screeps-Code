@@ -28,10 +28,30 @@ declare global {
     working: boolean;
   }
 
+  interface Array<T> {
+    at(index: number): T | undefined
+  }
+
 }
 // Syntax for adding properties to `global` (ex "global.log")
 declare const global: {
   log: any;
+}
+
+Array.prototype.at = function(index: number) {
+  if (index >= this.length) {
+    return undefined
+  }
+  else if (index < 0 && this.length + index < 0) {
+    return undefined
+  }
+
+  if (index < 0) {
+    return this[this.length + index]
+  }
+  else {
+    return this[index]
+  }
 }
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
@@ -42,10 +62,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
 
-  CREEP_MANAGER.LoadCreepData()
-
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
+    CREEP_MANAGER.LoadCreepData(room_name)
 
     const MY_CREEPS = ROOM_DATA.GetCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_SPAWN)
