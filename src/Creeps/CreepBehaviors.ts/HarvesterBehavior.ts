@@ -1,6 +1,9 @@
 import { CreepBehavior, JsonObj } from "Consts";
 import {  ScreepFile } from "FileSystem/File";
+import { RoomData } from "Rooms/RoomData";
 import { SafelyReadFromFile } from "utils/UtilFuncs";
+
+type EnergyContainers = StructureSpawn | StructureExtension | StructureContainer
 
 export class HarvesterBehavior implements CreepBehavior {
     private data: JsonObj
@@ -8,7 +11,7 @@ export class HarvesterBehavior implements CreepBehavior {
     private creep_id: string
     private creep: Creep | null
     private sources: Source[]
-    private spawns: (StructureSpawn | StructureExtension)[]
+    private spawns: EnergyContainers[]
 
     constructor() {
         this.data = {}
@@ -23,17 +26,29 @@ export class HarvesterBehavior implements CreepBehavior {
     Load(file: ScreepFile, id: string) {
         this.creep_id = id
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
 
-        if (this.creep !== null) {
+        if (this.creep !== null && this.data[this.state_key]) {
             this.sources = this.creep.room.find(FIND_SOURCES)
-            let x = [
-                ...this.creep.room.find(FIND_MY_SPAWNS),
-                ...this.creep.room.find(FIND_STRUCTURES, {filter: s => s.structureType === STRUCTURE_EXTENSION})
-            ]
-            this.spawns = x as (StructureSpawn | StructureExtension)[]
+            let x = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER])
+                .map(id => Game.getObjectById(id as Id<Structure>))
+                .filter(s => s != null)
+                .sort((a) =>{
+                    if (a == null) {
+                        return 0
+                    }
+                    else if (a.structureType === STRUCTURE_SPAWN) {
+                        return -1
+                    }
+                    else if (a.structureType === STRUCTURE_CONTAINER) {
+                        return 1
+                    }
+                    return 0
+                })
+
+            this.spawns = x as EnergyContainers[]
         }
 
-        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
         return this.creep != null
     }
 

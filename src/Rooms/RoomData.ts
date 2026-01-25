@@ -49,10 +49,10 @@ export class RoomData {
         return this.creep_ids
     }
 
-    public GetOwnedStructureIds(struct_type?: StructureConstant) {
+    public GetOwnedStructureIds(struct_type?: StructureConstant[]) {
         return Array.from(Object.values(Game.structures))
             .filter(s => s.room.name === this.room_name)
-            .filter(s => s.structureType === struct_type || struct_type == null)
+            .filter(s =>  struct_type == null || struct_type.includes(s.structureType))
             .map(s => s.id)
     }
 

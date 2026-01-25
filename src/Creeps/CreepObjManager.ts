@@ -128,7 +128,7 @@ export class CreepObjectManager {
         const REPAIRER_IDS = this.ids[REPAIR_TYPE]
         const ATTACKER_IDS = this.ids[ATTACK_TYPE]
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
-        const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_EXTENSION)
+        const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_EXTENSION])
         const BODY_TO_ENERGY_MAP = new Map<BodyPartConstant, number>([
             [MOVE, 50],
             [WORK, 100],
@@ -195,7 +195,7 @@ export class CreepObjectManager {
             this.creep_body = BuildBody([MOVE, CARRY, WORK], energy_use_limit)
         }
         else if (REPAIRER_IDS.length < 2) {
-            this.creep_body = BuildBody([MOVE, CARRY, WORK], energy_use_limit)
+            this.creep_body = BuildBody([MOVE, MOVE, CARRY, WORK], energy_use_limit)
         }
         else {
             this.creep_body = []
