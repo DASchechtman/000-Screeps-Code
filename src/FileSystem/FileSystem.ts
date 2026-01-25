@@ -50,23 +50,15 @@ export class FileSystem {
         return [folder_obj, file]
     }
 
-    private SaveFilesToMemory() {
-        this.file_obj_manager.Map((file) => {
-            if (file.ShouldDeleteFile()) { return }
-            const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(file.GetPath())
-
-            FOLDER_OBJ[FILE_NAME] = {
-                ...FOLDER_OBJ[FILE_NAME],
-                ...file.ToJson()
-            }
-        })
-    }
-
     private CleanUpMemory() {
+        const Delete = (o: any, key: string) => {
+            o[key] = undefined
+        }
+
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
                 if (file[key].can_delete) {
-                    delete file[key]
+                    Delete(file, key)
                 }
                 else if (key.endsWith(FOLDER_ENDING)) {
                     const CONTAINS_FILES = Object.getOwnPropertyNames(file[key]).length > 0
@@ -74,19 +66,19 @@ export class FileSystem {
                         CheckAllFiles(file[key])
                     }
                     else {
-                        delete file[key]
+                        Delete(file, key)
                     }
                 }
                 else if (key.endsWith(FILE_ENDING)) {
                     const FILE = this.file_obj_manager.GiveFile()
                     FILE.OverwriteFile(file[key])
                     if (FILE.ShouldDeleteFile()) {
-                        delete file[key]
+                        Delete(file, key)
                     }
                     this.file_obj_manager.ReturnFile(FILE)
                 }
                 else {
-                    delete file[key]
+                    Delete(file, key)
                 }
             }
         }
