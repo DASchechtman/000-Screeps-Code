@@ -6,20 +6,34 @@ import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
 import { BuildBehavior } from "./CreepBehaviors.ts/BuildBehavior"
 import { RepairBehavior } from "./CreepBehaviors.ts/RepairBehavior"
 import { AttackBehavior } from "./CreepBehaviors.ts/AttackBehavior"
-import { BEHAVIOR_KEY, ORIG_BEHAVIOR_KEY } from "Consts"
+import { BEHAVIOR_KEY, CreepBehavior, ORIG_BEHAVIOR_KEY } from "Consts"
 import { DebugLogger } from "utils/DebugLogger"
 
-export interface CreepBehavior {
-    Load: (file: ScreepFile) => boolean
-    Run: () => void
-    Cleanup: (file: ScreepFile) => void
-}
+
 
 export class CreepObj {
-    private id: string = ""
-    private file_path: string[] = []
-    private file: ScreepFile | null = null
-    private behavior: CreepBehavior | null = null
+    private id: string
+    private file_path: string[]
+    private file: ScreepFile | null
+    private behavior: CreepBehavior | null
+
+    private harvest_behavior: HarvesterBehavior
+    private upgrade_behavior: UpgraderBehavior
+    private build_behavior: BuildBehavior
+    private repair_behavior: RepairBehavior
+    private gaurd_behavior: AttackBehavior
+
+    constructor() {
+        this.harvest_behavior = new HarvesterBehavior()
+        this.upgrade_behavior = new UpgraderBehavior()
+        this.build_behavior = new BuildBehavior()
+        this.repair_behavior = new RepairBehavior()
+        this.gaurd_behavior = new AttackBehavior()
+        this.behavior = null
+        this.file = null
+        this.file_path = []
+        this.id = ""
+    }
 
     public OverrideCreep(id: string) {
         this.id = id
@@ -51,25 +65,25 @@ export class CreepObj {
         }
 
         if (creep_behavior === HARVESTER_TYPE) {
-            this.behavior = new HarvesterBehavior(this.id)
+            this.behavior = this.harvest_behavior
         }
         else if (creep_behavior === UPGRADER_TYPE) {
-            this.behavior = new UpgraderBehavior(this.id)
+            this.behavior = this.upgrade_behavior
         }
         else if (creep_behavior === BUILDER_TYPE) {
-            this.behavior = new BuildBehavior(this.id)
+            this.behavior = this.build_behavior
         }
         else if (creep_behavior === REPAIR_TYPE) {
-            this.behavior = new RepairBehavior(this.id)
+            this.behavior = this.repair_behavior
         }
         else if (creep_behavior === ATTACK_TYPE) {
-            this.behavior = new AttackBehavior(this.id)
+            this.behavior = this.gaurd_behavior
         }
     }
 
     public Load(FailedToLoad: () => void) {
         if (this.file == null) { return }
-        const CANT_LOAD = !Boolean(this.behavior?.Load(this.file))
+        const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))
         if (CANT_LOAD) {
             FailedToLoad()
             this.behavior = null

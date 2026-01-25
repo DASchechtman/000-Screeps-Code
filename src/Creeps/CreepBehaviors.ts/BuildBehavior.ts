@@ -1,9 +1,8 @@
-import { CreepBehavior } from "Creeps/Creep";
 import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { REPAIR_TYPE } from "./BehaviorTypes";
-import { BEHAVIOR_KEY, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
-import { SafelyReadFromFiletry } from "utils/UtilFuncs";
+import { BEHAVIOR_KEY, CreepBehavior, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
+import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class BuildBehavior implements CreepBehavior {
     private creep: Creep | null
@@ -12,20 +11,23 @@ export class BuildBehavior implements CreepBehavior {
     private data: JsonObj
     private state_key: string
 
-    public constructor(id: string) {
-        this.creep = Game.getObjectById(id as Id<Creep>)
+    public constructor() {
+        this.creep = null
         this.construction_sites = RoomData.GetRoomData().GetConstructionSites().map(csid => Game.getObjectById(csid as Id<ConstructionSite>))
         this.sources = null
         this.data = {}
         this.state_key = "state"
 
+
+    }
+
+    public Load(file: ScreepFile, id: string) {
+        this.creep = Game.getObjectById(id as Id<Creep>)
+
         if (this.creep) {
             this.sources = this.creep.pos.findClosestByPath(FIND_SOURCES)
         }
-    }
-
-    public Load(file: ScreepFile) {
-        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
         return this.creep != null
     }
 

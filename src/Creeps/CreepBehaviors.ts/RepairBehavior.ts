@@ -1,8 +1,8 @@
-import { JsonObj } from "Consts";
-import { CreepBehavior } from "Creeps/Creep";
+import { CreepBehavior, JsonObj } from "Consts";
 import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
-import { SafelyReadFromFiletry } from "utils/UtilFuncs";
+import { Timer } from "utils/Timer";
+import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class RepairBehavior implements CreepBehavior {
     private creep: Creep | null
@@ -10,41 +10,69 @@ export class RepairBehavior implements CreepBehavior {
     private structures: (Structure | null)[]
     private data: JsonObj
     private state_key: string
+    private source_key: string
+    private target: Structure | null
 
-    public constructor(id: string) {
-        this.creep = Game.getObjectById(id as Id<Creep>)
-        this.structures = [
-            ...RoomData.GetRoomData().GetOwnedStructureIds(),
-            ...RoomData.GetRoomData().GetRoomStructures(STRUCTURE_WALL)
-        ].map(id => Game.getObjectById(id as Id<Structure>))
-        .filter(s => s?.hits && s?.hitsMax && s.hits / s.hitsMax < .75)
-        .sort((a, b) => {
-            const RAMPART_CRITICAL = (
-                a?.structureType === STRUCTURE_RAMPART
-                && a.structureType !== b?.structureType
-                && Number(a.hits) / Number(a.hitsMax) <= .03
-            )
-            if (RAMPART_CRITICAL) {
-                return -1
-            }
-            else if (Number(a?.hits) < Number(b?.hits)) {
-                return -1
-            }
-            else {
-                return 1
-            }
-        })
+    public constructor() {
+        this.structures = []
         this.source = null
         this.data = {}
         this.state_key = "state"
+        this.creep = null
+        this.source_key = "source"
+        this.target = null
+    }
+
+    public Load(file: ScreepFile, id: string) {
+        this.creep = Game.getObjectById(id as Id<Creep>)
 
         if (this.creep) {
             this.source = this.creep.pos.findClosestByPath(FIND_SOURCES)
         }
-    }
 
-    public Load(file: ScreepFile) {
-        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
+        this.data[this.source_key] = SafelyReadFromFile(file, this.source_key, 'null')
+
+        this.target = Game.getObjectById(this.data[this.source_key] as Id<Structure>)
+
+        const TIMER = new Timer(id)
+
+        TIMER.StartTimer(15)
+        if (this.data[this.source_key] === 'null' || TIMER.IsTimerDone()) {
+            this.structures = [
+                ...RoomData.GetRoomData().GetOwnedStructureIds(),
+                ...RoomData.GetRoomData().GetRoomStructures(STRUCTURE_WALL)
+            ]
+                .map(id => Game.getObjectById(id as Id<Structure>))
+                .filter(s => s != null && s.hits / s.hitsMax < .75)
+                .sort((a, b) => {
+                    const RAMPART_CRITICAL = (
+                        a?.structureType === STRUCTURE_RAMPART
+                        && a.structureType !== b?.structureType
+                        && Number(a.hits) / Number(a.hitsMax) <= .03
+                    )
+                    if (RAMPART_CRITICAL) {
+                        return -1
+                    }
+                    else if (Number(a?.hits) < Number(b?.hits)) {
+                        return -1
+                    }
+                    else {
+                        return 1
+                    }
+                })
+
+
+            const STRUCT_TO_REPAIR = this.structures.at(0)
+            if (STRUCT_TO_REPAIR) {
+                this.target = STRUCT_TO_REPAIR
+                this.data[this.source_key] = this.target.id
+            }
+            else {
+                this.target = null
+            }
+        }
+
         return this.creep != null
     }
     public Run() {
@@ -68,16 +96,17 @@ export class RepairBehavior implements CreepBehavior {
             }
         }
         else {
-            const BUILDING = this.structures.at(0)
+            let building = this.target
 
-            if (BUILDING == null) { return}
+            if (building == null) { return }
 
-            if (this.creep.repair(BUILDING) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(BUILDING, { maxRooms: 1 })
+            if (this.creep.repair(building) === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(building, { maxRooms: 1 })
             }
         }
     }
     public Cleanup(file: ScreepFile) {
         file.WriteToFile(this.state_key, this.data[this.state_key])
-     }
+        file.WriteToFile(this.source_key, this.data[this.source_key])
+    }
 }

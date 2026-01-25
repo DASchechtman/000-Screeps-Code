@@ -1,7 +1,6 @@
-import { JsonObj } from "Consts";
-import { CreepBehavior } from "Creeps/Creep";
+import { CreepBehavior, JsonObj } from "Consts";
 import {  ScreepFile } from "FileSystem/File";
-import { SafelyReadFromFiletry } from "utils/UtilFuncs";
+import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class HarvesterBehavior implements CreepBehavior {
     private data: JsonObj
@@ -11,13 +10,19 @@ export class HarvesterBehavior implements CreepBehavior {
     private sources: Source[]
     private spawns: (StructureSpawn | StructureExtension)[]
 
-    constructor(creep_id: string) {
+    constructor() {
         this.data = {}
         this.state_key = "state"
-        this.creep_id = creep_id
-        this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
         this.sources = []
         this.spawns = []
+        this.creep_id = ""
+        this.creep = null
+    }
+
+
+    Load(file: ScreepFile, id: string) {
+        this.creep_id = id
+        this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
 
         if (this.creep !== null) {
             this.sources = this.creep.room.find(FIND_SOURCES)
@@ -27,11 +32,8 @@ export class HarvesterBehavior implements CreepBehavior {
             ]
             this.spawns = x as (StructureSpawn | StructureExtension)[]
         }
-    }
 
-
-    Load(file: ScreepFile) {
-        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
         return this.creep != null
     }
 

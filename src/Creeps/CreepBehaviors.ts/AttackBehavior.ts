@@ -1,8 +1,7 @@
-import { JsonObj } from "Consts";
-import { CreepBehavior } from "Creeps/Creep";
+import { CreepBehavior, JsonObj } from "Consts";
 import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
-import { SafelyReadFromFiletry } from "utils/UtilFuncs";
+import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class AttackBehavior implements CreepBehavior {
     private creep: Creep | null
@@ -10,18 +9,18 @@ export class AttackBehavior implements CreepBehavior {
     private ally_creeps: string[]
     private data: JsonObj
     private state_key: string
-    
-    constructor(id: string) {
-        this.creep = Game.getObjectById(id as Id<Creep>)
+
+    constructor() {
         this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
         this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
-
         this.data = {}
         this.state_key = "state"
+        this.creep = null
     }
 
-    public Load(file: ScreepFile) {
-        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
+    public Load(file: ScreepFile, id: string) {
+        this.creep = Game.getObjectById(id as Id<Creep>)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
         return this.creep != null
     }
 

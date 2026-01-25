@@ -4,7 +4,7 @@ import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE }
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { DebugLogger } from "utils/DebugLogger";
-import { SafelyReadFromFiletry } from "utils/UtilFuncs";
+import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class CreepObjectManager {
     private static manager: CreepObjectManager | null = null
@@ -89,11 +89,11 @@ export class CreepObjectManager {
         this.room_name = room_name
         this.file_path = ['creeps', `_${room_name}`, 'info']
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        this.ids[HARVESTER_TYPE] = SafelyReadFromFiletry(FILE, HARVESTER_TYPE, new Array<string>())
-        this.ids[UPGRADER_TYPE] = SafelyReadFromFiletry(FILE, UPGRADER_TYPE, new Array<string>())
-        this.ids[BUILDER_TYPE] = SafelyReadFromFiletry(FILE, BUILDER_TYPE, new Array<string>())
-        this.ids[REPAIR_TYPE] = SafelyReadFromFiletry(FILE, REPAIR_TYPE, new Array<string>())
-        this.ids[ATTACK_TYPE] = SafelyReadFromFiletry(FILE, ATTACK_TYPE, new Array<string>())
+        this.ids[HARVESTER_TYPE] = SafelyReadFromFile(FILE, HARVESTER_TYPE, new Array<string>())
+        this.ids[UPGRADER_TYPE] = SafelyReadFromFile(FILE, UPGRADER_TYPE, new Array<string>())
+        this.ids[BUILDER_TYPE] = SafelyReadFromFile(FILE, BUILDER_TYPE, new Array<string>())
+        this.ids[REPAIR_TYPE] = SafelyReadFromFile(FILE, REPAIR_TYPE, new Array<string>())
+        this.ids[ATTACK_TYPE] = SafelyReadFromFile(FILE, ATTACK_TYPE, new Array<string>())
     }
 
     public RunAllActiveCreeps() {

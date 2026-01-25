@@ -1,7 +1,6 @@
-import { JsonObj } from "Consts"
-import { CreepBehavior } from "Creeps/Creep"
+import { CreepBehavior, JsonObj } from "Consts"
 import { ScreepFile } from "FileSystem/File"
-import { SafelyReadFromFiletry } from "utils/UtilFuncs"
+import { SafelyReadFromFile } from "utils/UtilFuncs"
 
 export class UpgraderBehavior implements CreepBehavior {
     private data: JsonObj
@@ -11,22 +10,25 @@ export class UpgraderBehavior implements CreepBehavior {
     private sources: Source[]
     private controller: StructureController | undefined
 
-    constructor(creep_id: string) {
+    constructor() {
         this.state_key = "state key"
         this.data = {}
-        this.creep_id = creep_id
-        this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
         this.sources = []
         this.controller = undefined
+        this.creep_id = ""
+        this.creep = null
+    }
+
+    public Load(file: ScreepFile, id: string) {
+        this.creep_id = id
+        this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
 
         if (this.creep != null) {
             this.sources = this.creep.room.find(FIND_SOURCES)
             this.controller = this.creep.room.controller
         }
-    }
 
-    public Load(file: ScreepFile) {
-        this.data[this.state_key] = SafelyReadFromFiletry(file, this.state_key, false)
+        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
         return this.creep != null
     }
 

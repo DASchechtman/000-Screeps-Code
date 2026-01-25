@@ -2,7 +2,7 @@ import { ScreepFile } from "FileSystem/File"
 import { IsJsonType } from "./TypeChecks"
 import { BaseJsonValue } from "Consts"
 
-export function SafelyReadFromFiletry<T>(file: ScreepFile, key: BaseJsonValue, write_if_fail: T) {
+export function SafelyReadFromFile<T>(file: ScreepFile, key: BaseJsonValue, write_if_fail: T) {
     try {
         return file.ReadFromFile(key) as T
     }
