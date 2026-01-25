@@ -2,7 +2,7 @@ import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { REPAIR_TYPE } from "./BehaviorTypes";
 import { BEHAVIOR_KEY, CreepBehavior, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
-import { SafelyReadFromFile } from "utils/UtilFuncs";
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 
 export class BuildBehavior implements CreepBehavior {
     private creep: Creep | null
@@ -30,8 +30,8 @@ export class BuildBehavior implements CreepBehavior {
             this.sources = this.creep.pos.findClosestByPath(FIND_SOURCES)
         }
 
-        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
-        this.data[this.site_key] = SafelyReadFromFile(file, this.site_key, 'null')
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
+        this.data[this.site_key] = SafeReadFromFileWithOverwrite(file, this.site_key, 'null')
 
         this.site = Game.getObjectById(this.data[this.site_key] as Id<ConstructionSite>)
 

@@ -4,7 +4,7 @@ import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE }
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { DebugLogger } from "utils/DebugLogger";
-import { SafelyReadFromFile } from "utils/UtilFuncs";
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 
 export class CreepObjectManager {
     private static manager: CreepObjectManager | null = null
@@ -55,11 +55,11 @@ export class CreepObjectManager {
         this.room_name = room_name
         this.file_path = ['creeps', `_${room_name}`, 'info']
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        this.ids[HARVESTER_TYPE] = SafelyReadFromFile(FILE, HARVESTER_TYPE, new Array<string>())
-        this.ids[UPGRADER_TYPE] = SafelyReadFromFile(FILE, UPGRADER_TYPE, new Array<string>())
-        this.ids[BUILDER_TYPE] = SafelyReadFromFile(FILE, BUILDER_TYPE, new Array<string>())
-        this.ids[REPAIR_TYPE] = SafelyReadFromFile(FILE, REPAIR_TYPE, new Array<string>())
-        this.ids[ATTACK_TYPE] = SafelyReadFromFile(FILE, ATTACK_TYPE, new Array<string>())
+        this.ids[HARVESTER_TYPE] = SafeReadFromFileWithOverwrite(FILE, HARVESTER_TYPE, new Array<string>())
+        this.ids[UPGRADER_TYPE] = SafeReadFromFileWithOverwrite(FILE, UPGRADER_TYPE, new Array<string>())
+        this.ids[BUILDER_TYPE] = SafeReadFromFileWithOverwrite(FILE, BUILDER_TYPE, new Array<string>())
+        this.ids[REPAIR_TYPE] = SafeReadFromFileWithOverwrite(FILE, REPAIR_TYPE, new Array<string>())
+        this.ids[ATTACK_TYPE] = SafeReadFromFileWithOverwrite(FILE, ATTACK_TYPE, new Array<string>())
     }
 
     public RunAllActiveCreeps() {
@@ -195,7 +195,7 @@ export class CreepObjectManager {
             this.creep_body = BuildBody([MOVE, CARRY, WORK], energy_use_limit)
         }
         else if (REPAIRER_IDS.length < 2) {
-            this.creep_body = BuildBody([MOVE, MOVE, CARRY, WORK], energy_use_limit)
+            this.creep_body = BuildBody([MOVE, MOVE, MOVE, CARRY, WORK], energy_use_limit)
         }
         else {
             this.creep_body = []

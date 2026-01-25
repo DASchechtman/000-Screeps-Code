@@ -1,7 +1,7 @@
 import { CreepBehavior, JsonObj } from "Consts";
 import {  ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
-import { SafelyReadFromFile } from "utils/UtilFuncs";
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 
 type EnergyContainers = StructureSpawn | StructureExtension | StructureContainer
 
@@ -26,7 +26,7 @@ export class HarvesterBehavior implements CreepBehavior {
     Load(file: ScreepFile, id: string) {
         this.creep_id = id
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
-        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
 
         if (this.creep !== null && this.data[this.state_key]) {
             this.sources = this.creep.room.find(FIND_SOURCES)

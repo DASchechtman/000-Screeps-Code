@@ -1,6 +1,6 @@
 import { CreepBehavior, JsonObj } from "Consts"
 import { ScreepFile } from "FileSystem/File"
-import { SafelyReadFromFile } from "utils/UtilFuncs"
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 
 export class UpgraderBehavior implements CreepBehavior {
     private data: JsonObj
@@ -28,7 +28,7 @@ export class UpgraderBehavior implements CreepBehavior {
             this.controller = this.creep.room.controller
         }
 
-        this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
         return this.creep != null
     }
 
