@@ -33,6 +33,7 @@ export class RoomData {
     }
 
     public GetAllEnemyCreepIds() {
+        if (!Game.rooms[this.room_name]) { return [] }
         return Game.rooms[this.room_name].find(FIND_HOSTILE_CREEPS).map(hc => hc.id)
     }
 
@@ -67,11 +68,9 @@ export class RoomData {
     }
 
     public GetRoomStructures(struct_type: STRUCTURE_WALL) {
-        const ROOM = Game.rooms[this.room_name]
+        if (!Game.rooms[this.room_name]) { return [] }
 
-        if (ROOM == null) { return [] }
-
-        return ROOM.find(FIND_STRUCTURES, {
+        return Game.rooms[this.room_name].find(FIND_STRUCTURES, {
             filter: s => s.structureType === struct_type
         }).map(s => s.id)
     }

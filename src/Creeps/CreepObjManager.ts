@@ -14,65 +14,31 @@ export class CreepObjectManager {
         return this.manager
     }
 
-    private creep_pool: Array<CreepObj>
-    private available_creeps: Map<CreepObj, number>
-    private reserved_creeps: Map<CreepObj, number>
+    private creep: CreepObj
     private creep_body: BodyPartConstant[]
     private file_path: string[]
     private ids: string[][]
     private room_name: string
 
     private constructor() {
-        this.creep_pool = []
-        this.available_creeps = new Map()
-        this.reserved_creeps = new Map()
+        this.creep = new CreepObj()
         this.creep_body = []
         this.file_path = []
         this.ids = []
         this.room_name = ""
     }
 
-    private GiveCreep(id: string, behavior_type: number) {
-        const ITERATOR = this.available_creeps.keys()
-        const CREEP = ITERATOR.next().value
-
-        if (CREEP == null) {
-            const NEW_CREEP = new CreepObj()
-            NEW_CREEP.OverrideCreep(id)
-            NEW_CREEP.OverrideBehavior(behavior_type)
-
-            this.creep_pool.push(NEW_CREEP)
-            this.reserved_creeps.set(NEW_CREEP, this.creep_pool.length - 1)
-            return NEW_CREEP
-        }
-
-        CREEP.OverrideCreep(id)
-        CREEP.OverrideBehavior(behavior_type)
-        const CREEP_INDEX = this.available_creeps.get(CREEP)!
-        this.available_creeps.delete(CREEP)
-        this.reserved_creeps.set(CREEP, CREEP_INDEX)
-
-        return CREEP
-    }
-
-    private ReturnCreep(creep: CreepObj) {
-        if (this.reserved_creeps.has(creep)) {
-            const INDEX = this.reserved_creeps.get(creep)!
-            this.reserved_creeps.delete(creep)
-            this.available_creeps.set(creep, INDEX)
-        }
-    }
 
     private RunCreepCode(behavior: number, id_arr: string[], file: ScreepFile) {
         const IDS_TO_REMOVE = new Array<string>()
         for (let id of id_arr) {
-            const CREEP = this.GiveCreep(id, behavior)
-            CREEP.Load(() => {
+            this.creep.FullyOverrideCreep(id, behavior)
+
+            this.creep.Load(() => {
                 IDS_TO_REMOVE.push(id)
             })
-            CREEP.Run()
-            CREEP.Cleanup()
-            this.ReturnCreep(CREEP)
+            this.creep.Run()
+            this.creep.Cleanup()
         }
 
         for (let id of IDS_TO_REMOVE) {

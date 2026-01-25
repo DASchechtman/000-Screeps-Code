@@ -81,6 +81,11 @@ export class CreepObj {
         }
     }
 
+    public FullyOverrideCreep(id: string, behavior_type: number) {
+        this.OverrideCreep(id)
+        this.OverrideBehavior(behavior_type)
+    }
+
     public Load(FailedToLoad: () => void) {
         if (this.file == null) { return }
         const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))

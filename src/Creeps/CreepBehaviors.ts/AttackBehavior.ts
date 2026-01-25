@@ -11,8 +11,14 @@ export class AttackBehavior implements CreepBehavior {
     private state_key: string
 
     constructor() {
-        this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
-        this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
+        try {
+            this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
+            this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
+        } catch {
+            this.enemy_creep_ids = []
+            this.ally_creeps = []
+        }
+
         this.data = {}
         this.state_key = "state"
         this.creep = null
@@ -47,7 +53,7 @@ export class AttackBehavior implements CreepBehavior {
             }
         }
         else {
-            this.creep.moveTo(12, 14, { maxRooms: 1})
+            this.creep.moveTo(12, 14, { maxRooms: 1 })
         }
     }
 
