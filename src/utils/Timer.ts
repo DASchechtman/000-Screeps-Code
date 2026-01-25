@@ -28,7 +28,6 @@ export class Timer {
             const CUR_TIME = Number(FILE?.ReadFromFile('timer_start'))
             const MAX_TIME = Number(FILE?.ReadFromFile('timer_limit'))
             if (CUR_TIME >= MAX_TIME) {
-                
                 FileSystem.GetFileSystem().DeleteFile(this.path)
                 return
             }
@@ -52,14 +51,13 @@ export class Timer {
         const FILE = FileSystem.GetFileSystem().GetExistingFile(this.path)
 
         try {
-            const TIME_LIMIT = FILE?.ReadFromFile('timer_limit')
-            const CUR_TIME = FILE?.ReadFromFile('timer_start')
+            const TIME_LIMIT = FILE!.ReadFromFile('timer_limit')
+            const CUR_TIME = FILE!.ReadFromFile('timer_start')
             const DONE = Number(CUR_TIME) >= Number(TIME_LIMIT)
             return DONE
         }
         catch {
-            FileSystem.GetFileSystem().DeleteFile(this.path)
-            return true
+            return false
         }
     }
 }

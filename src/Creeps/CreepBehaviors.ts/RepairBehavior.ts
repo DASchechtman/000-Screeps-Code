@@ -12,6 +12,7 @@ export class RepairBehavior implements CreepBehavior {
     private state_key: string
     private source_key: string
     private target: Structure | null
+    private timer: Timer | null
 
     public constructor() {
         this.structures = []
@@ -21,6 +22,7 @@ export class RepairBehavior implements CreepBehavior {
         this.creep = null
         this.source_key = "source"
         this.target = null
+        this.timer = null
     }
 
     public Load(file: ScreepFile, id: string) {
@@ -35,10 +37,9 @@ export class RepairBehavior implements CreepBehavior {
 
         this.target = Game.getObjectById(this.data[this.source_key] as Id<Structure>)
 
-        const TIMER = new Timer(id)
+        this.timer = new Timer(id)
 
-        TIMER.StartTimer(15)
-        if (this.data[this.source_key] === 'null' || TIMER.IsTimerDone()) {
+        if (this.data[this.source_key] === 'null' || this.timer.IsTimerDone()) {
             this.structures = [
                 ...RoomData.GetRoomData().GetOwnedStructureIds(),
                 ...RoomData.GetRoomData().GetRoomStructures(STRUCTURE_WALL)
@@ -100,8 +101,12 @@ export class RepairBehavior implements CreepBehavior {
 
             if (building == null) { return }
 
-            if (this.creep.repair(building) === ERR_NOT_IN_RANGE) {
+            const REPAIR_RESULT = this.creep.repair(building)
+            if (REPAIR_RESULT === ERR_NOT_IN_RANGE) {
                 this.creep.moveTo(building, { maxRooms: 1 })
+            }
+            else if (REPAIR_RESULT === OK) {
+                this.timer?.StartTimer(15)
             }
         }
     }
