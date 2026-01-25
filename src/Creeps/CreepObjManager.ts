@@ -180,7 +180,7 @@ export class CreepObjectManager {
 
 
         if (HARVESER_IDS.length === 0) {
-            this.creep_body = BuildBody([MOVE, CARRY, WORK], energy_use_limit)
+            this.creep_body = BuildBody([MOVE, CARRY, WORK], 300)
         }
         else if (ATTACKER_IDS.length < 3) {
             this.creep_body = BuildBody([MOVE, ATTACK])

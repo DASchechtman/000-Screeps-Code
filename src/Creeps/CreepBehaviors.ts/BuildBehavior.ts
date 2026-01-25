@@ -6,19 +6,21 @@ import { SafelyReadFromFile } from "utils/UtilFuncs";
 
 export class BuildBehavior implements CreepBehavior {
     private creep: Creep | null
-    private construction_sites: (ConstructionSite | null)[]
+    private construction_sites: ConstructionSite[]
     private sources: Source | null
     private data: JsonObj
     private state_key: string
+    private site_key: string
+    private site: ConstructionSite | null
 
     public constructor() {
         this.creep = null
-        this.construction_sites = RoomData.GetRoomData().GetConstructionSites().map(csid => Game.getObjectById(csid as Id<ConstructionSite>))
+        this.construction_sites = []
         this.sources = null
         this.data = {}
         this.state_key = "state"
-
-
+        this.site_key = "construction site"
+        this.site = null
     }
 
     public Load(file: ScreepFile, id: string) {
@@ -27,7 +29,21 @@ export class BuildBehavior implements CreepBehavior {
         if (this.creep) {
             this.sources = this.creep.pos.findClosestByPath(FIND_SOURCES)
         }
+
         this.data[this.state_key] = SafelyReadFromFile(file, this.state_key, false)
+        this.data[this.site_key] = SafelyReadFromFile(file, this.site_key, 'null')
+
+        this.site = Game.getObjectById(this.data[this.site_key] as Id<ConstructionSite>)
+
+        let i = 0
+        const ALL_SITES = RoomData.GetRoomData().GetConstructionSites()
+
+        while (i < ALL_SITES.length && this.site === null) {
+            this.data[this.site_key] = ALL_SITES[i]
+            this.site = Game.getObjectById(this.data[this.site_key] as Id<ConstructionSite>)
+            i++
+        }
+
         return this.creep != null
     }
 
@@ -46,12 +62,7 @@ export class BuildBehavior implements CreepBehavior {
             }
         }
         else {
-            let i = 0
-            let construct = this.construction_sites[i]
-
-            while (i < this.construction_sites.length && !construct) {
-                construct = this.construction_sites[++i]
-            }
+            let construct = this.site
 
             if (construct == null) { return }
 
@@ -63,16 +74,11 @@ export class BuildBehavior implements CreepBehavior {
 
     public Cleanup(file: ScreepFile) {
         file.WriteToFile(this.state_key, this.data[this.state_key])
-        const CUR_BEHAVIOR = file.ReadFromFile(BEHAVIOR_KEY)
-        const INIT_BEHAVIOR = file.ReadFromFile(ORIG_BEHAVIOR_KEY)
+        file.WriteToFile(this.site_key, this.data[this.site_key])
 
-        if (this.construction_sites.length === 0) {
+
+        if (this.site === null) {
             file.WriteToFile(BEHAVIOR_KEY, REPAIR_TYPE)
         }
-        else if (CUR_BEHAVIOR !== INIT_BEHAVIOR) {
-            file.WriteToFile(BEHAVIOR_KEY, INIT_BEHAVIOR)
-            file.WriteToFile(ORIG_BEHAVIOR_KEY, INIT_BEHAVIOR)
-        }
-
     }
 }

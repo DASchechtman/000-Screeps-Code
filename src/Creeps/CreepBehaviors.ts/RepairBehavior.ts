@@ -106,7 +106,7 @@ export class RepairBehavior implements CreepBehavior {
                 this.creep.moveTo(building, { maxRooms: 1 })
             }
             else if (REPAIR_RESULT === OK) {
-                this.timer?.StartTimer(15)
+                this.timer?.StartTimer(5)
             }
         }
     }
