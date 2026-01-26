@@ -42,7 +42,6 @@ export class RoomData {
             for (let creep_name in Game.creeps) {
                 const CREEP = Game.creeps[creep_name]
                 if (CREEP.room.name !== this.room_name) { continue }
-                if (CREEP.spawning) { continue }
                 this.creep_ids.push(CREEP.id)
             }
         }

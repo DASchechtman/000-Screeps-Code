@@ -87,7 +87,7 @@ export class CreepObjectManager {
         const QUEUE = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
 
         if (this.ids.some(arr => arr.includes(id))) { return }
-        console.log(`adding creep: ${id}`)
+
 
         const NEXT_CREEP = QUEUE.at(0)
 
@@ -96,7 +96,6 @@ export class CreepObjectManager {
         const INDEX = ARR.indexOf(this.filler_data)
 
         if (INDEX >= 0) {
-            console.log('found empty spot')
             ARR[INDEX] = id
             QUEUE.shift()
         }
@@ -184,7 +183,7 @@ export class CreepObjectManager {
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
         const ENERGY_LIMIT = 1200
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const QUEUE = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
+        let queue = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
 
         const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (v: string) => void) => {
             const SIZE = max - arr.length
@@ -199,40 +198,39 @@ export class CreepObjectManager {
         }
 
         if (MY_CREEPS.length === 0) {
-            if (QUEUE.length === 0) {
-                harvest_ids = []
-                upgrader_ids = []
-                repairer_ids = []
-                builder_ids = []
-                attacker_ids = []
-            }
+            harvest_ids = []
+            upgrader_ids = []
+            repairer_ids = []
+            builder_ids = []
+            attacker_ids = []
+            queue = []
 
             FillArrayWithPlaceHolders(harvest_ids, 1, () => {
-                QUEUE.push({ body: [WORK, MOVE, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
+                queue.push({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
             })
         }
 
         FillArrayWithPlaceHolders(attacker_ids, 3, () => {
-            QUEUE.push({ body: [WORK, ATTACK], limit: null, creep_type: ATTACK_TYPE })
+            queue.push({ body: [MOVE, ATTACK], limit: null, creep_type: ATTACK_TYPE })
         })
 
         FillArrayWithPlaceHolders(harvest_ids, 2, () => {
-            QUEUE.push({ body: [WORK, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
+            queue.push({ body: [MOVE, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
         })
 
         FillArrayWithPlaceHolders(upgrader_ids, 2, () => {
-            QUEUE.push({ body: [MOVE, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE })
+            queue.push({ body: [MOVE, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE })
         })
 
         if (CONSTRUCTION_SITE.length > 0) {
             FillArrayWithPlaceHolders(builder_ids, 1, () => {
-                QUEUE.push({ body: [MOVE, WORK, CARRY, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE })
+                queue.push({ body: [MOVE, WORK, CARRY, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE })
             })
         }
 
 
         FillArrayWithPlaceHolders(repairer_ids, 2, () => {
-            QUEUE.push({ body: [MOVE, MOVE, CARRY, WORK, WORK], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
+            queue.push({ body: [MOVE, MOVE, CARRY, WORK, WORK], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
         })
 
 
@@ -244,7 +242,7 @@ export class CreepObjectManager {
             { key: BUILDER_TYPE, value: builder_ids },
             { key: REPAIR_TYPE, value: repairer_ids },
             { key: ATTACK_TYPE, value: attacker_ids },
-            { key: 'body_queue', value: QUEUE }
+            { key: 'body_queue', value: queue }
         ])
     }
 }

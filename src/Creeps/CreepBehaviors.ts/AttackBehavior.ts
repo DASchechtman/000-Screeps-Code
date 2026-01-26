@@ -1,7 +1,9 @@
 import { CreepBehavior, JsonObj } from "Consts";
 import { ScreepFile } from "FileSystem/File";
+import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
+
 
 export class AttackBehavior implements CreepBehavior {
     private creep: Creep | null
