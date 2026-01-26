@@ -94,6 +94,14 @@ export class ScreepFile {
         this.SaveToMemory(this)
     }
 
+    public WriteAllToFile(data: {key: BaseJsonValue, value: Json}[]) {
+        for (let entry of data) {
+            this.data[String(entry.key)] = entry.value
+        }
+
+        this.SaveToMemory(this)
+    }
+
     public ReadFromFile(key: BaseJsonValue) {
         key = String(key)
         if (this.data[key] === undefined) {

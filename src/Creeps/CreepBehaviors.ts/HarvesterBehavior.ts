@@ -1,5 +1,5 @@
 import { CreepBehavior, JsonObj } from "Consts";
-import {  ScreepFile } from "FileSystem/File";
+import { ScreepFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 
@@ -28,25 +28,29 @@ export class HarvesterBehavior implements CreepBehavior {
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
 
-        if (this.creep !== null && this.data[this.state_key]) {
-            this.sources = this.creep.room.find(FIND_SOURCES)
-            let x = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER])
-                .map(id => Game.getObjectById(id as Id<Structure>))
-                .filter(s => s != null)
-                .sort((a) =>{
-                    if (a == null) {
+        if (this.creep !== null) {
+            if (!this.data[this.state_key]) {
+                this.sources = this.creep.room.find(FIND_SOURCES)
+            }
+            else {
+                let x = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER])
+                    .map(id => Game.getObjectById(id as Id<Structure>))
+                    .filter(s => s != null)
+                    .sort((a) => {
+                        if (a == null) {
+                            return 0
+                        }
+                        else if (a.structureType === STRUCTURE_SPAWN) {
+                            return -1
+                        }
+                        else if (a.structureType === STRUCTURE_CONTAINER) {
+                            return 1
+                        }
                         return 0
-                    }
-                    else if (a.structureType === STRUCTURE_SPAWN) {
-                        return -1
-                    }
-                    else if (a.structureType === STRUCTURE_CONTAINER) {
-                        return 1
-                    }
-                    return 0
-                })
+                    })
 
-            this.spawns = x as EnergyContainers[]
+                this.spawns = x as EnergyContainers[]
+            }
         }
 
         return this.creep != null
@@ -73,7 +77,7 @@ export class HarvesterBehavior implements CreepBehavior {
         else {
             let i = 0
             let target = this.spawns[i]
-            while(i < this.spawns.length && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            while (i < this.spawns.length && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
                 target = this.spawns[++i]
             }
             if (target == null) {

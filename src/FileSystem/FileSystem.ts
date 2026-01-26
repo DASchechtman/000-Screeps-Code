@@ -102,7 +102,11 @@ export class FileSystem {
             FOLDER_OBJ[FILE_NAME] = {}
         }
         else {
-            FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
+            FILE.OverwriteFile({
+                ...FOLDER_OBJ[FILE_NAME],
+                file_name: path.join('/'),
+                path: path
+            })
         }
         const Update = (file: ScreepFile) => {
             FOLDER_OBJ[FILE_NAME] = {

@@ -69,12 +69,14 @@ export const loop = ErrorMapper.wrapLoop(() => {
     const MY_CREEPS = ROOM_DATA.GetCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_SPAWN])
     const CREEP_NAME = `Creep - ${new Date().toUTCString()}`
+    CREEP_MANAGER.QueueNextSpawnBody()
     const BODY = CREEP_MANAGER.GetSpawnBody()
 
     if (BODY.length > 0) {
       Game.getObjectById(SPAWN[0] as Id<StructureSpawn>)?.spawnCreep(BODY, CREEP_NAME)
     }
 
+    console.log(`num of creeps: ${MY_CREEPS.length}`)
     for (let creep_id of MY_CREEPS) {
       CREEP_MANAGER.AddCreepId(creep_id)
     }
