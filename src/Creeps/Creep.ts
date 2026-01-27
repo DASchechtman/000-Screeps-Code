@@ -92,6 +92,7 @@ export class CreepObj {
         if (CANT_LOAD) {
             FailedToLoad(this.id)
             this.behavior = null
+            this.file.MarkForDeletion()
         }
     }
 

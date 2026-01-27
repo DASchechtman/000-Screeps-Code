@@ -64,10 +64,10 @@ export class RepairBehavior implements CreepBehavior {
                             return -1
                         }
 
-                        return a.hits - b.hits
+                        return (a.hits / a.hitsMax) - (b.hits / b.hitsMax)
                     }
 
-                    return a.hits - b.hits
+                    return (a.hits / a.hitsMax) - (b.hits / b.hitsMax)
                 })
 
 

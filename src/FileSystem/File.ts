@@ -61,6 +61,7 @@ export class ScreepFile {
 
     public MarkForDeletion() {
         this.can_delete = true
+        this.SaveToMemory(this)
     }
 
     public GetFileAge() {
@@ -80,10 +81,9 @@ export class ScreepFile {
             tick_last_accessed: this.tick_last_accessed,
             path: this.path,
             file_name: this.file_name,
-            data: this.data
+            data: this.data,
+            can_delete: this.can_delete ? true : undefined
         }
-
-        if (this.can_delete) { json.can_delete = this.can_delete }
 
         return json
     }

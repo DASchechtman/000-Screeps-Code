@@ -1,6 +1,15 @@
 import { FILE_ENDING, FOLDER_ENDING, ScreepFile } from "./File"
 import { FileObjectManager } from "./FileObjManager"
 
+function DefaultFileSave(obj: any, key: string) {
+    return (update_file: ScreepFile) => {
+        obj[key] = {
+            ...obj[key],
+            ...update_file.ToJson()
+        }
+    }
+}
+
 export class FileSystem {
     private static file_system: FileSystem | null = null
 
@@ -108,15 +117,9 @@ export class FileSystem {
                 path: path
             })
         }
-        const Update = (file: ScreepFile) => {
-            FOLDER_OBJ[FILE_NAME] = {
-                ...FOLDER_OBJ[FILE_NAME],
-                ...file.ToJson()
-            }
-        }
 
         FILE.UpdateLastAccessed()
-        FILE.UpdateSaveFunction(Update)
+        FILE.UpdateSaveFunction(DefaultFileSave(FOLDER_OBJ, FILE_NAME))
 
         return FILE
     }
@@ -124,16 +127,10 @@ export class FileSystem {
     public GetExistingFile(path: string[]) {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
-            const Update = (file: ScreepFile) => {
-                FOLDER_OBJ[FILE_NAME] = {
-                    ...FOLDER_OBJ[FILE_NAME],
-                    ...file.ToJson()
-                }
-            }
             const FILE = this.file_obj_manager.GiveFile()
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
-            FILE.UpdateSaveFunction(Update)
+            FILE.UpdateSaveFunction(DefaultFileSave(FOLDER_OBJ, FILE_NAME))
             return FILE
         }
         return null

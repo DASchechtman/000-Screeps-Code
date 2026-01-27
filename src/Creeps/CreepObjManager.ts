@@ -286,7 +286,7 @@ export class CreepObjectManager {
         }
 
         FillArrayWithPlaceHolders(attacker_ids, 3, () => {
-            queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
+            queue.push({ body: [MOVE, MOVE, ATTACK, TOUGH, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
         })
 
         FillArrayWithPlaceHolders(harvest_ids, 3, () => {
