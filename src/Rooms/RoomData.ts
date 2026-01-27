@@ -66,11 +66,14 @@ export class RoomData {
         return this.construction_site_ids
     }
 
-    public GetRoomStructures(struct_type: STRUCTURE_WALL | STRUCTURE_CONTAINER) {
+    public GetRoomStructures(struct_type: StructureConstant | StructureConstant[]) {
         if (!Game.rooms[this.room_name]) { return [] }
 
         return Game.rooms[this.room_name].find(FIND_STRUCTURES, {
-            filter: s => s.structureType === struct_type
+            filter: s => {
+                if (Array.isArray(struct_type)) { return struct_type.includes(s.structureType) }
+                return struct_type === s.structureType
+            }
         }).map(s => s.id)
     }
 }

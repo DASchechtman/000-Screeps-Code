@@ -286,7 +286,7 @@ export class CreepObjectManager {
         }
 
         FillArrayWithPlaceHolders(attacker_ids, 3, () => {
-            queue.push({ body: [MOVE, ATTACK], limit: null, creep_type: ATTACK_TYPE })
+            queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
         })
 
         FillArrayWithPlaceHolders(harvest_ids, 3, () => {
@@ -298,7 +298,7 @@ export class CreepObjectManager {
         })
 
         if (CONSTRUCTION_SITE.length > 0) {
-            FillArrayWithPlaceHolders(builder_ids, 1, () => {
+            FillArrayWithPlaceHolders(builder_ids, 2, () => {
                 queue.push({ body: [MOVE, WORK, CARRY, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE })
             })
         }
