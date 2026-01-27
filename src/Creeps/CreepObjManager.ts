@@ -5,8 +5,10 @@ import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { DebugLogger } from "utils/DebugLogger";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
+import { BaseJsonValue, Json } from "Consts";
 
 type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: number }
+type DataObj = { [key: number | string]: Json }
 
 export class CreepObjectManager {
     private static manager: CreepObjectManager | null = null
@@ -19,99 +21,167 @@ export class CreepObjectManager {
     private creep: CreepObj
     private filler_data
     private file_path: string[]
-    private ids: string[][]
     private room_name: string
+
+    private HarvestIds(new_ids?: string[]): string[] {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_ids) {
+            FILE.WriteToFile(HARVESTER_TYPE, new_ids)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, HARVESTER_TYPE, new Array<string>())
+        }
+    }
+
+    private UpgraderIds(new_ids?: string[]): string[] {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_ids) {
+            FILE.WriteToFile(UPGRADER_TYPE, new_ids)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, UPGRADER_TYPE, new Array<string>())
+        }
+    }
+
+    private BuilderIds(new_ids?: string[]): string[] {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_ids) {
+            FILE.WriteToFile(BUILDER_TYPE, new_ids)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, BUILDER_TYPE, new Array<string>())
+        }
+    }
+
+    private RepairIds(new_ids?: string[]): string[] {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_ids) {
+            FILE.WriteToFile(REPAIR_TYPE, new_ids)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, REPAIR_TYPE, new Array<string>())
+        }
+    }
+
+    private GaurdIds(new_ids?: string[]): string[] {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_ids) {
+            FILE.WriteToFile(ATTACK_TYPE, new_ids)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, ATTACK_TYPE, new Array<string>())
+        }
+    }
+
+    private QueueData(new_queue?: Array<CreepQueueData>): Array<CreepQueueData> {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        if (new_queue) {
+            FILE.WriteToFile('body_queue', new_queue)
+            return []
+        }
+        else {
+            return SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
+        }
+    }
 
     private constructor() {
         this.creep = new CreepObj()
         this.file_path = []
-        this.ids = []
         this.room_name = ""
         this.filler_data = "empty"
     }
 
 
-    private RunCreepCode(behavior: number, id_arr: string[], file: ScreepFile) {
+    private RunCreepCode(behavior: number, id_arr: string[]) {
         const IDS_TO_REMOVE = new Array<string>()
         let deletion_occured = false
-        for (let id of id_arr) {
+        for (let i = 0; i < id_arr.length; i++) {
+            let id = id_arr[i]
             this.creep.FullyOverrideCreep(id, behavior)
 
-            this.creep.Load(() => {
-                IDS_TO_REMOVE.push(id)
+            this.creep.Load((failed_id) => {
+                if (failed_id === this.filler_data) { return }
+                IDS_TO_REMOVE.push(failed_id)
                 deletion_occured = true
             })
             this.creep.Run()
             this.creep.Cleanup()
         }
 
-        for (let id of IDS_TO_REMOVE) {
-            const INDEX = id_arr.indexOf(id)
+        console.log(`remove ids: ${IDS_TO_REMOVE}, ids: ${id_arr}`)
+
+        for(let y of IDS_TO_REMOVE) {
+            const INDEX = id_arr.indexOf(y)
             if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
         }
+    }
 
-        if (deletion_occured) {
-            file.WriteToFile(behavior, id_arr)
-        }
+    private ReadCreepDataFromFile() {
+        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+
     }
 
     public LoadCreepData(room_name: string) {
         this.room_name = room_name
         this.file_path = ['creeps', `_${room_name}`, 'info']
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        this.ids[HARVESTER_TYPE] = SafeReadFromFileWithOverwrite(FILE, HARVESTER_TYPE, new Array<string>())
-        this.ids[UPGRADER_TYPE] = SafeReadFromFileWithOverwrite(FILE, UPGRADER_TYPE, new Array<string>())
-        this.ids[BUILDER_TYPE] = SafeReadFromFileWithOverwrite(FILE, BUILDER_TYPE, new Array<string>())
-        this.ids[REPAIR_TYPE] = SafeReadFromFileWithOverwrite(FILE, REPAIR_TYPE, new Array<string>())
-        this.ids[ATTACK_TYPE] = SafeReadFromFileWithOverwrite(FILE, ATTACK_TYPE, new Array<string>())
+        this.ReadCreepDataFromFile()
     }
 
     public RunAllActiveCreeps() {
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const HARVESER_IDS = this.ids[HARVESTER_TYPE].filter(x => x !== this.filler_data)
-        const UPGRADER_IDS = this.ids[UPGRADER_TYPE].filter(x => x !== this.filler_data)
-        const BUILDER_IDS = this.ids[BUILDER_TYPE].filter(x => x !== this.filler_data)
-        const REPAIRER_IDS = this.ids[REPAIR_TYPE].filter(x => x !== this.filler_data)
-        const ATTACKER_IDS = this.ids[ATTACK_TYPE].filter(x => x !== this.filler_data)
+        const HARVESER_IDS = this.HarvestIds()
+        const UPGRADER_IDS = this.UpgraderIds()
+        const BUILDER_IDS = this.BuilderIds()
+        const REPAIRER_IDS = this.RepairIds()
+        const ATTACKER_IDS = this.GaurdIds()
 
-        this.RunCreepCode(HARVESTER_TYPE, HARVESER_IDS, FILE)
-        this.RunCreepCode(UPGRADER_TYPE, UPGRADER_IDS, FILE)
-        this.RunCreepCode(BUILDER_TYPE, BUILDER_IDS, FILE)
-        this.RunCreepCode(REPAIR_TYPE, REPAIRER_IDS, FILE)
-        this.RunCreepCode(ATTACK_TYPE, ATTACKER_IDS, FILE)
+        this.RunCreepCode(HARVESTER_TYPE, HARVESER_IDS)
+        this.RunCreepCode(UPGRADER_TYPE, UPGRADER_IDS)
+        this.RunCreepCode(BUILDER_TYPE, BUILDER_IDS)
+        this.RunCreepCode(REPAIR_TYPE, REPAIRER_IDS)
+        this.RunCreepCode(ATTACK_TYPE, ATTACKER_IDS)
+
+        console.log(HARVESER_IDS)
+
+        this.HarvestIds(HARVESER_IDS)
+        this.UpgraderIds(UPGRADER_IDS)
+        this.BuilderIds(BUILDER_IDS)
+        this.RepairIds(REPAIRER_IDS)
+        this.GaurdIds(ATTACKER_IDS)
     }
 
     public AddCreepId(id: string) {
+        const QUEUE = this.QueueData()
+        const IDS = [
+            this.HarvestIds(),
+            this.UpgraderIds(),
+            this.BuilderIds(),
+            this.RepairIds(),
+            this.GaurdIds()
+        ]
 
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const QUEUE = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
+        if (IDS.some(arr => arr.includes(id))) { return }
 
-        if (this.ids.some(arr => arr.includes(id))) { return }
-
-
-        const NEXT_CREEP = QUEUE.at(0)
-
+        const NEXT_CREEP = QUEUE.shift()
         if (NEXT_CREEP == null) { return }
-        const ARR = this.ids[NEXT_CREEP.creep_type]
+        this.QueueData(QUEUE)
+
+        const ARR = IDS[NEXT_CREEP.creep_type]
         const INDEX = ARR.indexOf(this.filler_data)
 
         if (INDEX >= 0) {
             ARR[INDEX] = id
-            QUEUE.shift()
         }
-
-        FILE.WriteAllToFile([
-            { key: HARVESTER_TYPE, value: this.ids[HARVESTER_TYPE] },
-            { key: UPGRADER_TYPE, value: this.ids[UPGRADER_TYPE] },
-            { key: BUILDER_TYPE, value: this.ids[BUILDER_TYPE] },
-            { key: REPAIR_TYPE, value: this.ids[REPAIR_TYPE] },
-            { key: ATTACK_TYPE, value: this.ids[ATTACK_TYPE] },
-            { key: 'body_queue', value: QUEUE }
-        ])
     }
 
     public GetSpawnBody() {
         const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_EXTENSION])
+        const SPAWNS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN])
+        const HARVESER_IDS = this.HarvestIds()
         const BODY_TO_ENERGY_MAP = new Map<BodyPartConstant, number>([
             [MOVE, 50],
             [WORK, 100],
@@ -123,9 +193,10 @@ export class CreepObjectManager {
             [TOUGH, 10]
         ])
 
-        let max_energy = 300
+        let max_energy = 300 * SPAWNS.length
         let controller = Game.rooms[this.room_name]?.controller
 
+        const CANT_ACCESS_MORE_ENERGY = HARVESER_IDS.filter(x => x !== this.filler_data).length === 0
         if (controller) {
             if (controller.level >= 2 && controller.level <= 6) {
                 max_energy += 50 * EXTENSIONS.length
@@ -136,6 +207,11 @@ export class CreepObjectManager {
             else if (controller.level === 8) {
                 max_energy += 200 * EXTENSIONS.length
             }
+        }
+
+        if (CANT_ACCESS_MORE_ENERGY) {
+            const EXTENSION_OBJS = EXTENSIONS.map(id => Game.getObjectById(id)).filter(s => s != null) as StructureExtension[]
+            max_energy = (300 * SPAWNS.length) + EXTENSION_OBJS.reduce((prev, cur) => prev + cur.store.getUsedCapacity(RESOURCE_ENERGY), 0)
         }
 
         const BuildBody = (parts: BodyPartConstant[], energy_limit: number | undefined | null) => {
@@ -174,16 +250,15 @@ export class CreepObjectManager {
     }
 
     public QueueNextSpawnBody() {
-        let harvest_ids = this.ids[HARVESTER_TYPE]
-        let upgrader_ids = this.ids[UPGRADER_TYPE]
-        let builder_ids = this.ids[BUILDER_TYPE]
-        let repairer_ids = this.ids[REPAIR_TYPE]
-        let attacker_ids = this.ids[ATTACK_TYPE]
+        let harvest_ids = this.HarvestIds()
+        let upgrader_ids = this.UpgraderIds()
+        let builder_ids = this.BuilderIds()
+        let repairer_ids = this.RepairIds()
+        let attacker_ids = this.GaurdIds()
+        let queue = this.QueueData()
         const MY_CREEPS = RoomData.GetRoomData().GetCreepIds()
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
         const ENERGY_LIMIT = 1200
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        let queue = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
 
         const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (v: string) => void) => {
             const SIZE = max - arr.length
@@ -197,7 +272,7 @@ export class CreepObjectManager {
             }
         }
 
-        if (MY_CREEPS.length === 0) {
+        if (MY_CREEPS.length === 0 || harvest_ids.filter(x => x !== this.filler_data).length === 0) {
             harvest_ids = []
             upgrader_ids = []
             repairer_ids = []
@@ -206,7 +281,7 @@ export class CreepObjectManager {
             queue = []
 
             FillArrayWithPlaceHolders(harvest_ids, 1, () => {
-                queue.push({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
+                queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
             })
         }
 
@@ -214,8 +289,8 @@ export class CreepObjectManager {
             queue.push({ body: [MOVE, ATTACK], limit: null, creep_type: ATTACK_TYPE })
         })
 
-        FillArrayWithPlaceHolders(harvest_ids, 2, () => {
-            queue.push({ body: [MOVE, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
+        FillArrayWithPlaceHolders(harvest_ids, 3, () => {
+            queue.push({ body: [MOVE, MOVE, WORK, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
         })
 
         FillArrayWithPlaceHolders(upgrader_ids, 2, () => {
@@ -233,16 +308,15 @@ export class CreepObjectManager {
             queue.push({ body: [MOVE, MOVE, CARRY, WORK, WORK], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
         })
 
+        this.HarvestIds(harvest_ids)
+        this.UpgraderIds(upgrader_ids)
+        this.BuilderIds(builder_ids)
+        this.RepairIds(repairer_ids)
+        this.GaurdIds(attacker_ids)
+        this.QueueData(queue)
 
+    }
 
-
-        FILE.WriteAllToFile([
-            { key: HARVESTER_TYPE, value: harvest_ids },
-            { key: UPGRADER_TYPE, value: upgrader_ids },
-            { key: BUILDER_TYPE, value: builder_ids },
-            { key: REPAIR_TYPE, value: repairer_ids },
-            { key: ATTACK_TYPE, value: attacker_ids },
-            { key: 'body_queue', value: queue }
-        ])
+    public SaveCreepData() {
     }
 }

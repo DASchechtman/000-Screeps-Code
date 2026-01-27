@@ -33,17 +33,27 @@ export class HarvesterBehavior implements CreepBehavior {
                 this.sources = this.creep.room.find(FIND_SOURCES)
             }
             else {
-                let x = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER])
+                let x = [
+                    ...RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION]),
+                    ...RoomData.GetRoomData().GetRoomStructures(STRUCTURE_CONTAINER)
+                ]
                     .map(id => Game.getObjectById(id as Id<Structure>))
                     .filter(s => s != null)
-                    .sort((a) => {
-                        if (a == null) {
+                    .sort((a, b) => {
+                        if (a == null || b === null) {
                             return 0
                         }
-                        else if (a.structureType === STRUCTURE_SPAWN) {
+
+                        const IsOtherStorageStructure = (struct_types: StructureConstant[]) => {
+                            return struct_types.includes(b.structureType)
+                        }
+                        let x = [STRUCTURE_SPAWN, STRUCTURE_EXTENSION]
+
+
+                        if (a.structureType === STRUCTURE_SPAWN) {
                             return -1
                         }
-                        else if (a.structureType === STRUCTURE_CONTAINER) {
+                        else if (a.structureType === STRUCTURE_CONTAINER && IsOtherStorageStructure(x)) {
                             return 1
                         }
                         return 0

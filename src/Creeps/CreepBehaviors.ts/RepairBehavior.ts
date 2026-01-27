@@ -52,7 +52,15 @@ export class RepairBehavior implements CreepBehavior {
                         && a.structureType !== b?.structureType
                         && Number(a.hits) / Number(a.hitsMax) <= .03
                     )
+                    const IS_CONTAINER = (
+                        a?.structureType === STRUCTURE_CONTAINER
+                        && b?.structureType !== STRUCTURE_RAMPART
+                        && Number(a.hits)/Number(b?.hits) < .4
+                    )
                     if (RAMPART_CRITICAL) {
+                        return -1
+                    }
+                    else if (IS_CONTAINER) {
                         return -1
                     }
                     else if (Number(a?.hits) < Number(b?.hits)) {

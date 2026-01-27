@@ -81,6 +81,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     CREEP_MANAGER.RunAllActiveCreeps()
+    CREEP_MANAGER.SaveCreepData()
   }
 
   Timer.AdvanceAllTimers()

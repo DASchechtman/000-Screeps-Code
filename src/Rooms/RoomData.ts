@@ -25,7 +25,6 @@ export class RoomData {
         this.timer.StartTimer(5)
 
         if (this.timer.IsTimerDone()) {
-            DebugLogger.Log('resetting room cache')
             this.creep_ids = []
             this.construction_site_ids = []
         }
@@ -67,7 +66,7 @@ export class RoomData {
         return this.construction_site_ids
     }
 
-    public GetRoomStructures(struct_type: STRUCTURE_WALL) {
+    public GetRoomStructures(struct_type: STRUCTURE_WALL | STRUCTURE_CONTAINER) {
         if (!Game.rooms[this.room_name]) { return [] }
 
         return Game.rooms[this.room_name].find(FIND_STRUCTURES, {
