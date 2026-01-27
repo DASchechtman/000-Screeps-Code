@@ -8,6 +8,7 @@ import { RepairBehavior } from "./CreepBehaviors.ts/RepairBehavior"
 import { AttackBehavior } from "./CreepBehaviors.ts/AttackBehavior"
 import { BEHAVIOR_KEY, CreepBehavior, ORIG_BEHAVIOR_KEY } from "Consts"
 import { DebugLogger } from "utils/DebugLogger"
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 
 
 
@@ -37,31 +38,23 @@ export class CreepObj {
 
     public OverrideCreep(id: string) {
         this.id = id
+
         this.file_path = ["creeps", this.id]
         this.file = FileSystem.GetFileSystem().GetFile(this.file_path)
+
         this.behavior = null
     }
 
     public OverrideBehavior(behavior_type: number) {
-        let creep_behavior = -1
-        let creep_orig_behavior = -1
+        if (this.file == null) { return }
+        let creep_behavior = SafeReadFromFileWithOverwrite(this.file, BEHAVIOR_KEY, behavior_type)
+        let creep_orig_behavior = SafeReadFromFileWithOverwrite(this.file, ORIG_BEHAVIOR_KEY, behavior_type)
 
-        try {
-            creep_behavior = Number(this.file?.ReadFromFile(BEHAVIOR_KEY))
-            creep_orig_behavior = Number(this.file?.ReadFromFile(ORIG_BEHAVIOR_KEY))
-
-            if (creep_orig_behavior !== behavior_type) {
-                creep_behavior = behavior_type
-                creep_orig_behavior = behavior_type
-                this.file?.WriteToFile(BEHAVIOR_KEY, creep_behavior)
-                this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, creep_orig_behavior)
-            }
-        }
-        catch (e) {
-            DebugLogger.Log(`Creep Error: ${e}`)
-            this.file?.WriteToFile(BEHAVIOR_KEY, behavior_type)
-            this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, behavior_type)
+        if (creep_orig_behavior !== behavior_type) {
             creep_behavior = behavior_type
+            creep_orig_behavior = behavior_type
+            this.file?.WriteToFile(BEHAVIOR_KEY, creep_behavior)
+            this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, creep_orig_behavior)
         }
 
         if (creep_behavior === HARVESTER_TYPE) {

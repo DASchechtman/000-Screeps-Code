@@ -105,7 +105,7 @@ export class ScreepFile {
     public ReadFromFile(key: BaseJsonValue) {
         key = String(key)
         if (this.data[key] === undefined) {
-            throw new Error(`Accessing non-existent data ${key} in file ${this.file_name}`)
+            throw new Error(`Accessing non-existent data "${key}" in file ${this.file_name}`)
         }
 
         return this.data[key]

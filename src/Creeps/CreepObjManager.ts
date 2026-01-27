@@ -113,8 +113,6 @@ export class CreepObjectManager {
             this.creep.Cleanup()
         }
 
-        console.log(`remove ids: ${IDS_TO_REMOVE}, ids: ${id_arr}`)
-
         for(let y of IDS_TO_REMOVE) {
             const INDEX = id_arr.indexOf(y)
             if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
@@ -145,7 +143,6 @@ export class CreepObjectManager {
         this.RunCreepCode(REPAIR_TYPE, REPAIRER_IDS)
         this.RunCreepCode(ATTACK_TYPE, ATTACKER_IDS)
 
-        console.log(HARVESER_IDS)
 
         this.HarvestIds(HARVESER_IDS)
         this.UpgraderIds(UPGRADER_IDS)

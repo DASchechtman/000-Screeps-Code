@@ -62,6 +62,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
 
+
+
+
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
     CREEP_MANAGER.LoadCreepData(room_name)
@@ -85,5 +88,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
   }
 
   Timer.AdvanceAllTimers()
+  //FILE_SYSTEM.ClearFileSystme()
   FILE_SYSTEM.Cleanup()
 });

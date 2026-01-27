@@ -157,4 +157,10 @@ export class FileSystem {
         this.file_obj_manager.ReturnAllFiles()
         this.CleanUpMemory()
     }
+
+    public ClearFileSystme() {
+        for(let key of Object.keys(Memory)) {
+            Memory[key] = undefined
+        }
+    }
 }
