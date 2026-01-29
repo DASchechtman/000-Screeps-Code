@@ -1,5 +1,5 @@
 import { CreepBehavior, JsonObj } from "Consts"
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 
 export class UpgraderBehavior implements CreepBehavior {

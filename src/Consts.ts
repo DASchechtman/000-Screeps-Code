@@ -1,4 +1,4 @@
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 
 export const BEHAVIOR_KEY = "behavior"
 export const ORIG_BEHAVIOR_KEY = "original behavior"

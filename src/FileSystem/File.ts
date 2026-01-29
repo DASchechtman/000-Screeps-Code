@@ -3,7 +3,14 @@ import { BaseJsonValue, Json, JsonObj } from "Consts"
 export const FILE_ENDING = ':sfl'
 export const FOLDER_ENDING = ':sfldr'
 
-export class ScreepFile {
+export interface ScreepFile {
+    WriteToFile: (key: BaseJsonValue, value: Json) => void
+    WriteAllToFile: (data: { key: BaseJsonValue, value: Json }[]) => void
+    ReadFromFile: (key: BaseJsonValue) => Json
+    MarkForDeletion: () => void
+}
+
+export class ScreepMetaFile {
     private tick_last_accessed: number = -1
     private file_name: string = ""
     private path: string[] = []
@@ -15,8 +22,8 @@ export class ScreepFile {
         return typeof obj === 'object' && obj !== null && key in obj
     }
 
-    public OverwriteFile(prev_file_contents: ScreepFile | unknown) {
-        if (prev_file_contents instanceof ScreepFile) {
+    public OverwriteFile(prev_file_contents: ScreepMetaFile | unknown) {
+        if (prev_file_contents instanceof ScreepMetaFile) {
             this.tick_last_accessed = prev_file_contents.tick_last_accessed
             this.file_name = prev_file_contents.file_name
             this.path = prev_file_contents.path
@@ -36,12 +43,6 @@ export class ScreepFile {
         }
     }
 
-    public OverwriteLastAccessed(prev_file_contents: any) {
-        if (typeof prev_file_contents.tick_last_accessed === 'number') {
-            this.tick_last_accessed = prev_file_contents.tick_last_accessed
-        }
-    }
-
     public UpdateAccessFunctions(write: (key: string, val: any) => void, read: (key: string) => any | undefined) {
         this.SaveFileBehavior = write
         this.ReadFileBehavior = read
@@ -55,20 +56,8 @@ export class ScreepFile {
         this.tick_last_accessed = Game.time
     }
 
-    public MarkForDeletion() {
-        this.SaveFileBehavior('can_delete', true)
-    }
-
-    public GetFileAge() {
-        return Game.time - this.tick_last_accessed
-    }
-
     public GetPath() {
         return this.path
-    }
-
-    public SetFileName(name: string) {
-        this.file_name = name
     }
 
     public ToJson() {
@@ -81,6 +70,10 @@ export class ScreepFile {
         if (this.can_delete) { json.can_delete = true }
 
         return json
+    }
+
+    public MarkForDeletion() {
+        this.SaveFileBehavior('can_delete', true)
     }
 
     public WriteToFile(key: BaseJsonValue, value: Json) {

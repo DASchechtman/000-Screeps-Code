@@ -1,4 +1,4 @@
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
 import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes"
 import { HarvesterBehavior } from "./CreepBehaviors.ts/HarvesterBehavior"

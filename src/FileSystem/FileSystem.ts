@@ -1,4 +1,5 @@
-import { FILE_ENDING, FOLDER_ENDING, ScreepFile } from "./File"
+import { BaseJsonValue, Json } from "Consts"
+import { ScreepFile, FILE_ENDING, FOLDER_ENDING, ScreepMetaFile } from "./File"
 import { FileObjectManager } from "./FileObjManager"
 
 function DefaultFileSave(obj: any, key: string) {
@@ -71,7 +72,7 @@ export class FileSystem {
 
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
-                
+
                 if (file[key].can_delete) {
                     Delete(file, key)
                 }
@@ -101,6 +102,23 @@ export class FileSystem {
         CheckAllFiles(Memory)
     }
 
+    private ConvertScreepFileToFile(sfile: ScreepMetaFile): ScreepFile {
+        return {
+            WriteToFile: function (key: BaseJsonValue, value: Json) {
+                sfile.WriteToFile(key, value)
+            },
+            WriteAllToFile: function (data: { key: BaseJsonValue, value: Json }[]) {
+                sfile.WriteAllToFile(data)
+            },
+            ReadFromFile: function (key: BaseJsonValue) {
+                return sfile.ReadFromFile(key)
+            },
+            MarkForDeletion: function () {
+                sfile.MarkForDeletion()
+            }
+        }
+    }
+
     public GetFile(path: string[]): ScreepFile {
         if (path.length === 0) { throw new Error('Cannot use an empty path') }
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path)
@@ -127,17 +145,17 @@ export class FileSystem {
         FILE.UpdateLastAccessed()
         FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
 
-        return FILE
+        return this.ConvertScreepFileToFile(FILE)
     }
 
-    public GetExistingFile(path: string[]) {
+    public GetExistingFile(path: string[]): ScreepFile | null {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
             const FILE = this.file_obj_manager.GiveFile()
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
             FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
-            return FILE
+            return this.ConvertScreepFileToFile(FILE)
         }
         return null
     }
@@ -174,7 +192,7 @@ export class FileSystem {
     }
 
     public ClearFileSystme() {
-        for(let key of Object.keys(Memory)) {
+        for (let key of Object.keys(Memory)) {
             Memory[key] = undefined
         }
     }
