@@ -44,13 +44,15 @@ export class FileSystem {
             const FILE_NAME = `${NAME}${FILE_ENDING}`
 
             if (i < path.length - 1) {
-                if (folder_obj[FOLDER_NAME] == null && creating_file) {
-                    folder_obj[FOLDER_NAME] = {}
-                }
-                else if (folder_obj[FOLDER_NAME] == null && !creating_file) {
-                    folder_obj = null
-                    file = 'null'
-                    break
+                if (folder_obj[FOLDER_NAME] == null) {
+                    if (creating_file) {
+                        folder_obj[FOLDER_NAME] = {}
+                    }
+                    else {
+                        folder_obj = null
+                        file = 'null'
+                        break
+                    }
                 }
 
                 folder_obj = folder_obj[FOLDER_NAME]
@@ -71,7 +73,7 @@ export class FileSystem {
 
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
-                
+
                 if (file[key].can_delete) {
                     Delete(file, key)
                 }
@@ -85,7 +87,9 @@ export class FileSystem {
                     }
                 }
                 else if (key.endsWith(FILE_ENDING)) {
-                    const FILE = this.file_obj_manager.GiveFile()
+                    const READ = DefaultFileRead(file, key)
+                    const WRITE = DefaultFileSave(file, key)
+                    const FILE = this.file_obj_manager.GiveFile(READ, WRITE)
                     FILE.OverwriteFile(file[key])
                     if (FILE.ShouldDeleteFile()) {
                         Delete(file, key)
@@ -104,40 +108,22 @@ export class FileSystem {
     public GetFile(path: string[]): ScreepFile {
         if (path.length === 0) { throw new Error('Cannot use an empty path') }
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path)
-        const FILE = this.file_obj_manager.GiveFile()
-
-        if (FOLDER_OBJ[FILE_NAME] == null) {
-            FILE.OverwriteFile({
-                tick_last_accessed: Game.time,
-                file_name: path.join('/'),
-                path: path,
-                data: {},
-                can_delete: false
-            })
-            FOLDER_OBJ[FILE_NAME] = {}
-        }
-        else {
-            FILE.OverwriteFile({
-                ...FOLDER_OBJ[FILE_NAME],
-                file_name: path.join('/'),
-                path: path
-            })
-        }
-
-        FILE.UpdateLastAccessed()
-        FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
-
+        const META_FILE = this.file_obj_manager.GiveFile(DefaultFileRead(FOLDER_OBJ, FILE_NAME), DefaultFileSave(FOLDER_OBJ, FILE_NAME))
+        META_FILE.UpdateLastAccessed()
+        META_FILE.AppendMetaDataToObject(FOLDER_OBJ[FILE_NAME])
+        const FILE = META_FILE.GetFile()
         return FILE
     }
 
     public GetExistingFile(path: string[]) {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
-            const FILE = this.file_obj_manager.GiveFile()
+            const READ = DefaultFileRead(FOLDER_OBJ, FILE_NAME)
+            const WRITE = DefaultFileSave(FOLDER_OBJ, FILE_NAME)
+            const FILE = this.file_obj_manager.GiveFile(READ, WRITE)
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
-            FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
-            return FILE
+            return FILE.GetFile()
         }
         return null
     }
@@ -161,19 +147,10 @@ export class FileSystem {
 
     public Cleanup() {
         this.file_obj_manager.ReturnAllFiles()
-        this.file_obj_manager.Map((s) => {
-            const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(s.GetPath(), false)
-            if (FOLDER_OBJ !== null && FOLDER_OBJ[FILE_NAME] !== null) {
-                FOLDER_OBJ[FILE_NAME] = {
-                    ...FOLDER_OBJ[FILE_NAME],
-                    ...s.ToJson()
-                }
-            }
-        })
         this.CleanUpMemory()
     }
 
-    public ClearFileSystme() {
+    public ClearFileSystem() {
         for(let key of Object.keys(Memory)) {
             Memory[key] = undefined
         }

@@ -90,6 +90,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
   }
 
   Timer.AdvanceAllTimers()
-  //FILE_SYSTEM.ClearFileSystme()
+  FILE_SYSTEM.ClearFileSystem()
   FILE_SYSTEM.Cleanup()
 });
