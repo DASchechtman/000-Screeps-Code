@@ -42,7 +42,7 @@ export class RepairBehavior implements CreepBehavior {
 
         this.timer = new Timer(id)
 
-        if (this.data[this.source_key] === 'null' || this.timer.IsTimerDone()) {
+        if (this.data[this.source_key] === 'null' || this.timer.IsTimerDone() || this.target == null) {
             this.structures = [
                 ...RoomData.GetRoomData().GetOwnedStructureIds(),
                 ...RoomData.GetRoomData().GetRoomStructures([STRUCTURE_WALL, STRUCTURE_CONTAINER])

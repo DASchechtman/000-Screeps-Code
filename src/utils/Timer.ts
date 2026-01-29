@@ -49,6 +49,10 @@ export class Timer {
             FILE.WriteToFile(this.timer_end_key, tick_time)
             FILE.WriteToFile(this.timer_current_key, 0)
         }
+        else {
+            const FILE = FileSystem.GetFileSystem().GetFile(this.path)
+            FILE.WriteToFile(this.timer_end_key, tick_time)
+        }
     }
 
     public IsTimerDone() {
