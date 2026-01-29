@@ -33,6 +33,9 @@ export class ScreepMetaFile {
         if (this.hasProp(prev_file_contents, 'tick_last_accessed') && typeof prev_file_contents.tick_last_accessed === 'number') {
             this.tick_last_accessed = prev_file_contents.tick_last_accessed
         }
+        else {
+            this.tick_last_accessed = -1
+        }
 
         if (this.hasProp(prev_file_contents, 'file_name') && typeof prev_file_contents.file_name === 'string') {
             this.file_name = prev_file_contents.file_name
@@ -49,7 +52,7 @@ export class ScreepMetaFile {
     }
 
     public ShouldDeleteFile() {
-        return Game.time - this.tick_last_accessed >= 10
+        return this.tick_last_accessed === -1 || Game.time - this.tick_last_accessed >= 10
     }
 
     public UpdateLastAccessed() {

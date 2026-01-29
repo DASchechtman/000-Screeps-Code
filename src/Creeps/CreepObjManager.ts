@@ -280,7 +280,7 @@ export class CreepObjectManager {
             console.log('queuing harvester')
         })
 
-        FillArrayWithPlaceHolders(this.upgrader_ids, 2, () => {
+        FillArrayWithPlaceHolders(this.upgrader_ids, 1, () => {
             this.creep_queue.push({ body: [WORK, CARRY, MOVE], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE})
         })
 
@@ -291,7 +291,7 @@ export class CreepObjectManager {
             })
         }
 
-        FillArrayWithPlaceHolders(this.repair_ids, 2, () => {
+        FillArrayWithPlaceHolders(this.repair_ids, 1, () => {
             this.creep_queue.push({ body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE})
         })
 
