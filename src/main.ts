@@ -30,6 +30,7 @@ declare global {
 
   interface Array<T> {
     at(index: number): T | undefined
+    clear(): void
   }
 
 }
@@ -54,6 +55,10 @@ Array.prototype.at = function(index: number) {
   }
 }
 
+Array.prototype.clear = function() {
+  this.splice(0)
+}
+
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -61,9 +66,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const FILE_SYSTEM = FileSystem.GetFileSystem()
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
-
-
-
 
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)

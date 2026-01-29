@@ -2,11 +2,16 @@ import { FILE_ENDING, FOLDER_ENDING, ScreepFile } from "./File"
 import { FileObjectManager } from "./FileObjManager"
 
 function DefaultFileSave(obj: any, key: string) {
-    return (update_file: ScreepFile) => {
-        obj[key] = {
-            ...obj[key],
-            ...update_file.ToJson()
-        }
+    return (data_key: string, val: any) => {
+        if (obj[key]['data'] === undefined) { obj[key]['data'] = {} }
+        obj[key]['data'][data_key] = val
+    }
+}
+
+function DefaultFileRead(obj: any, key: string) {
+    return (data_key: string) => {
+        if (obj[key]['data'] === undefined) { return undefined }
+        return obj[key]['data'][data_key]
     }
 }
 
@@ -66,6 +71,7 @@ export class FileSystem {
 
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
+                
                 if (file[key].can_delete) {
                     Delete(file, key)
                 }
@@ -119,7 +125,7 @@ export class FileSystem {
         }
 
         FILE.UpdateLastAccessed()
-        FILE.UpdateSaveFunction(DefaultFileSave(FOLDER_OBJ, FILE_NAME))
+        FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
 
         return FILE
     }
@@ -130,7 +136,7 @@ export class FileSystem {
             const FILE = this.file_obj_manager.GiveFile()
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
-            FILE.UpdateSaveFunction(DefaultFileSave(FOLDER_OBJ, FILE_NAME))
+            FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
             return FILE
         }
         return null
@@ -155,6 +161,15 @@ export class FileSystem {
 
     public Cleanup() {
         this.file_obj_manager.ReturnAllFiles()
+        this.file_obj_manager.Map((s) => {
+            const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(s.GetPath(), false)
+            if (FOLDER_OBJ !== null && FOLDER_OBJ[FILE_NAME] !== null) {
+                FOLDER_OBJ[FILE_NAME] = {
+                    ...FOLDER_OBJ[FILE_NAME],
+                    ...s.ToJson()
+                }
+            }
+        })
         this.CleanUpMemory()
     }
 
@@ -162,5 +177,9 @@ export class FileSystem {
         for(let key of Object.keys(Memory)) {
             Memory[key] = undefined
         }
+    }
+
+    public PrintFileSystem() {
+        console.log(JSON.stringify(Memory, null, 2))
     }
 }

@@ -1,13 +1,14 @@
 import { ScreepFile } from "FileSystem/File";
 import { CreepObj } from "./Creep";
-import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes";
+import { ATTACK_TYPE, BUILDER_TYPE, CreepBehaviorType, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { DebugLogger } from "utils/DebugLogger";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { BaseJsonValue, Json } from "Consts";
+import { BaseJsonValue, CreepBehavior, Json } from "Consts";
+import { indexBy } from "lodash";
 
-type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: number }
+type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: CreepBehaviorType }
 type DataObj = { [key: number | string]: Json }
 
 export class CreepObjectManager {
@@ -22,6 +23,30 @@ export class CreepObjectManager {
     private filler_data
     private file_path: string[]
     private room_name: string
+
+    private harvester_ids: string[]
+    private upgrader_ids: string[]
+    private builder_ids: string[]
+    private repair_ids: string[]
+    private gaurd_ids: string[]
+    private creep_queue: CreepQueueData[]
+    private all_ids: (() => string[])[]
+
+
+    private constructor() {
+        this.creep = new CreepObj()
+        this.file_path = []
+        this.room_name = ""
+        this.filler_data = "empty"
+
+        this.harvester_ids = []
+        this.upgrader_ids = []
+        this.builder_ids = []
+        this.repair_ids = []
+        this.gaurd_ids = []
+        this.creep_queue = []
+        this.all_ids = []
+    }
 
     private HarvestIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
@@ -89,39 +114,40 @@ export class CreepObjectManager {
         }
     }
 
-    private constructor() {
-        this.creep = new CreepObj()
-        this.file_path = []
-        this.room_name = ""
-        this.filler_data = "empty"
-    }
-
-
     private RunCreepCode(behavior: number, id_arr: string[]) {
         const IDS_TO_REMOVE = new Array<string>()
-        let deletion_occured = false
-        for (let i = 0; i < id_arr.length; i++) {
-            let id = id_arr[i]
+        for (let id of id_arr) {
+            if (id === this.filler_data) { continue }
+
             this.creep.FullyOverrideCreep(id, behavior)
 
             this.creep.Load((failed_id) => {
-                if (failed_id === this.filler_data) { return }
                 IDS_TO_REMOVE.push(failed_id)
-                deletion_occured = true
             })
             this.creep.Run()
             this.creep.Cleanup()
         }
 
-        for(let y of IDS_TO_REMOVE) {
+        for (let y of IDS_TO_REMOVE) {
             const INDEX = id_arr.indexOf(y)
             if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
         }
     }
 
     private ReadCreepDataFromFile() {
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
+        this.harvester_ids = this.HarvestIds()
+        this.upgrader_ids = this.UpgraderIds()
+        this.builder_ids = this.BuilderIds()
+        this.repair_ids = this.RepairIds()
+        this.gaurd_ids = this.GaurdIds()
+        this.creep_queue = this.QueueData()
 
+        this.all_ids = []
+        this.all_ids[HARVESTER_TYPE] = () => this.harvester_ids
+        this.all_ids[UPGRADER_TYPE] = () => this.upgrader_ids
+        this.all_ids[BUILDER_TYPE] = () => this.builder_ids
+        this.all_ids[REPAIR_TYPE] = () => this.repair_ids
+        this.all_ids[ATTACK_TYPE] = () => this.gaurd_ids
     }
 
     public LoadCreepData(room_name: string) {
@@ -131,54 +157,31 @@ export class CreepObjectManager {
     }
 
     public RunAllActiveCreeps() {
-        const HARVESER_IDS = this.HarvestIds()
-        const UPGRADER_IDS = this.UpgraderIds()
-        const BUILDER_IDS = this.BuilderIds()
-        const REPAIRER_IDS = this.RepairIds()
-        const ATTACKER_IDS = this.GaurdIds()
-
-        this.RunCreepCode(HARVESTER_TYPE, HARVESER_IDS)
-        this.RunCreepCode(UPGRADER_TYPE, UPGRADER_IDS)
-        this.RunCreepCode(BUILDER_TYPE, BUILDER_IDS)
-        this.RunCreepCode(REPAIR_TYPE, REPAIRER_IDS)
-        this.RunCreepCode(ATTACK_TYPE, ATTACKER_IDS)
-
-
-        this.HarvestIds(HARVESER_IDS)
-        this.UpgraderIds(UPGRADER_IDS)
-        this.BuilderIds(BUILDER_IDS)
-        this.RepairIds(REPAIRER_IDS)
-        this.GaurdIds(ATTACKER_IDS)
+        this.RunCreepCode(HARVESTER_TYPE, this.harvester_ids)
+        this.RunCreepCode(UPGRADER_TYPE, this.upgrader_ids)
+        this.RunCreepCode(REPAIR_TYPE, this.repair_ids)
+        this.RunCreepCode(BUILDER_TYPE, this.builder_ids)
+        this.RunCreepCode(ATTACK_TYPE, this.gaurd_ids)
     }
 
     public AddCreepId(id: string) {
-        const QUEUE = this.QueueData()
-        const IDS = [
-            this.HarvestIds(),
-            this.UpgraderIds(),
-            this.BuilderIds(),
-            this.RepairIds(),
-            this.GaurdIds()
-        ]
 
-        if (IDS.some(arr => arr.includes(id))) { return }
+        if (this.all_ids.some(arr => arr().includes(id))) { return }
 
-        const NEXT_CREEP = QUEUE.shift()
+        const NEXT_CREEP = this.creep_queue.shift()
+        console.log(`next in queue: ${NEXT_CREEP}`)
         if (NEXT_CREEP == null) { return }
-        this.QueueData(QUEUE)
 
-        const ARR = IDS[NEXT_CREEP.creep_type]
-        const INDEX = ARR.indexOf(this.filler_data)
-
+        const CREEP_ARR = this.all_ids[NEXT_CREEP.creep_type]()
+        const INDEX = CREEP_ARR.indexOf(this.filler_data)
         if (INDEX >= 0) {
-            ARR[INDEX] = id
+            CREEP_ARR[INDEX] = id
         }
     }
 
     public GetSpawnBody() {
         const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_EXTENSION])
         const SPAWNS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN])
-        const HARVESER_IDS = this.HarvestIds()
         const BODY_TO_ENERGY_MAP = new Map<BodyPartConstant, number>([
             [MOVE, 50],
             [WORK, 100],
@@ -193,7 +196,8 @@ export class CreepObjectManager {
         let max_energy = 300 * SPAWNS.length
         let controller = Game.rooms[this.room_name]?.controller
 
-        const CANT_ACCESS_MORE_ENERGY = HARVESER_IDS.filter(x => x !== this.filler_data).length === 0
+        const CANT_ACCESS_MORE_ENERGY = this.harvester_ids.filter(x => x !== this.filler_data).length === 0
+        //const CANT_ACCESS_MORE_ENERGY = false
         if (controller) {
             if (controller.level >= 2 && controller.level <= 6) {
                 max_energy += 50 * EXTENSIONS.length
@@ -233,10 +237,7 @@ export class CreepObjectManager {
             return new_body
         }
 
-        const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
-        const QUEUE = SafeReadFromFileWithOverwrite(FILE, 'body_queue', new Array<CreepQueueData>())
-
-
+        const QUEUE: CreepQueueData[] = this.creep_queue
         const NEXT_BODY = QUEUE.at(0)
 
         if (NEXT_BODY == null) {
@@ -247,12 +248,6 @@ export class CreepObjectManager {
     }
 
     public QueueNextSpawnBody() {
-        let harvest_ids = this.HarvestIds()
-        let upgrader_ids = this.UpgraderIds()
-        let builder_ids = this.BuilderIds()
-        let repairer_ids = this.RepairIds()
-        let attacker_ids = this.GaurdIds()
-        let queue = this.QueueData()
         const MY_CREEPS = RoomData.GetRoomData().GetCreepIds()
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
         const ENERGY_LIMIT = 1200
@@ -269,51 +264,45 @@ export class CreepObjectManager {
             }
         }
 
-        if (MY_CREEPS.length === 0 || harvest_ids.filter(x => x !== this.filler_data).length === 0) {
-            harvest_ids = []
-            upgrader_ids = []
-            repairer_ids = []
-            builder_ids = []
-            attacker_ids = []
-            queue = []
-
-            FillArrayWithPlaceHolders(harvest_ids, 1, () => {
-                queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
+        const NO_HARVESTERS_ACTIVE = this.harvester_ids.filter(x => x !== this.filler_data).length === 0
+        if (NO_HARVESTERS_ACTIVE) {
+            FillArrayWithPlaceHolders(this.harvester_ids, 1, () => {
+                this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
             })
         }
 
-        FillArrayWithPlaceHolders(attacker_ids, 3, () => {
-            queue.push({ body: [MOVE, MOVE, ATTACK, TOUGH, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
+        FillArrayWithPlaceHolders(this.gaurd_ids, 3, () => {
+            this.creep_queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE})
         })
 
-        FillArrayWithPlaceHolders(harvest_ids, 3, () => {
-            queue.push({ body: [MOVE, MOVE, WORK, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
+        FillArrayWithPlaceHolders(this.harvester_ids, 3, () => {
+            this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE})
+            console.log('queuing harvester')
         })
 
-        FillArrayWithPlaceHolders(upgrader_ids, 2, () => {
-            queue.push({ body: [MOVE, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE })
+        FillArrayWithPlaceHolders(this.upgrader_ids, 2, () => {
+            this.creep_queue.push({ body: [WORK, CARRY, MOVE], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE})
         })
 
-        if (CONSTRUCTION_SITE.length > 0) {
-            FillArrayWithPlaceHolders(builder_ids, 2, () => {
-                queue.push({ body: [MOVE, WORK, CARRY, CARRY, WORK], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE })
+        const HAS_THINGS_TO_BUILD = CONSTRUCTION_SITE.length > 0
+        if (HAS_THINGS_TO_BUILD) {
+            FillArrayWithPlaceHolders(this.builder_ids, 1, () => {
+                this.creep_queue.push({ body: [MOVE, WORK, CARRY, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE})
             })
         }
 
-
-        FillArrayWithPlaceHolders(repairer_ids, 2, () => {
-            queue.push({ body: [MOVE, MOVE, CARRY, WORK, WORK], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
+        FillArrayWithPlaceHolders(this.repair_ids, 2, () => {
+            this.creep_queue.push({ body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE})
         })
-
-        this.HarvestIds(harvest_ids)
-        this.UpgraderIds(upgrader_ids)
-        this.BuilderIds(builder_ids)
-        this.RepairIds(repairer_ids)
-        this.GaurdIds(attacker_ids)
-        this.QueueData(queue)
 
     }
 
     public SaveCreepData() {
+        this.HarvestIds(this.harvester_ids)
+        this.UpgraderIds(this.upgrader_ids)
+        this.BuilderIds(this.builder_ids)
+        this.RepairIds(this.repair_ids)
+        this.GaurdIds(this.gaurd_ids)
+        this.QueueData(this.creep_queue)
     }
 }

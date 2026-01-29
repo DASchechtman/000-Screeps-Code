@@ -7,9 +7,9 @@ export class ScreepFile {
     private tick_last_accessed: number = -1
     private file_name: string = ""
     private path: string[] = []
-    private data: JsonObj = {}
     private can_delete: boolean = false
-    private SaveToMemory: ((file: ScreepFile) => void) = (file: ScreepFile) => {}
+    private SaveFileBehavior: ((key: string, val: any) => void) = () => { }
+    private ReadFileBehavior: ((key: string) => any | undefined) = () => undefined
 
     private hasProp(obj: unknown, key: string): obj is Record<string, unknown> {
         return typeof obj === 'object' && obj !== null && key in obj
@@ -20,7 +20,6 @@ export class ScreepFile {
             this.tick_last_accessed = prev_file_contents.tick_last_accessed
             this.file_name = prev_file_contents.file_name
             this.path = prev_file_contents.path
-            this.data = prev_file_contents.data
             return
         }
 
@@ -35,10 +34,6 @@ export class ScreepFile {
         if (this.hasProp(prev_file_contents, 'path') && Array.isArray(prev_file_contents.path) && prev_file_contents.path.every(s => typeof s === 'string')) {
             this.path = prev_file_contents.path
         }
-
-        if (this.hasProp(prev_file_contents, 'data')) {
-            this.data = prev_file_contents.data as JsonObj
-        }
     }
 
     public OverwriteLastAccessed(prev_file_contents: any) {
@@ -47,8 +42,9 @@ export class ScreepFile {
         }
     }
 
-    public UpdateSaveFunction(fn: (file: ScreepFile) => void) {
-        this.SaveToMemory = fn
+    public UpdateAccessFunctions(write: (key: string, val: any) => void, read: (key: string) => any | undefined) {
+        this.SaveFileBehavior = write
+        this.ReadFileBehavior = read
     }
 
     public ShouldDeleteFile() {
@@ -60,8 +56,7 @@ export class ScreepFile {
     }
 
     public MarkForDeletion() {
-        this.can_delete = true
-        this.SaveToMemory(this)
+        this.SaveFileBehavior('can_delete', true)
     }
 
     public GetFileAge() {
@@ -80,34 +75,33 @@ export class ScreepFile {
         let json: any = {
             tick_last_accessed: this.tick_last_accessed,
             path: this.path,
-            file_name: this.file_name,
-            data: this.data,
-            can_delete: this.can_delete ? true : undefined
+            file_name: this.file_name
         }
+
+        if (this.can_delete) { json.can_delete = true }
 
         return json
     }
 
     public WriteToFile(key: BaseJsonValue, value: Json) {
         key = String(key)
-        this.data[key] = value
-        this.SaveToMemory(this)
+        this.SaveFileBehavior(key, value)
     }
 
-    public WriteAllToFile(data: {key: BaseJsonValue, value: Json}[]) {
+    public WriteAllToFile(data: { key: BaseJsonValue, value: Json }[]) {
         for (let entry of data) {
-            this.data[String(entry.key)] = entry.value
+            this.SaveFileBehavior(String(entry.key), entry.value)
         }
-
-        this.SaveToMemory(this)
     }
 
-    public ReadFromFile(key: BaseJsonValue) {
+    public ReadFromFile(key: BaseJsonValue): Json {
         key = String(key)
-        if (this.data[key] === undefined) {
+
+        const VAL = this.ReadFileBehavior(key)
+        if (VAL === undefined) {
             throw new Error(`Accessing non-existent data "${key}" in file ${this.file_name}`)
         }
 
-        return this.data[key]
+        return VAL as Json
     }
 }

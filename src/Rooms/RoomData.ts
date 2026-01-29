@@ -25,9 +25,10 @@ export class RoomData {
         this.timer.StartTimer(5)
 
         if (this.timer.IsTimerDone()) {
-            this.creep_ids = []
             this.construction_site_ids = []
         }
+
+        this.creep_ids = []
 
     }
 

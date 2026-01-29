@@ -28,8 +28,6 @@ export class HarvesterBehavior implements CreepBehavior {
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
 
-        console.log(`Harvester State: ${this.data[this.state_key]}, id: ${id}`)
-
         if (this.creep !== null) {
             if (!this.data[this.state_key]) {
                 this.sources = this.creep.room.find(FIND_SOURCES)
@@ -102,7 +100,6 @@ export class HarvesterBehavior implements CreepBehavior {
     }
 
     Cleanup(file: ScreepFile) {
-        console.log('saving harvester to file')
         file.WriteToFile(this.state_key, this.data[this.state_key])
     };
 
