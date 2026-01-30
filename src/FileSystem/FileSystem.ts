@@ -126,7 +126,7 @@ export class FileSystem {
     public GetFile(path: string[]): ScreepFile {
         if (path.length === 0) { throw new Error('Cannot use an empty path') }
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path)
-        const FILE = this.file_obj_manager.GiveFile(DefaultFileRead(FOLDER_OBJ, FILE_NAME), DefaultFileSave(FOLDER_OBJ, FILE_NAME))
+        const FILE = this.file_obj_manager.GiveFile()
 
         if (FOLDER_OBJ[FILE_NAME] == null) {
             FILE.OverwriteFile({
