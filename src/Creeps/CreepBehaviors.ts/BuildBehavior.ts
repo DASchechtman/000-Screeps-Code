@@ -1,4 +1,4 @@
-import { ScreepFile } from "FileSystem/File";
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { REPAIR_TYPE } from "./BehaviorTypes";
 import { BEHAVIOR_KEY, CreepBehavior, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
@@ -115,7 +115,6 @@ export class BuildBehavior implements CreepBehavior {
         file.WriteToFile(this.state_key, this.data[this.state_key])
         file.WriteToFile(this.site_key, this.data[this.site_key])
         file.WriteToFile(this.container_key, this.data[this.container_key])
-
 
         if (this.site === null) {
             file.WriteToFile(BEHAVIOR_KEY, REPAIR_TYPE)

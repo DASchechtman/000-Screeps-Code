@@ -1,5 +1,5 @@
 import { Json } from "Consts"
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
 import { IsJsonType } from "./TypeChecks"
 

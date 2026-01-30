@@ -1,4 +1,5 @@
-import { FILE_ENDING, FOLDER_ENDING, ScreepFile } from "./File"
+import { BaseJsonValue, Json } from "Consts"
+import { ScreepFile, FILE_ENDING, FOLDER_ENDING, ScreepMetaFile } from "./File"
 import { FileObjectManager } from "./FileObjManager"
 
 function DefaultFileSave(obj: any, key: string) {
@@ -105,17 +106,52 @@ export class FileSystem {
         CheckAllFiles(Memory)
     }
 
+    private ConvertScreepFileToFile(sfile: ScreepMetaFile): ScreepFile {
+        return {
+            WriteToFile: function (key: BaseJsonValue, value: Json) {
+                sfile.WriteToFile(key, value)
+            },
+            WriteAllToFile: function (data: { key: BaseJsonValue, value: Json }[]) {
+                sfile.WriteAllToFile(data)
+            },
+            ReadFromFile: function (key: BaseJsonValue) {
+                return sfile.ReadFromFile(key)
+            },
+            MarkForDeletion: function () {
+                sfile.MarkForDeletion()
+            }
+        }
+    }
+
     public GetFile(path: string[]): ScreepFile {
         if (path.length === 0) { throw new Error('Cannot use an empty path') }
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path)
-        const META_FILE = this.file_obj_manager.GiveFile(DefaultFileRead(FOLDER_OBJ, FILE_NAME), DefaultFileSave(FOLDER_OBJ, FILE_NAME))
-        META_FILE.UpdateLastAccessed()
-        META_FILE.AppendMetaDataToObject(FOLDER_OBJ[FILE_NAME])
-        const FILE = META_FILE.GetFile()
-        return FILE
+        const FILE = this.file_obj_manager.GiveFile(DefaultFileRead(FOLDER_OBJ, FILE_NAME), DefaultFileSave(FOLDER_OBJ, FILE_NAME))
+
+        if (FOLDER_OBJ[FILE_NAME] == null) {
+            FILE.OverwriteFile({
+                tick_last_accessed: Game.time,
+                file_name: path.join('/'),
+                path: path,
+                data: {},
+                can_delete: false
+            })
+            FOLDER_OBJ[FILE_NAME] = {}
+        }
+        else {
+            FILE.OverwriteFile({
+                ...FOLDER_OBJ[FILE_NAME],
+                file_name: path.join('/'),
+                path: path
+            })
+        }
+
+        FILE.UpdateLastAccessed()
+
+        return this.ConvertScreepFileToFile(FILE)
     }
 
-    public GetExistingFile(path: string[]) {
+    public GetExistingFile(path: string[]): ScreepFile | null {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
             const READ = DefaultFileRead(FOLDER_OBJ, FILE_NAME)
@@ -123,7 +159,8 @@ export class FileSystem {
             const FILE = this.file_obj_manager.GiveFile(READ, WRITE)
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
-            return FILE.GetFile()
+            FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
+            return this.ConvertScreepFileToFile(FILE)
         }
         return null
     }
@@ -150,8 +187,13 @@ export class FileSystem {
         this.CleanUpMemory()
     }
 
+<<<<<<< HEAD
     public ClearFileSystem() {
         for(let key of Object.keys(Memory)) {
+=======
+    public ClearFileSystme() {
+        for (let key of Object.keys(Memory)) {
+>>>>>>> d3c438194002bb8550b2adb89d01872c1ba17f1e
             Memory[key] = undefined
         }
     }
