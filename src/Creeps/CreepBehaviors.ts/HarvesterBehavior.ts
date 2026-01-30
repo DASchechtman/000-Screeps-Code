@@ -2,6 +2,7 @@ import { CreepBehavior, JsonObj } from "Consts";
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
+import { FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
 
 type EnergyContainers = StructureSpawn | StructureExtension | StructureContainer
 
@@ -69,15 +70,7 @@ export class HarvesterBehavior implements CreepBehavior {
     Run() {
         if (this.creep === null) { return }
 
-        const NO_ENERGY = this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
-        const ENERGY_FULL = this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
-
-        if (NO_ENERGY) {
-            this.data[this.state_key] = false
-        }
-        else if (ENERGY_FULL) {
-            this.data[this.state_key] = true
-        }
+        this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
 
         if (!this.data[this.state_key]) {
             if (this.creep.harvest(this.sources[0]) === ERR_NOT_IN_RANGE) {

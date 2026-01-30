@@ -4,6 +4,7 @@ import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { RoomData } from "Rooms/RoomData"
 import { Timer } from "utils/Timer"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
+import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils"
 
 export class UpgraderBehavior implements CreepBehavior {
     private data: JsonObj
@@ -42,25 +43,7 @@ export class UpgraderBehavior implements CreepBehavior {
         TIMER.StartTimer(15)
 
         if (this.data[this.container_key] === 'null' || TIMER.IsTimerDone()) {
-
-            const ALL_CONTAINERS = RoomData.GetRoomData().GetRoomStructures(STRUCTURE_CONTAINER)
-                .map(id => Game.getObjectById(id))
-                .filter(s => s !== null) as StructureContainer[]
-
-            const STORED_ENERGY = ALL_CONTAINERS.reduce((prev, cur) => prev + cur.store.getUsedCapacity(RESOURCE_ENERGY), 0)
-
-            if (STORED_ENERGY > 0 && STORED_ENERGY >= 2000 * ALL_CONTAINERS.length * .9) {
-                ALL_CONTAINERS.sort((a, b) => {
-                    return a.store.getUsedCapacity(RESOURCE_ENERGY) - b.store.getUsedCapacity(RESOURCE_ENERGY)
-                })
-
-                this.data[this.container_key] = ALL_CONTAINERS.at(-1)!.id
-
-            }
-            else if (STORED_ENERGY <= 2000 * ALL_CONTAINERS.length * .1) {
-                this.data[this.container_key] = 'N/A'
-            }
-
+            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
             if (this.data[this.container_key] === 'null') {
                 this.data[this.container_key] = "N/A"
             }
@@ -72,24 +55,11 @@ export class UpgraderBehavior implements CreepBehavior {
     public Run() {
         if (this.creep == null || this.controller == null) { return }
 
-        const NO_ENERGY = this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
-        const ENERGY_FULL = this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
-
-        if (NO_ENERGY) {
-            this.data[this.state_key] = false
-        }
-        else if (ENERGY_FULL) {
-            this.data[this.state_key] = true
-        }
+        this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
 
         if (!this.data[this.state_key]) {
             const CONTAINER = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            if (CONTAINER && this.creep.withdraw(CONTAINER, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(CONTAINER)
-            }
-            else if (this.creep.harvest(this.sources[1]) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.sources[1], { maxRooms: 1 })
-            }
+            GetEnergy(this.creep, this.sources[1], CONTAINER)
         }
         else {
             if (this.creep.upgradeController(this.controller) === ERR_NOT_IN_RANGE) {
