@@ -1,4 +1,4 @@
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { IsJsonType } from "./TypeChecks"
 import { BaseJsonValue } from "Consts"
 

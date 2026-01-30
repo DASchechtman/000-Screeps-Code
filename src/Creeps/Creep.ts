@@ -1,4 +1,4 @@
-import { ScreepFile } from "FileSystem/File"
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
 import { ATTACK_TYPE, BUILDER_TYPE, HARVESTER_TYPE, REPAIR_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes"
 import { HarvesterBehavior } from "./CreepBehaviors.ts/HarvesterBehavior"
@@ -80,21 +80,31 @@ export class CreepObj {
     }
 
     public Load(FailedToLoad: (id: string) => void) {
-        if (this.file == null) { return }
-        const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))
-        if (CANT_LOAD) {
+        try {
+            if (this.file == null) { return }
+            const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))
+            if (CANT_LOAD) {
+                FailedToLoad(this.id)
+                this.behavior = null
+                this.file.MarkForDeletion()
+            }
+        } catch {
             FailedToLoad(this.id)
             this.behavior = null
-            this.file.MarkForDeletion()
+            this.file?.MarkForDeletion()
         }
     }
 
     public Run() {
-        this.behavior?.Run()
+        try {
+            this.behavior?.Run()
+        } catch { }
     }
 
     public Cleanup() {
-        if (this.file == null) { return }
-        this.behavior?.Cleanup(this.file)
+        try {
+            if (this.file == null) { return }
+            this.behavior?.Cleanup(this.file)
+        } catch { }
     }
 }

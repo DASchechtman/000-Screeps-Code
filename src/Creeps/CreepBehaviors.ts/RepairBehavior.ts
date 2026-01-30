@@ -1,5 +1,5 @@
 import { CreepBehavior, JsonObj } from "Consts";
-import { ScreepFile } from "FileSystem/File";
+import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { Timer } from "utils/Timer";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
