@@ -1,12 +1,13 @@
-import { CreepBehavior, JsonObj } from "Consts"
+import { JsonObj } from "Consts"
 import { FILE } from "dns"
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { RoomData } from "Rooms/RoomData"
 import { Timer } from "utils/Timer"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils"
+import { EntityBehavior } from "./BehaviorTypes"
 
-export class UpgraderBehavior implements CreepBehavior {
+export class UpgraderBehavior implements EntityBehavior {
     private data: JsonObj
     private state_key: string
     private container_key: string
@@ -58,8 +59,12 @@ export class UpgraderBehavior implements CreepBehavior {
         this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
 
         if (!this.data[this.state_key]) {
-            const CONTAINER = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.sources[1], CONTAINER)
+            let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
+            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+                container = Game.getObjectById(container_id as Id<StructureContainer>)
+            }
+            GetEnergy(this.creep, this.sources[1], container)
         }
         else {
             if (this.creep.upgradeController(this.controller) === ERR_NOT_IN_RANGE) {
@@ -72,5 +77,7 @@ export class UpgraderBehavior implements CreepBehavior {
         file.WriteToFile(this.state_key, this.data[this.state_key])
         file.WriteToFile(this.container_key, this.data[this.container_key])
     }
+
+    Unload(file: ScreepFile) {}
 
 }

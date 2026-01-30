@@ -1,11 +1,12 @@
-import { CreepBehavior, JsonObj } from "Consts";
+import { JsonObj } from "Consts";
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
+import { EntityBehavior } from "./BehaviorTypes";
 
 
-export class AttackBehavior implements CreepBehavior {
+export class AttackBehavior implements EntityBehavior {
     private creep: Creep | null
     private enemy_creep_ids: string[]
     private ally_creeps: string[]
@@ -62,4 +63,6 @@ export class AttackBehavior implements CreepBehavior {
     public Cleanup(file: ScreepFile) {
         file.WriteToFile(this.state_key, this.data[this.state_key])
     }
+
+    public Unload(file: ScreepFile) {}
 }

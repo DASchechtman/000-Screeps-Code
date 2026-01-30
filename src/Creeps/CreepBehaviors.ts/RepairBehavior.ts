@@ -1,56 +1,12 @@
-import { CreepBehavior, JsonObj } from "Consts";
+import { JsonObj } from "Consts";
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { Timer } from "utils/Timer";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
+import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy, SortStructs } from "./Utils/CreepUtils";
+import { EntityBehavior } from "./BehaviorTypes";
 
-function SortStructs(a: Structure<StructureConstant> | null, b: Structure<StructureConstant> | null) {
-    const DECAYING_STRUCT_TYPES: StructureConstant[] = [
-        STRUCTURE_CONTAINER,
-        STRUCTURE_RAMPART,
-        STRUCTURE_ROAD
-    ]
-
-    const GetStructValue = (struct: Structure<StructureConstant>) => {
-        return struct.hits / struct.hitsMax
-    }
-
-    const GetCompareVal = (a: Structure<StructureConstant>, b: Structure<StructureConstant>) => {
-        return GetStructValue(a) - GetStructValue(b)
-    }
-
-    if (a == null || b == null) { return 0 }
-
-    const DECAYING_STRUCT_LOW_ON_HEALTH = (
-        DECAYING_STRUCT_TYPES.includes(a.structureType)
-        && !DECAYING_STRUCT_TYPES.includes(b.structureType)
-        && GetStructValue(a) <= .15
-    )
-
-    const BOTH_STRUCTS_ARE_DECAYING = (
-        DECAYING_STRUCT_TYPES.includes(a.structureType)
-        && DECAYING_STRUCT_TYPES.includes(b.structureType)
-    )
-
-    if (DECAYING_STRUCT_LOW_ON_HEALTH) {
-        return -1
-    }
-    else if (BOTH_STRUCTS_ARE_DECAYING) {
-        if (a.structureType === STRUCTURE_RAMPART && GetStructValue(a) < .2) {
-            return a.structureType === b.structureType ? GetCompareVal(a, b) : -1
-        }
-        else if (a.structureType === STRUCTURE_CONTAINER && GetStructValue(a) < .5) {
-            return a.structureType === b.structureType ? GetCompareVal(a, b) : -1
-        }
-        
-        return GetCompareVal(a, b)
-    }
-
-    return GetCompareVal(a, b)
-}
-
-export class RepairBehavior implements CreepBehavior {
+export class RepairBehavior implements EntityBehavior {
     private creep: Creep | null
     private source: Source | null
     private structures: (Structure | null)[]
@@ -125,8 +81,12 @@ export class RepairBehavior implements CreepBehavior {
 
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
-            const CONTAINER = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.source, CONTAINER)
+            let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
+            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+                container = Game.getObjectById(container_id as Id<StructureContainer>)
+            }
+            GetEnergy(this.creep, this.source, container)
         }
         else {
             let building = this.target
@@ -147,4 +107,5 @@ export class RepairBehavior implements CreepBehavior {
         file.WriteToFile(this.source_key, this.data[this.source_key])
         file.WriteToFile(this.container_key, this.data[this.container_key])
     }
+    Unload(file: ScreepFile) {}
 }

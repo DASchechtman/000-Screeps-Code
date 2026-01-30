@@ -1,12 +1,12 @@
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
-import { REPAIR_TYPE } from "./BehaviorTypes";
-import { BEHAVIOR_KEY, CreepBehavior, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts";
+import { EntityBehavior, REPAIR_TYPE } from "./BehaviorTypes";
+import { BEHAVIOR_KEY, JsonObj } from "Consts";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { Timer } from "utils/Timer";
 import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
 
-export class BuildBehavior implements CreepBehavior {
+export class BuildBehavior implements EntityBehavior {
     private creep: Creep | null
     private construction_sites: ConstructionSite[]
     private sources: Source | null
@@ -74,7 +74,11 @@ export class BuildBehavior implements CreepBehavior {
 
         if (!this.data[this.state_key]) {
             if (this.sources == null) { return }
-            const container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
+            let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
+            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+                container = Game.getObjectById(container_id as Id<StructureContainer>)
+            }
             GetEnergy(this.creep, this.sources, container)
         }
         else {
@@ -97,4 +101,6 @@ export class BuildBehavior implements CreepBehavior {
             file.WriteToFile(BEHAVIOR_KEY, REPAIR_TYPE)
         }
     }
+
+    public Unload(file: ScreepFile) {}
 }

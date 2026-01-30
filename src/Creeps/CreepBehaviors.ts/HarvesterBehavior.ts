@@ -1,12 +1,13 @@
-import { CreepBehavior, JsonObj } from "Consts";
+import { JsonObj } from "Consts";
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
+import { EntityBehavior } from "./BehaviorTypes";
 
 type EnergyContainers = StructureSpawn | StructureExtension | StructureContainer
 
-export class HarvesterBehavior implements CreepBehavior {
+export class HarvesterBehavior implements EntityBehavior {
     private data: JsonObj
     private state_key: string
     private creep_id: string
@@ -94,6 +95,8 @@ export class HarvesterBehavior implements CreepBehavior {
 
     Cleanup(file: ScreepFile) {
         file.WriteToFile(this.state_key, this.data[this.state_key])
-    };
+    }
+
+    Unload(file: ScreepFile) {}
 
 }

@@ -69,10 +69,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
-    CREEP_MANAGER.LoadCreepData(room_name)
+    CREEP_MANAGER.LoadEntityData(room_name)
 
     const MY_CREEPS = ROOM_DATA.GetCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_SPAWN])
+    const STRUCTS = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_TOWER])
     const CREEP_NAME = `Creep - ${new Date().toUTCString()}`
     CREEP_MANAGER.QueueNextSpawnBody()
     const BODY = CREEP_MANAGER.GetSpawnBody()
@@ -85,7 +86,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
       CREEP_MANAGER.AddCreepId(creep_id)
     }
 
-    CREEP_MANAGER.RunAllActiveCreeps()
+    for (let struct_id of STRUCTS) {
+      CREEP_MANAGER.AddStructureId(struct_id)
+    }
+
+    CREEP_MANAGER.RunAllActiveEntities()
     CREEP_MANAGER.SaveCreepData()
   }
 

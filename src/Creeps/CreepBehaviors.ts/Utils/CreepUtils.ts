@@ -17,6 +17,7 @@ export function GetContainerIdIfThereIsEnoughStoredEnergy(container_id: string) 
         const SORTED_CONTAINERS = CONTAINERS.sort((a, b) => {
             return a.store.getUsedCapacity(RESOURCE_ENERGY) - b.store.getUsedCapacity(RESOURCE_ENERGY)
         })
+        .filter(c => c.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
 
         return SORTED_CONTAINERS.at(-1)!.id
     }
@@ -49,3 +50,49 @@ export function GetEnergy(creep: Creep, source: Source, container: StructureCont
         creep.moveTo(source, { maxRooms: 1 })
     }
 }
+
+export function SortStructs(a: Structure<StructureConstant> | null, b: Structure<StructureConstant> | null) {
+    const DECAYING_STRUCT_TYPES: StructureConstant[] = [
+        STRUCTURE_CONTAINER,
+        STRUCTURE_RAMPART,
+        STRUCTURE_ROAD
+    ]
+
+    const GetStructValue = (struct: Structure<StructureConstant>) => {
+        return struct.hits / struct.hitsMax
+    }
+
+    const GetCompareVal = (a: Structure<StructureConstant>, b: Structure<StructureConstant>) => {
+        return GetStructValue(a) - GetStructValue(b)
+    }
+
+    if (a == null || b == null) { return 0 }
+
+    const DECAYING_STRUCT_LOW_ON_HEALTH = (
+        DECAYING_STRUCT_TYPES.includes(a.structureType)
+        && !DECAYING_STRUCT_TYPES.includes(b.structureType)
+        && GetStructValue(a) <= .15
+    )
+
+    const BOTH_STRUCTS_ARE_DECAYING = (
+        DECAYING_STRUCT_TYPES.includes(a.structureType)
+        && DECAYING_STRUCT_TYPES.includes(b.structureType)
+    )
+
+    if (DECAYING_STRUCT_LOW_ON_HEALTH) {
+        return -1
+    }
+    else if (BOTH_STRUCTS_ARE_DECAYING) {
+        if (a.structureType === STRUCTURE_RAMPART && GetStructValue(a) < .2) {
+            return a.structureType === b.structureType ? GetCompareVal(a, b) : -1
+        }
+        else if (a.structureType === STRUCTURE_CONTAINER && GetStructValue(a) < .5) {
+            return a.structureType === b.structureType ? GetCompareVal(a, b) : -1
+        }
+
+        return GetCompareVal(a, b)
+    }
+
+    return GetCompareVal(a, b)
+}
+

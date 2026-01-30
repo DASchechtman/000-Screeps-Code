@@ -1,7 +1,18 @@
-export type CreepBehaviorType = 0 | 1 | 2 | 3 | 4
+import { ScreepFile } from "FileSystem/File"
 
-export const HARVESTER_TYPE: CreepBehaviorType = 0
-export const UPGRADER_TYPE: CreepBehaviorType = 1
-export const BUILDER_TYPE: CreepBehaviorType = 2
-export const REPAIR_TYPE: CreepBehaviorType = 3
-export const ATTACK_TYPE: CreepBehaviorType = 4
+export type EntityBehaviorType = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export const HARVESTER_TYPE: EntityBehaviorType = 0
+export const UPGRADER_TYPE: EntityBehaviorType = 1
+export const BUILDER_TYPE: EntityBehaviorType = 2
+export const REPAIR_TYPE: EntityBehaviorType = 3
+export const ATTACK_TYPE: EntityBehaviorType = 4
+export const TOWER_TYPE: EntityBehaviorType = 5
+export const TOWER_SUPPLIER_TYPE: EntityBehaviorType = 6
+
+export interface EntityBehavior {
+    Load: (file: ScreepFile, id: string) => boolean
+    Run: () => void
+    Cleanup: (file: ScreepFile) => void
+    Unload: (file: ScreepFile) => void
+}
