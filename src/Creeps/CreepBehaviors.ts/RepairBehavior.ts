@@ -3,7 +3,7 @@ import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { Timer } from "utils/Timer";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy, SortStructs } from "./Utils/CreepUtils";
+import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetDamagedStruct, GetEnergy, SortStructs } from "./Utils/CreepUtils";
 import { EntityBehavior } from "./BehaviorTypes";
 
 export class RepairBehavior implements EntityBehavior {
@@ -31,6 +31,7 @@ export class RepairBehavior implements EntityBehavior {
 
     public Load(file: ScreepFile, id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
+        const HAS_CREEP = this.creep != null
 
         if (this.creep) {
             this.source = this.creep.pos.findClosestByPath(FIND_SOURCES)
@@ -45,16 +46,7 @@ export class RepairBehavior implements EntityBehavior {
         this.timer = new Timer(id)
 
         if (this.data[this.source_key] === 'null' || this.timer.IsTimerDone() || this.target == null) {
-            this.structures = [
-                ...RoomData.GetRoomData().GetOwnedStructureIds(),
-                ...RoomData.GetRoomData().GetRoomStructures([STRUCTURE_WALL, STRUCTURE_CONTAINER])
-            ]
-                .map(id => Game.getObjectById(id as Id<Structure>))
-                .filter(s => s != null && s.hits / s.hitsMax < .75)
-                .sort(SortStructs)
-
-
-            const STRUCT_TO_REPAIR = this.structures.at(0)
+            const STRUCT_TO_REPAIR = GetDamagedStruct()
             if (STRUCT_TO_REPAIR) {
                 this.target = STRUCT_TO_REPAIR
                 this.data[this.source_key] = this.target.id
@@ -68,11 +60,12 @@ export class RepairBehavior implements EntityBehavior {
         TIMER_2.StartTimer(15)
 
         if (this.data[this.container_key] === 'null' || TIMER_2.IsTimerDone()) {
-            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+            if (!HAS_CREEP) { return false }
+            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
             if (this.data[this.container_key] === 'null') { this.data[this.container_key] = "N/A" }
         }
 
-        return this.creep != null
+        return HAS_CREEP
     }
     public Run() {
         if (this.creep == null) { return }
@@ -82,10 +75,6 @@ export class RepairBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
-                container = Game.getObjectById(container_id as Id<StructureContainer>)
-            }
             GetEnergy(this.creep, this.source, container)
         }
         else {

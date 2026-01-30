@@ -1,31 +1,27 @@
 import { RoomData } from "Rooms/RoomData";
 
-export function GetContainerIdIfThereIsEnoughStoredEnergy(container_id: string) {
+export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
     const CONTAINERS = RoomData.GetRoomData().GetRoomStructures(STRUCTURE_CONTAINER)
         .map(id => Game.getObjectById(id))
-        .filter(s => s !== null) as StructureContainer[]
-
-    const ENERGY_PER_CONTAINER = 2000
-
-    const STORED_ENERGY = CONTAINERS.reduce((prev, cur) => {
-        return prev + cur.store.getUsedCapacity(RESOURCE_ENERGY)
-    }, 0)
-
-    const HAS_ENOUGH_ENERGY = STORED_ENERGY > 0 && STORED_ENERGY >= ENERGY_PER_CONTAINER * CONTAINERS.length * .9
-    const HAS_TOO_LITTLE_ENERGY = STORED_ENERGY <= ENERGY_PER_CONTAINER * CONTAINERS.length * .1
-    if (HAS_ENOUGH_ENERGY) {
-        const SORTED_CONTAINERS = CONTAINERS.sort((a, b) => {
-            return a.store.getUsedCapacity(RESOURCE_ENERGY) - b.store.getUsedCapacity(RESOURCE_ENERGY)
+        .filter((s) => {
+            const HAS_ENOUGH_ENERGY = (
+                (s as StructureContainer).store.getUsedCapacity(RESOURCE_ENERGY)
+                > creep.store.getCapacity()
+            )
+            return s != null && HAS_ENOUGH_ENERGY
         })
-        .filter(c => c.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+        .sort((a, b) => {
+            const CONTAINER_1 = a as StructureContainer
+            const CONTAINER_2 = b as StructureContainer
 
-        return SORTED_CONTAINERS.at(-1)!.id
-    }
-    else if (HAS_TOO_LITTLE_ENERGY) {
-        return 'N/A'
-    }
+            return CONTAINER_1.store.getUsedCapacity(RESOURCE_ENERGY) - CONTAINER_2.store.getUsedCapacity(RESOURCE_ENERGY)
+        }) as StructureContainer[]
 
-    return container_id
+        if (CONTAINERS.length > 0) {
+            return CONTAINERS.at(-1)!.id
+        }
+
+    return 'N/A'
 }
 
 export function FlipStateBasedOnEnergyInCreep(creep: Creep, state: boolean) {
@@ -70,7 +66,6 @@ export function SortStructs(a: Structure<StructureConstant> | null, b: Structure
 
     const DECAYING_STRUCT_LOW_ON_HEALTH = (
         DECAYING_STRUCT_TYPES.includes(a.structureType)
-        && !DECAYING_STRUCT_TYPES.includes(b.structureType)
         && GetStructValue(a) <= .15
     )
 
@@ -79,6 +74,9 @@ export function SortStructs(a: Structure<StructureConstant> | null, b: Structure
         && DECAYING_STRUCT_TYPES.includes(b.structureType)
     )
 
+    if (a.structureType === STRUCTURE_RAMPART && a.hits < 15000) {
+        return -1
+    }
     if (DECAYING_STRUCT_LOW_ON_HEALTH) {
         return -1
     }
@@ -94,5 +92,51 @@ export function SortStructs(a: Structure<StructureConstant> | null, b: Structure
     }
 
     return GetCompareVal(a, b)
+}
+
+export function GetDamagedStruct(): Structure | null {
+    let struct: Structure | null = null
+    const DECAYING_STRUCT_TYPES: StructureConstant[] = [
+        STRUCTURE_ROAD,
+        STRUCTURE_RAMPART,
+        STRUCTURE_CONTAINER
+    ]
+    const OWNED_STRUCTURES = RoomData.GetRoomData().GetOwnedStructureIds()
+        .map(id => Game.getObjectById(id))
+        .filter(s => s != null && s.hits / s.hitsMax < .75) as Structure[]
+
+    const ROOM_STRUCTURES = RoomData.GetRoomData().GetRoomStructures([
+        STRUCTURE_WALL,
+        STRUCTURE_CONTAINER
+    ])
+        .map(id => Game.getObjectById(id))
+        .filter(s => s != null && s.hits / s.hitsMax < .75) as Structure[]
+
+    const DECAYING_STRUCTURES = [
+        ...OWNED_STRUCTURES,
+        ...ROOM_STRUCTURES
+    ].filter(s => DECAYING_STRUCT_TYPES.includes(s.structureType))
+
+    if (DECAYING_STRUCTURES.length > 0) {
+        const SORTED = DECAYING_STRUCTURES
+        .filter(s => s.hits / s.hitsMax <= .20)
+        .sort((a, b) => {
+            return (a.hits / a.hitsMax) - (b.hits / b.hitsMax)
+        })
+
+        struct = SORTED[0]
+    }
+    else if (OWNED_STRUCTURES.length > 0 || ROOM_STRUCTURES.length > 0){
+        const SORTED = [
+            ...OWNED_STRUCTURES,
+            ...ROOM_STRUCTURES
+        ].sort((a, b) => {
+            return (a.hits / a.hitsMax) - (b.hits / b.hitsMax)
+        })
+
+        struct = SORTED[0]
+    }
+
+    return struct
 }
 

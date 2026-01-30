@@ -13,6 +13,7 @@ export class TowerSupplierBehavior implements EntityBehavior {
     private state_key: string
     private energy_source_key: string
     private data: JsonObj
+    private id: string
 
     constructor() {
         this.creep = null
@@ -21,20 +22,23 @@ export class TowerSupplierBehavior implements EntityBehavior {
         this.state_key = "state"
         this.energy_source_key = "from container"
         this.data = {}
+        this.id = ""
     }
 
     Load(file: ScreepFile, id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
+        this.id = id
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
         this.data[this.tower_id_key] = SafeReadFromFileWithOverwrite(file, this.tower_id_key, 'null')
         this.data[this.energy_source_key] = SafeReadFromFileWithOverwrite(file, this.energy_source_key, 'null')
+        const HAS_CREEP = this.creep != null
 
         if (this.creep && !this.source) {
             this.source = this.creep.room.find(FIND_SOURCES)[1]
         }
 
         if (this.data[this.tower_id_key] === 'null') {
-            const TOWER_ID = TowerBehavior.GetTowerId()
+            const TOWER_ID = TowerBehavior.GetTowerId(id)
             if (TOWER_ID != null) {
                  this.data[this.tower_id_key] = TOWER_ID
             }
@@ -44,13 +48,14 @@ export class TowerSupplierBehavior implements EntityBehavior {
         TIMER.StartTimer(15)
 
         if (this.data[this.energy_source_key] === 'null' || TIMER.IsTimerDone()) {
-            this.data[this.energy_source_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.energy_source_key] as string)
+            if (!HAS_CREEP) { return false }
+            this.data[this.energy_source_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
             if (this.data[this.energy_source_key] === 'null') {
                 this.data[this.energy_source_key] = 'N/A'
             }
         }
 
-        return this.creep != null
+        return HAS_CREEP
     }
 
     Run() {
@@ -60,10 +65,6 @@ export class TowerSupplierBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
             let container = Game.getObjectById(this.data[this.energy_source_key] as Id<StructureContainer>)
-            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.energy_source_key] as string)
-                container = Game.getObjectById(container_id as Id<StructureContainer>)
-            }
             GetEnergy(this.creep, this.source, container)
         }
         else {
@@ -84,6 +85,8 @@ export class TowerSupplierBehavior implements EntityBehavior {
         ])
     }
 
-    Unload(file: ScreepFile) {}
+    Unload(file: ScreepFile) {
+        TowerBehavior.RemoveTowerId(this.id)
+    }
 
 }

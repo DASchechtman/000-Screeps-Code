@@ -31,6 +31,7 @@ export class UpgraderBehavior implements EntityBehavior {
     public Load(file: ScreepFile, id: string) {
         this.creep_id = id
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
+        const HAS_CREEP = this.creep != null
 
         if (this.creep != null) {
             this.sources = this.creep.room.find(FIND_SOURCES)
@@ -44,7 +45,8 @@ export class UpgraderBehavior implements EntityBehavior {
         TIMER.StartTimer(15)
 
         if (this.data[this.container_key] === 'null' || TIMER.IsTimerDone()) {
-            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+            if (!HAS_CREEP) { return false }
+            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
             if (this.data[this.container_key] === 'null') {
                 this.data[this.container_key] = "N/A"
             }
@@ -60,10 +62,6 @@ export class UpgraderBehavior implements EntityBehavior {
 
         if (!this.data[this.state_key]) {
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
-                container = Game.getObjectById(container_id as Id<StructureContainer>)
-            }
             GetEnergy(this.creep, this.sources[1], container)
         }
         else {

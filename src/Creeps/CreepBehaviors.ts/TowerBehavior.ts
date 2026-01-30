@@ -4,20 +4,37 @@ import { RoomData } from "Rooms/RoomData";
 import { JsonObj } from "Consts";
 import { SafeReadFromFile, SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { Timer } from "utils/Timer";
-import { SortStructs } from "./Utils/CreepUtils";
+import { GetDamagedStruct, SortStructs } from "./Utils/CreepUtils";
 
 const REPAIR_STATE = 0
 const ATTACK_STATE = 1
 
 export class TowerBehavior implements EntityBehavior {
     private static tower_ids: string[] = []
+    private static creep_to_tower: Map<string, string> = new Map()
     private static index: number = 0
 
-    public static GetTowerId(): string | undefined {
-        if (this.index >= this.tower_ids.length) { return undefined }
+    public static GetTowerId(id: string): string | undefined {
+        if (this.creep_to_tower.has(id)) {
+            return this.creep_to_tower.get(id)!
+        }
         const ID = this.tower_ids[this.index]
         this.index++
+        this.creep_to_tower.set(id, ID)
         return ID
+    }
+
+    public static RemoveTowerId(id: string) {
+        if (this.creep_to_tower.has(id)) {
+            const ID = this.creep_to_tower.get(id)!
+            const INDEX = this.tower_ids.indexOf(ID)
+
+            if (INDEX >= 0) {
+                this.tower_ids.splice(INDEX, 1)
+            }
+
+            this.creep_to_tower.delete(id)
+        }
     }
 
     private tower: StructureTower | null
@@ -60,18 +77,9 @@ export class TowerBehavior implements EntityBehavior {
         TIMER.StartTimer(15)
 
         if (this.data[this.damaged_struct_key] === 'null' || TIMER.IsTimerDone()) {
-            const STRUCTURES = [
-                ...RoomData.GetRoomData().GetOwnedStructureIds(),
-                ...RoomData.GetRoomData().GetRoomStructures([STRUCTURE_WALL, STRUCTURE_CONTAINER])
-            ]
-                .map(id => Game.getObjectById(id as Id<Structure>))
-                .filter(s => s != null && s.hits / s.hitsMax < .75)
-                .sort(SortStructs)
-
-
-            const STRUCT_TO_REPAIR = STRUCTURES.at(0)
-            if (STRUCT_TO_REPAIR) {
-                this.data[this.damaged_struct_key] = STRUCT_TO_REPAIR.id
+            const DAMAGED_STRUCT = GetDamagedStruct()
+            if (DAMAGED_STRUCT) {
+                this.data[this.damaged_struct_key] = DAMAGED_STRUCT.id
             }
             else {
                 this.data[this.damaged_struct_key] = 'N/A'
@@ -105,14 +113,26 @@ export class TowerBehavior implements EntityBehavior {
 
     Cleanup(file: ScreepFile) {
         file.WriteToFile(this.state_key, this.data[this.state_key])
-        file.WriteToFile(this.damaged_struct, this.data[this.damaged_struct])
+        file.WriteToFile(this.damaged_struct_key, this.data[this.damaged_struct_key])
     }
 
     Unload(file: ScreepFile) {
-        const INDEX = TowerBehavior.tower_ids.indexOf(this.id)
-        if (INDEX >= 0) {
-            TowerBehavior.tower_ids.splice(INDEX, 1)
-            TowerBehavior.index--
+        const IDS_TO_REMOVE = new Array<string>()
+        const KEYS_TO_REMOVE = new Array<string>()
+        for (let [key, val] of TowerBehavior.creep_to_tower) {
+            if (val === this.id) {
+                IDS_TO_REMOVE.push(val)
+                KEYS_TO_REMOVE.push(key)
+            }
+        }
+
+        for (let id of IDS_TO_REMOVE) {
+            const INDEX = TowerBehavior.tower_ids.indexOf(id)
+            if (INDEX >= 0) { TowerBehavior.tower_ids.splice(INDEX, 1) }
+        }
+
+        for (let id of KEYS_TO_REMOVE) {
+            TowerBehavior.creep_to_tower.delete(id)
         }
     }
 

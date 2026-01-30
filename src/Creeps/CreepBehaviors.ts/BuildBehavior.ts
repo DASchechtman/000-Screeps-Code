@@ -33,6 +33,7 @@ export class BuildBehavior implements EntityBehavior {
 
     public Load(file: ScreepFile, id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
+        const HAS_CREEP = this.creep != null
 
         if (this.creep) {
             this.sources = this.creep.pos.findClosestByPath(FIND_SOURCES)
@@ -57,14 +58,15 @@ export class BuildBehavior implements EntityBehavior {
         this.timer.StartTimer(15)
 
         if (this.data[this.container_key] === 'null' || this.timer.IsTimerDone()) {
-            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
+            if (!HAS_CREEP) { return false }
+            this.data[this.container_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
 
             if (this.data[this.container_key] === 'null') {
                 this.data[this.container_key] = 'N/A'
             }
         }
 
-        return this.creep != null
+        return HAS_CREEP
     }
 
     public Run() {
@@ -75,10 +77,6 @@ export class BuildBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.sources == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            if (container && container.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-                const container_id = GetContainerIdIfThereIsEnoughStoredEnergy(this.data[this.container_key] as string)
-                container = Game.getObjectById(container_id as Id<StructureContainer>)
-            }
             GetEnergy(this.creep, this.sources, container)
         }
         else {

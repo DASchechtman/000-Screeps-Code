@@ -74,8 +74,18 @@ export class HarvesterBehavior implements EntityBehavior {
         this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
 
         if (!this.data[this.state_key]) {
-            if (this.creep.harvest(this.sources[0]) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(this.sources[0], { maxRooms: 1 })
+            let res = this.creep.harvest(this.sources[0])
+            if (res === ERR_NOT_ENOUGH_ENERGY) {
+                const SOURCE = this.sources.at(1)
+                if (SOURCE == null) { return }
+                res = this.creep.harvest(SOURCE)
+
+                if (res === ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(SOURCE)
+                }
+            }
+            else if (res === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(this.sources[0])
             }
         }
         else {
