@@ -1,5 +1,4 @@
-import { ScreepFile } from "./File"
-import { ScreepMetaFile } from "./ScreepMetaFile"
+import { ScreepMetaFile } from "./File"
 
 export class FileObjectManager {
     private static manager: FileObjectManager | null = null
@@ -19,12 +18,12 @@ export class FileObjectManager {
         this.reserved_files = new Map()
     }
 
-    public GiveFile(read: (key: string) => any | undefined, write: (key: string, value: any) => void) {
+    public GiveFile() {
         const ITERATOR = this.available_files.keys()
         const FILE = ITERATOR.next().value
 
         if (FILE === undefined) {
-            const NEW_FILE = new ScreepMetaFile(read, write)
+            const NEW_FILE = new ScreepMetaFile()
             this.file_pool.push(NEW_FILE)
             this.reserved_files.set(NEW_FILE, this.file_pool.length - 1)
             return NEW_FILE

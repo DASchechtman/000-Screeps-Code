@@ -90,7 +90,7 @@ export class FileSystem {
                 else if (key.endsWith(FILE_ENDING)) {
                     const READ = DefaultFileRead(file, key)
                     const WRITE = DefaultFileSave(file, key)
-                    const FILE = this.file_obj_manager.GiveFile(READ, WRITE)
+                    const FILE = this.file_obj_manager.GiveFile()
                     FILE.OverwriteFile(file[key])
                     if (FILE.ShouldDeleteFile()) {
                         Delete(file, key)
@@ -156,10 +156,10 @@ export class FileSystem {
         if (FOLDER_OBJ != null && FOLDER_OBJ[FILE_NAME] != null) {
             const READ = DefaultFileRead(FOLDER_OBJ, FILE_NAME)
             const WRITE = DefaultFileSave(FOLDER_OBJ, FILE_NAME)
-            const FILE = this.file_obj_manager.GiveFile(READ, WRITE)
+            const FILE = this.file_obj_manager.GiveFile()
             FILE.OverwriteFile(FOLDER_OBJ[FILE_NAME])
             FILE.UpdateLastAccessed()
-            FILE.UpdateAccessFunctions(DefaultFileSave(FOLDER_OBJ, FILE_NAME), DefaultFileRead(FOLDER_OBJ, FILE_NAME))
+            FILE.UpdateAccessFunctions(WRITE, READ)
             return this.ConvertScreepFileToFile(FILE)
         }
         return null
@@ -187,13 +187,8 @@ export class FileSystem {
         this.CleanUpMemory()
     }
 
-<<<<<<< HEAD
     public ClearFileSystem() {
-        for(let key of Object.keys(Memory)) {
-=======
-    public ClearFileSystme() {
         for (let key of Object.keys(Memory)) {
->>>>>>> d3c438194002bb8550b2adb89d01872c1ba17f1e
             Memory[key] = undefined
         }
     }
