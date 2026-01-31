@@ -96,7 +96,20 @@ export class HarvesterBehavior implements EntityBehavior {
 
             }
             else {
+                let res = this.creep.harvest(this.sources[0])
 
+                if (res === ERR_NOT_ENOUGH_ENERGY) {
+                    const NEXT_SOURCE = this.sources.at(1)
+                    if (NEXT_SOURCE == null) { return }
+
+                    res = this.creep.harvest(NEXT_SOURCE)
+                    if (res === ERR_NOT_IN_RANGE) {
+                        this.creep.moveTo(NEXT_SOURCE)
+                    }
+                }
+                else if (res === ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(this.sources[0])
+                }
             }
         }
         else {

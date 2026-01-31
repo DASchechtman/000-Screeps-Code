@@ -318,7 +318,7 @@ export class CreepObjectManager {
             this.creep_queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
         })
 
-        const NUM_OF_HARVESTERS = CONTAINERS.length <= 3 ? 3 : 5
+        const NUM_OF_HARVESTERS = CONTAINERS.length === 0 ? 2 : CONTAINERS.length
         FillArrayWithPlaceHolders(this.harvester_ids, NUM_OF_HARVESTERS, () => {
             this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
             console.log('queuing harvester')
