@@ -116,7 +116,7 @@ export function GetDamagedStruct(): Structure | null {
         ...OWNED_STRUCTURES,
         ...ROOM_STRUCTURES
     ]
-        .filter(s => DECAYING_STRUCT_TYPES.includes(s.structureType) && s.hits / s.hitsMax <= .07)
+        .filter(s => DECAYING_STRUCT_TYPES.includes(s.structureType) && s.hits / s.hitsMax <= .20)
 
     if (DECAYING_STRUCTURES.length > 0) {
         const SORTED = DECAYING_STRUCTURES
