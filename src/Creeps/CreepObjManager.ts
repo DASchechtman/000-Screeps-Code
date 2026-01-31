@@ -292,6 +292,7 @@ export class CreepObjectManager {
     public QueueNextSpawnBody() {
         const MY_TOWERS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_TOWER])
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
+        const CONTAINERS = RoomData.GetRoomData().GetRoomStructures([STRUCTURE_CONTAINER])
         const ENERGY_LIMIT = 1200
 
         const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (v: string) => void) => {
@@ -317,7 +318,8 @@ export class CreepObjectManager {
             this.creep_queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
         })
 
-        FillArrayWithPlaceHolders(this.harvester_ids, 3, () => {
+        const NUM_OF_HARVESTERS = CONTAINERS.length <= 3 ? 3 : 5
+        FillArrayWithPlaceHolders(this.harvester_ids, NUM_OF_HARVESTERS, () => {
             this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
             console.log('queuing harvester')
         })
