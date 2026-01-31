@@ -60,8 +60,6 @@ export class HarvesterBehavior implements EntityBehavior {
         this.creep_id = id
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        const CONTAINER_ID = BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id)
-        console.log(`container id: ${CONTAINER_ID}`)
 
         if (this.creep !== null) {
             if (!this.data[this.state_key]) {
