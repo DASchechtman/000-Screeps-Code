@@ -25,7 +25,7 @@ export class AttackBehavior implements EntityBehavior {
         this.creep = Game.getObjectById(id as Id<Creep>)
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
         this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
-        this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
+        this.ally_creeps = RoomData.GetRoomData().GetMyCreepIds()
 
         const INJURED_CREEP_COUNT = this.ally_creeps
             .map(c => Game.getObjectById(c as Id<Creep>))

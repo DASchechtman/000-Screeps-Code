@@ -6,16 +6,22 @@ import { FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
 import { EntityBehavior } from "./BehaviorTypes";
 import { BuildingAllocator } from "utils/BuildingAllocator";
 
-type EnergyContainer = StructureSpawn | StructureExtension | StructureContainer
+type EnergyContainer = StructureSpawn | StructureExtension | StructureContainer | null
+type Storage = Id<StructureSpawn | StructureExtension> | Id<StructureContainer>
 
 function GetEnergyStorageTargets(id: string) {
-    const CONTAINER_ID = String(BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id))
-    
-    let x = [
+    let CONTAINER_ID = BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id)
+    let x: Storage[] = [
         ...RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION]),
-        CONTAINER_ID
     ]
-        .map(id => Game.getObjectById(String(id) as Id<Structure>))
+
+    if (CONTAINER_ID != null) {
+        x.push(CONTAINER_ID)
+    }
+
+
+
+    let y = x.map(id => Game.getObjectById(id))
         .filter(s => s != null)
         .sort((a, b) => {
             if (a == null || b === null) {
@@ -35,8 +41,10 @@ function GetEnergyStorageTargets(id: string) {
                 return 1
             }
             return 0
-        }) as (EnergyContainer)[]
-    return x
+        })
+
+
+    return y
 }
 
 export class HarvesterBehavior implements EntityBehavior {
@@ -80,7 +88,9 @@ export class HarvesterBehavior implements EntityBehavior {
                 target = storage.at(++i)
             }
             if (target == null) {
-                target = storage[0]
+                let next = storage[0]
+                if (next != null) { target = next }
+                else { return }
             }
             if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                 creep.moveTo(target, { maxRooms: 1 })

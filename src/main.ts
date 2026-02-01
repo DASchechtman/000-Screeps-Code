@@ -31,6 +31,8 @@ declare global {
   interface Array<T> {
     at(index: number): T | undefined
     clear(): void
+    resize(size: number): void
+    toString(): string
   }
 
 }
@@ -59,6 +61,28 @@ Array.prototype.clear = function() {
   this.splice(0)
 }
 
+Array.prototype.toString = function() {
+  return `[${this.join(', ')}]`
+}
+
+Array.prototype.resize = function(size: number) {
+  if (size < 0 || size >= this.length || this.length - size < 0) { return }
+  this.splice(size, this.length - size)
+}
+
+export function KillAllCreeps() {
+  const MY_CREEPS = RoomData.GetRoomData().GetMyCreepIds()
+  for (let id of MY_CREEPS) {
+    let creep = Game.getObjectById(id)
+    console.log(creep?.suicide())
+  }
+}
+let kill = Array.from(Object.values(Game.rooms)).some(r => {
+  const CONTROLLER = r.controller
+  return CONTROLLER?.owner?.username === 'test'
+})
+
+let reset = false
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -71,7 +95,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     ROOM_DATA.SetRoomName(room_name)
     CREEP_MANAGER.LoadEntityData(room_name)
 
-    const MY_CREEPS = ROOM_DATA.GetCreepIds()
+    const MY_CREEPS = ROOM_DATA.GetMyCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_SPAWN])
     const STRUCTS = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_TOWER])
     CREEP_MANAGER.QueueNextSpawnBody()
@@ -92,6 +116,13 @@ export const loop = ErrorMapper.wrapLoop(() => {
     CREEP_MANAGER.RunAllActiveEntities()
     CREEP_MANAGER.SaveCreepData()
   }
+
+   if (kill && reset) {
+    console.log('killing all creeps')
+    KillAllCreeps()
+    kill = false
+  }
+
 
   Timer.AdvanceAllTimers()
   //FILE_SYSTEM.ClearFileSystem()

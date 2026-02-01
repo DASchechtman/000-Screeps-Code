@@ -1,5 +1,8 @@
+import { FindOwnedStructureType, FindStructureType, OwnedStructuresConstant } from "Consts"
 import { DebugLogger } from "utils/DebugLogger"
 import { Timer } from "utils/Timer"
+
+
 
 export class RoomData {
     private static manager: RoomData | null = null
@@ -13,9 +16,9 @@ export class RoomData {
     }
 
     private room_name: string = ""
-    private creep_ids: string[] = []
-    private enemy_creep_ids: string[] = []
-    private construction_site_ids: string[] = []
+    private creep_ids: Id<Creep>[] = []
+    private enemy_creep_ids: Id<Creep>[] = []
+    private construction_site_ids: Id<ConstructionSite>[] = []
     private timer: Timer | null = null
     private constructor() { }
 
@@ -42,7 +45,7 @@ export class RoomData {
         return this.enemy_creep_ids
     }
 
-    public GetCreepIds() {
+    public GetMyCreepIds() {
         if (this.creep_ids.length === 0) {
             for (let creep_name in Game.creeps) {
                 const CREEP = Game.creeps[creep_name]
@@ -54,11 +57,17 @@ export class RoomData {
         return this.creep_ids
     }
 
-    public GetOwnedStructureIds(struct_type?: StructureConstant[]) {
-        return Array.from(Object.values(Game.structures))
-            .filter(s => s.room.name === this.room_name)
-            .filter(s =>  struct_type == null || struct_type.includes(s.structureType))
-            .map(s => s.id)
+    public GetOwnedStructureIds<K extends OwnedStructuresConstant, S extends FindOwnedStructureType[K]>(struct_type?: K | K[]): Id<S>[] {
+        let x = Array.from(Object.values(Game.structures))
+            .filter(s => {
+                if (s.room.name !== this.room_name) { return false }
+                if (s == null) { return true }
+                if (Array.isArray(struct_type)) { return struct_type?.some(x => x === s.structureType) }
+                return s.structureType === struct_type
+            }) as S[]
+
+
+        return x.map(s => s.id as Id<S>)
     }
 
     public GetConstructionSites() {
@@ -72,14 +81,14 @@ export class RoomData {
         return this.construction_site_ids
     }
 
-    public GetRoomStructures(struct_type: StructureConstant | StructureConstant[]) {
+    public GetRoomStructures<K extends StructureConstant, S extends FindStructureType[K]>(struct_type: K | K[]): Id<S>[] {
         if (!Game.rooms[this.room_name]) { return [] }
 
         return Game.rooms[this.room_name].find(FIND_STRUCTURES, {
             filter: s => {
-                if (Array.isArray(struct_type)) { return struct_type.includes(s.structureType) }
+                if (Array.isArray(struct_type)) { return struct_type.some(x => x === s.structureType) }
                 return struct_type === s.structureType
             }
-        }).map(s => s.id)
+        }).map(s => s.id) as Id<S>[]
     }
 }

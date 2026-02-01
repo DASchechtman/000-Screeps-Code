@@ -2,6 +2,7 @@ import { Json } from "Consts"
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
 import { IsJsonType } from "./TypeChecks"
+import { SafeReadFromFile, SafeReadFromFileWithOverwrite } from "./UtilFuncs"
 
 
 export class DebugLogger {
@@ -9,22 +10,11 @@ export class DebugLogger {
     private static level: number = 1
     private static debug_file: string[] = ['debug', 'file']
 
-    private static ReadFromFile<T>(file: ScreepFile, key: string, write_if_fail: T): T {
-        try {
-            return file.ReadFromFile(key) as T
-        }
-        catch {
-            if (IsJsonType(write_if_fail)) {
-                file.WriteToFile(key, write_if_fail)
-            }
-            return write_if_fail
-        }
-    }
 
     public static InitLogger() {
         const FILE = FileSystem.GetFileSystem().GetFile(this.debug_file)
-        this.debug_flag = this.ReadFromFile(FILE, 'debug logs on?', this.debug_flag)
-        this.level = this.ReadFromFile(FILE, 'log level', this.level)
+        this.debug_flag = SafeReadFromFileWithOverwrite(FILE, 'debug logs on?', this.debug_flag)
+        this.level = SafeReadFromFileWithOverwrite(FILE, 'log level', this.level)
     }
 
     public static Log(data: any, level: number = 1) {

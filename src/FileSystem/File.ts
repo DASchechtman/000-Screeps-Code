@@ -90,12 +90,12 @@ export class ScreepMetaFile {
         }
     }
 
-    public ReadFromFile(key: BaseJsonValue): Json {
+    public ReadFromFile(key: BaseJsonValue): Json | null {
         key = String(key)
 
         const VAL = this.ReadFileBehavior(key)
         if (VAL === undefined) {
-            throw new Error(`Accessing non-existent data "${key}" in file ${this.file_name}`)
+            return null
         }
 
         return VAL as Json
