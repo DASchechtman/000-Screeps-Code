@@ -17,7 +17,8 @@ export class CreepObjectManager {
     }
 
     private entity: EntityObj
-    private filler_data
+    private filler_data: string
+    private queued_data: string
     private file_path: string[]
     private room_name: string
 
@@ -37,6 +38,7 @@ export class CreepObjectManager {
         this.file_path = []
         this.room_name = ""
         this.filler_data = "empty"
+        this.queued_data = "queued"
 
         this.harvester_ids = []
         this.upgrader_ids = []
@@ -139,23 +141,21 @@ export class CreepObjectManager {
     }
 
     private RunEntityCode(behavior: number, id_arr: string[]) {
-        const IDS_TO_REMOVE = new Array<string>()
-        for (let id of id_arr) {
-            if (id === this.filler_data) { continue }
+        const IDS_TO_REMOVE = new Array<number>()
+        for (let i = 0; i < id_arr.length; i++) {
+            let id = id_arr[i]
+            if (id === this.filler_data || id === this.queued_data) { continue }
 
             this.entity.FullyOverrideCreep(id, behavior)
 
             this.entity.Load((failed_id) => {
-                IDS_TO_REMOVE.push(failed_id)
+                id_arr[i] = this.filler_data
             })
             this.entity.Run()
             this.entity.Cleanup()
         }
 
-        for (let y of IDS_TO_REMOVE) {
-            const INDEX = id_arr.indexOf(y)
-            if (INDEX >= 0) { id_arr.splice(INDEX, 1) }
-        }
+
     }
 
     private ReadCreepDataFromFile() {
@@ -198,11 +198,12 @@ export class CreepObjectManager {
 
         if (this.all_ids.some(arr => arr().includes(id))) { return }
 
-        const NEXT_CREEP = this.creep_queue.shift()
+        const NEXT_CREEP = this.creep_queue[0]
+        this.creep_queue = this.creep_queue.slice(1)
         if (NEXT_CREEP == null) { return }
 
         const CREEP_ARR = this.all_ids[NEXT_CREEP.creep_type]()
-        const INDEX = CREEP_ARR.indexOf(this.filler_data)
+        const INDEX = CREEP_ARR.findIndex(x => x === this.queued_data)
         if (INDEX >= 0) {
             CREEP_ARR[INDEX] = id
         }
@@ -309,6 +310,7 @@ export class CreepObjectManager {
             return [[], CreateName()]
         }
 
+
         return [BuildBody(NEXT_BODY.body, NEXT_BODY.limit), CreateName(NEXT_BODY.creep_type)]
     }
 
@@ -318,37 +320,43 @@ export class CreepObjectManager {
         const CONTAINERS = RoomData.GetRoomData().GetRoomStructures([STRUCTURE_CONTAINER])
         const ENERGY_LIMIT = 1200
         const HAS_THINGS_TO_BUILD = CONSTRUCTION_SITE.length > 0
-        const NO_HARVESTERS_ACTIVE = this.harvester_ids.filter(x => x !== this.filler_data).length === 0
-        const NO_SUPPLIERS_ACTIVE = this.tower_supplier_ids.filter(x => x !== this.filler_data).length === 0
+        const NO_HARVESTERS_ACTIVE = this.harvester_ids.filter(x => ![this.filler_data, this.queued_data].includes(x)).length === 0
+        const NO_SUPPLIERS_ACTIVE = this.tower_supplier_ids.filter(x => ![this.filler_data, this.queued_data].includes(x)).length === 0
         const CONTAINERS_EXIST = CONTAINERS.length > 0
 
-        const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (v: string) => void) => {
-            const SIZE = max - arr.length
-            if (SIZE < 1) { return }
-
-            const PLACE_HOLDERS = new Array<string>(SIZE).fill(this.filler_data)
-
-            for (let v of PLACE_HOLDERS) {
-                fn(v)
-                arr.push(v)
+        const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (val: string, i: number) => void) => {
+            const END = Math.min(max, 6)
+            for (let i = 0; i < END; i++) {
+                while (i >= arr.length) {
+                    arr.push(this.filler_data)
+                }
+                const SPOT = arr[i]
+                if (SPOT === this.filler_data || max === -1) {
+                    fn(SPOT, i)
+                    arr[i] = this.queued_data
+                    if (max === -1) { break }
+                }
             }
         }
 
-        if (NO_HARVESTERS_ACTIVE && !CONTAINERS_EXIST) {
-            const NEXT_CREEP = this.creep_queue.at(0)
-            if (NEXT_CREEP?.creep_type !== HARVESTER_TYPE && NEXT_CREEP?.limit !== 300) {
-                this.harvester_ids.clear()
+        if (NO_HARVESTERS_ACTIVE) {
+            let max = 1
+            let next = this.creep_queue[0]
+            if (next.creep_type !== HARVESTER_TYPE && next.limit !== 300) {
+                max = -1
             }
-            FillArrayWithPlaceHolders(this.harvester_ids, 1, () => {
+            FillArrayWithPlaceHolders(this.harvester_ids, max, (val, i) => {
                 this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
             })
         }
-        else if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
-            const NEXT_CREEP = this.creep_queue.at(0)
-            if (NEXT_CREEP?.creep_type !== STRUCTURE_SUPPLIER_TYPE && NEXT_CREEP?.limit !== 300) {
-                this.tower_supplier_ids.clear()
+
+        if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
+            let max = 1
+            let next = this.creep_queue[0]
+            if (next.creep_type !== STRUCTURE_SUPPLIER_TYPE && next.limit !== 300) {
+                max = -1
             }
-            FillArrayWithPlaceHolders(this.tower_supplier_ids, 1, () => {
+            FillArrayWithPlaceHolders(this.tower_supplier_ids, max, () => {
                 this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: STRUCTURE_SUPPLIER_TYPE })
             })
         }
@@ -379,7 +387,7 @@ export class CreepObjectManager {
             })
         }
 
-        if (MY_TOWERS.length === 0) {
+        if (!CONTAINERS_EXIST) {
             FillArrayWithPlaceHolders(this.repair_ids, 1, () => {
                 this.creep_queue.push({ body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
             })

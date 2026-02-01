@@ -92,32 +92,25 @@ export class EntityObj {
     }
 
     public Load(FailedToLoad: (id: string) => void) {
-        try {
-            if (this.file == null) { return }
-            const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))
-            if (CANT_LOAD) {
-                this.behavior?.Unload(this.file)
-                FailedToLoad(this.id)
-                this.behavior = null
-                this.file.MarkForDeletion()
-            }
-        } catch {
+
+        if (this.file == null) { return }
+        const CANT_LOAD = !Boolean(this.behavior?.Load(this.file, this.id))
+        if (CANT_LOAD) {
+            this.behavior?.Unload(this.file)
             FailedToLoad(this.id)
             this.behavior = null
-            this.file?.MarkForDeletion()
+            this.file.MarkForDeletion()
         }
+
     }
 
     public Run() {
-        try {
-            this.behavior?.Run()
-        } catch { }
+        this.behavior?.Run()
     }
 
     public Cleanup() {
-        try {
-            if (this.file == null) { return }
-            this.behavior?.Cleanup(this.file)
-        } catch { }
+        if (this.file == null) { return }
+        this.behavior?.Cleanup(this.file)
     }
+
 }

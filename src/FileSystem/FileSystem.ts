@@ -72,7 +72,6 @@ export class FileSystem {
 
         const CheckAllFiles = (file: any) => {
             for (let key of Object.getOwnPropertyNames(file)) {
-
                 if (file[key].can_delete) {
                     Delete(file, key)
                 }
