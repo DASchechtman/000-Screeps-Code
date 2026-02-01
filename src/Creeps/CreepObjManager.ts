@@ -194,12 +194,11 @@ export class CreepObjectManager {
         this.RunEntityCode(TOWER_TYPE, this.tower_ids)
     }
 
-    public AddCreepId(id: string) {
+    public AddCreepId(id: Id<Creep>) {
 
         if (this.all_ids.some(arr => arr().includes(id))) { return }
 
         const NEXT_CREEP = this.creep_queue.shift()
-        console.log(`next in queue: ${NEXT_CREEP}`)
         if (NEXT_CREEP == null) { return }
 
         const CREEP_ARR = this.all_ids[NEXT_CREEP.creep_type]()
@@ -209,16 +208,16 @@ export class CreepObjectManager {
         }
     }
 
-    public AddStructureId(id: string) {
+    public AddStructureId(id: Id<Structure<StructureConstant>>) {
         if (this.all_ids.some(arr => arr().includes(id))) { return }
 
-        try {
-            const STRUCT = Game.getObjectById(id as Id<Structure>)
 
-            if (STRUCT?.structureType === STRUCTURE_TOWER) {
-                this.tower_ids.push(id)
-            }
-        } catch { }
+        const STRUCT = Game.getObjectById(id)
+
+        if (STRUCT?.structureType === STRUCTURE_TOWER) {
+            this.tower_ids.push(id)
+        }
+
     }
 
     public GetSpawnBody(): [BodyPartConstant[], string] {
@@ -342,7 +341,6 @@ export class CreepObjectManager {
             }
             FillArrayWithPlaceHolders(this.harvester_ids, 1, () => {
                 this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
-                console.log('queuing emergency harvester')
             })
         }
         else if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
@@ -352,7 +350,6 @@ export class CreepObjectManager {
             }
             FillArrayWithPlaceHolders(this.tower_supplier_ids, 1, () => {
                 this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: STRUCTURE_SUPPLIER_TYPE })
-                console.log('queuing emergency harvester')
             })
         }
 
@@ -370,7 +367,6 @@ export class CreepObjectManager {
         const NUM_OF_HARVESTERS = CONTAINERS.length === 0 ? 2 : CONTAINERS.length
         FillArrayWithPlaceHolders(this.harvester_ids, NUM_OF_HARVESTERS, () => {
             this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
-            console.log('queuing harvester')
         })
 
         FillArrayWithPlaceHolders(this.upgrader_ids, 1, () => {

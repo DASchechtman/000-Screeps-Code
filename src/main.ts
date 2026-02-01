@@ -59,6 +59,14 @@ Array.prototype.clear = function() {
   this.splice(0)
 }
 
+export function KillAllCreeps() {
+  const MY_CREEPS = RoomData.GetRoomData().GetMyCreepIds()
+  for (let id of MY_CREEPS) {
+    let creep = Game.getObjectById(id)
+    creep?.suicide()
+  }
+}
+
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -67,11 +75,12 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
 
+
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
     CREEP_MANAGER.LoadEntityData(room_name)
 
-    const MY_CREEPS = ROOM_DATA.GetCreepIds()
+    const MY_CREEPS = ROOM_DATA.GetMyCreepIds()
     const SPAWN = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_SPAWN])
     const STRUCTS = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_TOWER])
     CREEP_MANAGER.QueueNextSpawnBody()
@@ -96,4 +105,5 @@ export const loop = ErrorMapper.wrapLoop(() => {
   Timer.AdvanceAllTimers()
   //FILE_SYSTEM.ClearFileSystme()
   FILE_SYSTEM.Cleanup()
+  console.log(`CPU used: ${Game.cpu.getUsed()}`)
 });

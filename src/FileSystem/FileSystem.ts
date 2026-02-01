@@ -168,12 +168,7 @@ export class FileSystem {
     public DeleteFile(path: string[]) {
         const [FOLDER_OBJ, FILE_NAME] = this.GetFileDataFromMemory(path, false)
         if (FOLDER_OBJ != null) {
-            try {
-                FOLDER_OBJ[FILE_NAME].MarkForDeletion()
-            }
-            catch {
-                FOLDER_OBJ[FILE_NAME].can_delete = true
-            }
+            FOLDER_OBJ[FILE_NAME].can_delete = true
         }
     }
 

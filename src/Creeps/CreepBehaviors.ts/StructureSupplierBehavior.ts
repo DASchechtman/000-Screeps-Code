@@ -6,12 +6,14 @@ import { TowerBehavior } from "./TowerBehavior";
 import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
 import { Timer } from "utils/Timer";
 import { RoomData } from "Rooms/RoomData";
+import { BuildingAllocator } from "utils/BuildingAllocator";
 
 
-type StorageStruct = StructureSpawn | StructureExtension | StructureTower
+type StorageStruct = StructureSpawn | StructureExtension | StructureTower | null
 
-function SortStructs(a: Structure<StructureConstant> | null, b: Structure<StructureConstant> | null) {
+function SortStructs(a: StorageStruct, b: StorageStruct) {
     if (a == null || b == null) { return 0 }
+
     const HIGH_PRIO_STRUCTS = new Array<StructureConstant>()
     HIGH_PRIO_STRUCTS.push(STRUCTURE_SPAWN, STRUCTURE_EXTENSION)
 
@@ -84,13 +86,14 @@ export class StructureSupplierBehavior implements EntityBehavior {
     Run() {
         if (this.creep == null) { return }
         this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
-
+       
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
             let container = Game.getObjectById(this.data[this.energy_source_key] as Id<StructureContainer>)
             GetEnergy(this.creep, this.source, container)
         }
         else {
+            const TEST = RoomData.GetRoomData().GetOwnedStructureIds()
             const STRUCTS = RoomData.GetRoomData().GetOwnedStructureIds([
                 STRUCTURE_SPAWN,
                 STRUCTURE_EXTENSION,
@@ -98,13 +101,8 @@ export class StructureSupplierBehavior implements EntityBehavior {
             ])
                 .map(id => Game.getObjectById(id))
                 .filter((s) => {
-                    if (
-                        s?.structureType === STRUCTURE_SPAWN
-                        || s?.structureType === STRUCTURE_EXTENSION
-                        || s?.structureType === STRUCTURE_TOWER
-                    ) {
-                        const SS = (s as StorageStruct)
-                        return SS.store.getUsedCapacity(RESOURCE_ENERGY) < SS.store.getCapacity(RESOURCE_ENERGY)
+                    if (s) {
+                        return s.store.getUsedCapacity(RESOURCE_ENERGY) < s.store.getCapacity(RESOURCE_ENERGY)
                     }
                     return false
                 })

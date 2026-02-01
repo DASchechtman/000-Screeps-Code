@@ -38,7 +38,7 @@ export class TowerBehavior implements EntityBehavior {
     }
 
     private tower: StructureTower | null
-    private enemies: string[]
+    private enemies: Id<Creep>[]
     private damaged_struct: string
     private data: JsonObj
     private state_key: string
@@ -74,7 +74,7 @@ export class TowerBehavior implements EntityBehavior {
 
         this.data[this.damaged_struct_key] = SafeReadFromFileWithOverwrite(file, this.damaged_struct_key, 'null')
         const TIMER = new Timer(id)
-        TIMER.StartTimer(15)
+        TIMER.StartTimer(5)
 
         if (this.data[this.damaged_struct_key] === 'null' || TIMER.IsTimerDone()) {
             const DAMAGED_STRUCT = GetDamagedStruct()
@@ -96,11 +96,7 @@ export class TowerBehavior implements EntityBehavior {
             case REPAIR_STATE: {
                 const DAMAGED_STRUCT = Game.getObjectById(this.data[this.damaged_struct_key] as Id<Structure>)
                 if (DAMAGED_STRUCT == null) { return }
-                const TIMER = new Timer(`${this.tower.id} - 2`)
-                TIMER.StartTimer(3)
-                if (TIMER.IsTimerDone()) {
-                    this.tower.repair(DAMAGED_STRUCT)
-                }
+                this.tower.repair(DAMAGED_STRUCT)
                 break
             }
 
