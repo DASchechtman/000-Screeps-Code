@@ -109,8 +109,23 @@ export function GetDamagedStruct(): Structure | null {
         STRUCTURE_WALL,
         STRUCTURE_CONTAINER
     ])
-        .map(id => Game.getObjectById(id))
-        .filter(s => s != null && s.hits / s.hitsMax < .75) as Structure[]
+        .map(id => Game.getObjectById(id as Id<Structure>))
+        .filter(s => {
+            if (s == null) { return false }
+
+            let health_limit = 0
+            if (s.structureType === STRUCTURE_RAMPART) {
+                health_limit = .2
+            }
+            else if (s.structureType === STRUCTURE_CONTAINER) {
+                health_limit = .15
+            }
+            else {
+                health_limit = .05
+            }
+
+            return s.hits / s.hitsMax < health_limit
+        }) as Structure[]
 
     const DECAYING_STRUCTURES = [
         ...OWNED_STRUCTURES,

@@ -14,14 +14,8 @@ export class AttackBehavior implements EntityBehavior {
     private state_key: string
 
     constructor() {
-        try {
-            this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
-            this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
-        } catch {
-            this.enemy_creep_ids = []
-            this.ally_creeps = []
-        }
-
+        this.enemy_creep_ids = []
+        this.ally_creeps = []
         this.data = {}
         this.state_key = "state"
         this.creep = null
@@ -30,11 +24,8 @@ export class AttackBehavior implements EntityBehavior {
     public Load(file: ScreepFile, id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        return this.creep != null
-    }
-
-    public Run() {
-        if (this.creep == null) { return }
+        this.enemy_creep_ids = RoomData.GetRoomData().GetAllEnemyCreepIds()
+        this.ally_creeps = RoomData.GetRoomData().GetCreepIds()
 
         const INJURED_CREEP_COUNT = this.ally_creeps
             .map(c => Game.getObjectById(c as Id<Creep>))
@@ -46,6 +37,13 @@ export class AttackBehavior implements EntityBehavior {
         else {
             this.data[this.state_key] = false
         }
+
+
+        return this.creep != null
+    }
+
+    public Run() {
+        if (this.creep == null) { return }
 
         if (this.enemy_creep_ids.length > 0 && this.data[this.state_key]) {
             const ENEMY = Game.getObjectById(this.enemy_creep_ids[0] as Id<Creep>)
@@ -64,5 +62,5 @@ export class AttackBehavior implements EntityBehavior {
         file.WriteToFile(this.state_key, this.data[this.state_key])
     }
 
-    public Unload(file: ScreepFile) {}
+    public Unload(file: ScreepFile) { }
 }

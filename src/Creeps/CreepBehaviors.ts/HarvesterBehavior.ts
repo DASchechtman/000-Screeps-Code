@@ -6,10 +6,11 @@ import { FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
 import { EntityBehavior } from "./BehaviorTypes";
 import { BuildingAllocator } from "utils/BuildingAllocator";
 
-type EnergyContainers = StructureSpawn | StructureExtension | StructureContainer
+type EnergyContainer = StructureSpawn | StructureExtension | StructureContainer
 
 function GetEnergyStorageTargets(id: string) {
-    const CONTAINER_ID = BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id)
+    const CONTAINER_ID = String(BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id))
+    
     let x = [
         ...RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION]),
         CONTAINER_ID
@@ -34,7 +35,7 @@ function GetEnergyStorageTargets(id: string) {
                 return 1
             }
             return 0
-        }) as (StructureSpawn | StructureExtension | StructureContainer)[]
+        }) as (EnergyContainer)[]
     return x
 }
 
@@ -44,7 +45,7 @@ export class HarvesterBehavior implements EntityBehavior {
     private creep_id: string
     private creep: Creep | null
     private sources: Source[]
-    private spawns: EnergyContainers[]
+    private spawns: EnergyContainer[]
 
     constructor() {
         this.data = {}
@@ -53,6 +54,62 @@ export class HarvesterBehavior implements EntityBehavior {
         this.spawns = []
         this.creep_id = ""
         this.creep = null
+    }
+
+    private DefaultHarvestBehavior(creep: Creep, storage: EnergyContainer[]) {
+        if (!this.data[this.state_key]) {
+            let res = creep.harvest(this.sources[0])
+
+            if (res === ERR_NOT_ENOUGH_ENERGY) {
+                const NEXT_SOURCE = this.sources.at(1)
+                if (NEXT_SOURCE == null) { return }
+
+                res = creep.harvest(NEXT_SOURCE)
+                if (res === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(NEXT_SOURCE)
+                }
+            }
+            else if (res === ERR_NOT_IN_RANGE) {
+                creep.moveTo(this.sources[0])
+            }
+        }
+        else {
+            let i = 0
+            let target: EnergyContainer | undefined = storage.at(i)
+            while (i < storage.length && target?.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                target = storage.at(++i)
+            }
+            if (target == null) {
+                target = storage[0]
+            }
+            if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(target, { maxRooms: 1 })
+            }
+        }
+    }
+
+    private ContainerHarvestBehavior(creep: Creep, storage: EnergyContainer[]) {
+        const CONTAINER = storage.at(-1)!
+        if (!this.data[this.state_key]) {
+
+            const SOURCE = CONTAINER.pos.findClosestByPath(FIND_SOURCES)
+            if (SOURCE == null) { return }
+
+            const CREEP_X = creep.pos.x
+            const CREEP_Y = creep.pos.y
+            const CONTAINER_X = CONTAINER.pos.x
+            const CONTAINER_Y = CONTAINER.pos.y
+
+            if (CREEP_X !== CONTAINER_X || CREEP_Y !== CONTAINER_Y) {
+                creep.moveTo(CONTAINER_X, CONTAINER_Y, { maxRooms: 1 })
+            }
+            else {
+                creep.harvest(SOURCE)
+            }
+        }
+        else {
+            creep.transfer(CONTAINER, RESOURCE_ENERGY)
+        }
     }
 
 
@@ -76,54 +133,11 @@ export class HarvesterBehavior implements EntityBehavior {
         this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
         const STORAGE = GetEnergyStorageTargets(this.creep_id)
 
-        if (!this.data[this.state_key]) {
-            if (STORAGE.at(-1)?.structureType === STRUCTURE_CONTAINER) {
-                const CONTAINER = STORAGE.at(-1)!
-                const SOURCE = CONTAINER.pos.findClosestByPath(FIND_SOURCES)
-                if (SOURCE == null) { return }
-
-                const CREEP_X = this.creep.pos.x
-                const CREEP_Y = this.creep.pos.y
-                const CONTAINER_X = CONTAINER.pos.x
-                const CONTAINER_Y = CONTAINER.pos.y
-
-                if (CREEP_X !== CONTAINER_X || CREEP_Y !== CONTAINER_Y) {
-                    this.creep.moveTo(CONTAINER_X, CONTAINER_Y, { maxRooms: 1 })
-                }
-                else {
-                    this.creep.harvest(SOURCE)
-                }
-
-            }
-            else {
-                let res = this.creep.harvest(this.sources[0])
-
-                if (res === ERR_NOT_ENOUGH_ENERGY) {
-                    const NEXT_SOURCE = this.sources.at(1)
-                    if (NEXT_SOURCE == null) { return }
-
-                    res = this.creep.harvest(NEXT_SOURCE)
-                    if (res === ERR_NOT_IN_RANGE) {
-                        this.creep.moveTo(NEXT_SOURCE)
-                    }
-                }
-                else if (res === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(this.sources[0])
-                }
-            }
+        if (STORAGE.at(-1)?.structureType === STRUCTURE_CONTAINER) {
+            this.ContainerHarvestBehavior(this.creep, STORAGE)
         }
         else {
-            let i = 0
-            let target = STORAGE[i]
-            while (i < STORAGE.length && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-                target = STORAGE[++i]
-            }
-            if (target == null) {
-                target = STORAGE[0]
-            }
-            if (this.creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(target, { maxRooms: 1 })
-            }
+            this.DefaultHarvestBehavior(this.creep, STORAGE)
         }
     }
 

@@ -14,6 +14,7 @@ export class RoomData {
 
     private room_name: string = ""
     private creep_ids: string[] = []
+    private enemy_creep_ids: string[] = []
     private construction_site_ids: string[] = []
     private timer: Timer | null = null
     private constructor() { }
@@ -29,12 +30,16 @@ export class RoomData {
         }
 
         this.creep_ids = []
+        this.enemy_creep_ids = []
 
     }
 
     public GetAllEnemyCreepIds() {
         if (!Game.rooms[this.room_name]) { return [] }
-        return Game.rooms[this.room_name].find(FIND_HOSTILE_CREEPS).map(hc => hc.id)
+        if (this.enemy_creep_ids.length === 0) {
+            this.enemy_creep_ids = Game.rooms[this.room_name].find(FIND_HOSTILE_CREEPS).map(hc => hc.id)
+        }
+        return this.enemy_creep_ids
     }
 
     public GetCreepIds() {

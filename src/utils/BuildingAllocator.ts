@@ -1,4 +1,5 @@
 import { RoomData } from "Rooms/RoomData"
+import { Timer } from "./Timer"
 
 export class BuildingAllocator {
     private static structs = new Map<StructureConstant, Array<string>>()
@@ -15,14 +16,40 @@ export class BuildingAllocator {
             this.structs.set(type, STRUCT_ARR)
             this.used_struct_indexes.set(type, new Map())
         }
+        else {
+            const TIMER = new Timer(id)
+            TIMER.StartTimer(10)
+
+            if (TIMER.IsTimerDone()) {
+                const STRUCT_ARR = [
+                    ...RoomData.GetRoomData().GetOwnedStructureIds([type]),
+                    ...RoomData.GetRoomData().GetRoomStructures([type])
+                ]
+
+                this.structs.set(type, STRUCT_ARR)
+            }
+        }
+
+        const STRUCT_ARR = this.structs.get(type)!
+        const INDEX_MAP = this.used_struct_indexes.get(type)!
+        const IDS_TO_REMOVE = new Array<string>()
+
+        for (let id of STRUCT_ARR) {
+            if (Game.getObjectById(id as Id<Structure>) == null) {
+                IDS_TO_REMOVE.push(id)
+            }
+        }
+
+        for (let invalid_struct_ids of IDS_TO_REMOVE) {
+            this.RemoveStructureIdFromList(type, invalid_struct_ids)
+        }
 
         if (this.id_to_struct.has(id)) {
             const STRUCT_ID = this.id_to_struct.get(id)!
             return STRUCT_ID
         }
 
-        const STRUCT_ARR = this.structs.get(type)!
-        const INDEX_MAP = this.used_struct_indexes.get(type)!
+
         let struct_id: string | null = null
 
         for (let i = 0; i < STRUCT_ARR.length; i++) {
@@ -52,6 +79,20 @@ export class BuildingAllocator {
 
             for (let index of INDEXES_TO_UNMAP) {
                 MAPPING.delete(index)
+            }
+        }
+    }
+
+    public static RemoveStructureIdFromList(type: StructureConstant, invalid_struct_id: string) {
+        if (this.structs.has(type)) {
+            const ARR = this.structs.get(type)!
+            const INDEX = ARR.indexOf(invalid_struct_id)
+            if (INDEX >= 0) { ARR.splice(INDEX, 1) }
+
+            for (let [creep_id, struct_id] of this.id_to_struct) {
+                if (struct_id === invalid_struct_id) {
+                    this.RemoveStructureId(type, creep_id)
+                }
             }
         }
     }

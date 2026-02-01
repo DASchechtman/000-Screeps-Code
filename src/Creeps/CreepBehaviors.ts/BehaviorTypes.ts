@@ -8,7 +8,7 @@ export const BUILDER_TYPE: EntityBehaviorType = 2
 export const REPAIR_TYPE: EntityBehaviorType = 3
 export const ATTACK_TYPE: EntityBehaviorType = 4
 export const TOWER_TYPE: EntityBehaviorType = 5
-export const TOWER_SUPPLIER_TYPE: EntityBehaviorType = 6
+export const STRUCTURE_SUPPLIER_TYPE: EntityBehaviorType = 6
 
 export interface EntityBehavior {
     Load: (file: ScreepFile, id: string) => boolean

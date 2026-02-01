@@ -5,8 +5,31 @@ import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { TowerBehavior } from "./TowerBehavior";
 import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
 import { Timer } from "utils/Timer";
+import { RoomData } from "Rooms/RoomData";
 
-export class TowerSupplierBehavior implements EntityBehavior {
+
+type StorageStruct = StructureSpawn | StructureExtension | StructureTower
+
+function SortStructs(a: Structure<StructureConstant> | null, b: Structure<StructureConstant> | null) {
+    if (a == null || b == null) { return 0 }
+    const HIGH_PRIO_STRUCTS = new Array<StructureConstant>()
+    HIGH_PRIO_STRUCTS.push(STRUCTURE_SPAWN, STRUCTURE_EXTENSION)
+
+    if (a.structureType === STRUCTURE_SPAWN) {
+        return -1
+    }
+    else if (a.structureType === STRUCTURE_TOWER && HIGH_PRIO_STRUCTS.includes(b.structureType)) {
+        return 1
+    }
+    else if (a.structureType === STRUCTURE_EXTENSION && b.structureType === STRUCTURE_TOWER) {
+        return -1
+    }
+
+
+    return 0
+}
+
+export class StructureSupplierBehavior implements EntityBehavior {
     private creep: Creep | null
     private source: Source | null
     private tower_id_key: string
@@ -68,11 +91,29 @@ export class TowerSupplierBehavior implements EntityBehavior {
             GetEnergy(this.creep, this.source, container)
         }
         else {
-            const TOWER = Game.getObjectById(this.data[this.tower_id_key] as Id<StructureTower>)
-            if (TOWER == null) { return }
+            const STRUCTS = RoomData.GetRoomData().GetOwnedStructureIds([
+                STRUCTURE_SPAWN,
+                STRUCTURE_EXTENSION,
+                STRUCTURE_TOWER
+            ])
+                .map(id => Game.getObjectById(id))
+                .filter((s) => {
+                    if (
+                        s?.structureType === STRUCTURE_SPAWN
+                        || s?.structureType === STRUCTURE_EXTENSION
+                        || s?.structureType === STRUCTURE_TOWER
+                    ) {
+                        const SS = (s as StorageStruct)
+                        return SS.store.getUsedCapacity(RESOURCE_ENERGY) < SS.store.getCapacity(RESOURCE_ENERGY)
+                    }
+                    return false
+                })
+                .sort(SortStructs)
+            const STRUCT = STRUCTS.at(0)
+            if (STRUCT == null) { return }
 
-            if (this.creep.transfer(TOWER, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(TOWER)
+            if (this.creep.transfer(STRUCT, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(STRUCT)
             }
         }
     }
