@@ -349,6 +349,7 @@ export class CreepObjectManager {
             const NEXT_CREEP = this.creep_queue.at(0)
             if (NEXT_CREEP?.creep_type !== STRUCTURE_SUPPLIER_TYPE && NEXT_CREEP?.limit !== 300) {
                 this.tower_supplier_ids.clear()
+                console.log('queuing new suppliers')
             }
             FillArrayWithPlaceHolders(this.tower_supplier_ids, 1, () => {
                 this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: STRUCTURE_SUPPLIER_TYPE })
