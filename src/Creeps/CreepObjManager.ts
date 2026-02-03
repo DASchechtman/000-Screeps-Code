@@ -1,11 +1,11 @@
 import { EntityObj } from "./Creep";
-import { ATTACK_TYPE, BUILDER_TYPE, EntityBehaviorType, HARVESTER_TYPE, REPAIR_TYPE, STRUCTURE_SUPPLIER_TYPE, TOWER_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes";
+import { EntityTypes } from "./CreepBehaviors.ts/BehaviorTypes";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { Json } from "Consts";
 
-type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: EntityBehaviorType }
+type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: EntityTypes }
 type DataObj = { [key: number | string]: Json }
 
 export class CreepObjectManager {
@@ -54,66 +54,66 @@ export class CreepObjectManager {
     private HarvestIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(HARVESTER_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.HARVESTER_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, HARVESTER_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.HARVESTER_TYPE, new Array<string>())
         }
     }
 
     private UpgraderIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(UPGRADER_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.UPGRADER_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, UPGRADER_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.UPGRADER_TYPE, new Array<string>())
         }
     }
 
     private BuilderIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(BUILDER_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.BUILDER_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, BUILDER_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.BUILDER_TYPE, new Array<string>())
         }
     }
 
     private RepairIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(REPAIR_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.REPAIR_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, REPAIR_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.REPAIR_TYPE, new Array<string>())
         }
     }
 
     private GaurdIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(ATTACK_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.ATTACK_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, ATTACK_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.ATTACK_TYPE, new Array<string>())
         }
     }
 
     private TowerSuppliersIds(new_ids?: string[]): string[] {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
         if (new_ids) {
-            FILE.WriteToFile(STRUCTURE_SUPPLIER_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.STRUCTURE_SUPPLIER_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, STRUCTURE_SUPPLIER_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.STRUCTURE_SUPPLIER_TYPE, new Array<string>())
         }
     }
 
@@ -121,11 +121,11 @@ export class CreepObjectManager {
         const FILE = FileSystem.GetFileSystem().GetFile(this.file_path)
 
         if (new_ids) {
-            FILE.WriteToFile(TOWER_TYPE, new_ids)
+            FILE.WriteToFile(EntityTypes.TOWER_TYPE, new_ids)
             return []
         }
         else {
-            return SafeReadFromFileWithOverwrite(FILE, TOWER_TYPE, new Array<string>())
+            return SafeReadFromFileWithOverwrite(FILE, EntityTypes.TOWER_TYPE, new Array<string>())
         }
     }
 
@@ -169,13 +169,13 @@ export class CreepObjectManager {
         this.creep_queue = this.QueueData()
 
         this.all_ids = []
-        this.all_ids[HARVESTER_TYPE] = () => this.harvester_ids
-        this.all_ids[UPGRADER_TYPE] = () => this.upgrader_ids
-        this.all_ids[BUILDER_TYPE] = () => this.builder_ids
-        this.all_ids[REPAIR_TYPE] = () => this.repair_ids
-        this.all_ids[ATTACK_TYPE] = () => this.gaurd_ids
-        this.all_ids[TOWER_TYPE] = () => this.tower_ids
-        this.all_ids[STRUCTURE_SUPPLIER_TYPE] = () => this.tower_supplier_ids
+        this.all_ids[EntityTypes.HARVESTER_TYPE] = () => this.harvester_ids
+        this.all_ids[EntityTypes.UPGRADER_TYPE] = () => this.upgrader_ids
+        this.all_ids[EntityTypes.BUILDER_TYPE] = () => this.builder_ids
+        this.all_ids[EntityTypes.REPAIR_TYPE] = () => this.repair_ids
+        this.all_ids[EntityTypes.ATTACK_TYPE] = () => this.gaurd_ids
+        this.all_ids[EntityTypes.TOWER_TYPE] = () => this.tower_ids
+        this.all_ids[EntityTypes.STRUCTURE_SUPPLIER_TYPE] = () => this.tower_supplier_ids
     }
 
     public LoadEntityData(room_name: string) {
@@ -185,13 +185,13 @@ export class CreepObjectManager {
     }
 
     public RunAllActiveEntities() {
-        this.RunEntityCode(HARVESTER_TYPE, this.harvester_ids)
-        this.RunEntityCode(UPGRADER_TYPE, this.upgrader_ids)
-        this.RunEntityCode(REPAIR_TYPE, this.repair_ids)
-        this.RunEntityCode(BUILDER_TYPE, this.builder_ids)
-        this.RunEntityCode(ATTACK_TYPE, this.gaurd_ids)
-        this.RunEntityCode(STRUCTURE_SUPPLIER_TYPE, this.tower_supplier_ids)
-        this.RunEntityCode(TOWER_TYPE, this.tower_ids)
+        this.RunEntityCode(EntityTypes.HARVESTER_TYPE, this.harvester_ids)
+        this.RunEntityCode(EntityTypes.UPGRADER_TYPE, this.upgrader_ids)
+        this.RunEntityCode(EntityTypes.REPAIR_TYPE, this.repair_ids)
+        this.RunEntityCode(EntityTypes.BUILDER_TYPE, this.builder_ids)
+        this.RunEntityCode(EntityTypes.ATTACK_TYPE, this.gaurd_ids)
+        this.RunEntityCode(EntityTypes.STRUCTURE_SUPPLIER_TYPE, this.tower_supplier_ids)
+        this.RunEntityCode(EntityTypes.TOWER_TYPE, this.tower_ids)
     }
 
     public AddCreepId(id: Id<Creep>) {
@@ -279,25 +279,25 @@ export class CreepObjectManager {
             return new_body
         }
 
-        const CreateName = (behavior?: EntityBehaviorType) => {
+        const CreateName = (behavior?: EntityTypes) => {
             const DATE_STR = new Date().toUTCString()
             let name = ['Creep', Game.time]
-            if (behavior === HARVESTER_TYPE) {
+            if (behavior === EntityTypes.HARVESTER_TYPE) {
                 name[0] = 'Harvester'
             }
-            else if (behavior === UPGRADER_TYPE) {
+            else if (behavior === EntityTypes.UPGRADER_TYPE) {
                 name[0] = 'Upgrader'
             }
-            else if (behavior === BUILDER_TYPE) {
+            else if (behavior === EntityTypes.BUILDER_TYPE) {
                 name[0] = 'Builder'
             }
-            else if (behavior === REPAIR_TYPE) {
+            else if (behavior === EntityTypes.REPAIR_TYPE) {
                 name[0] = 'Repairer'
             }
-            else if (behavior === ATTACK_TYPE) {
+            else if (behavior === EntityTypes.ATTACK_TYPE) {
                 name[0] = 'Gaurd'
             }
-            else if (behavior === STRUCTURE_SUPPLIER_TYPE) {
+            else if (behavior === EntityTypes.STRUCTURE_SUPPLIER_TYPE) {
                 name[0] = 'Tower Supplier'
             }
             return name.join(' - ')
@@ -345,7 +345,7 @@ export class CreepObjectManager {
             }
         }
 
-        const GetEmergencyCreepMax = (behavior: EntityBehaviorType, limit: number, emergency_max: number) => {
+        const GetEmergencyCreepMax = (behavior: EntityTypes, limit: number, emergency_max: number) => {
             const NEXT_IN_QUEUE = this.creep_queue.at(0)
             if (NEXT_IN_QUEUE == null) { return emergency_max }
             if (NEXT_IN_QUEUE.creep_type !== behavior && NEXT_IN_QUEUE.limit !== limit) { return -1 }
@@ -353,53 +353,59 @@ export class CreepObjectManager {
         }
 
         if (NO_HARVESTERS_ACTIVE) {
-            let max = GetEmergencyCreepMax(HARVESTER_TYPE, 300, 1)
+            let max = GetEmergencyCreepMax(EntityTypes.HARVESTER_TYPE, 300, 1)
             console.log('queuing emergency harvesters', max)
             FillArrayWithPlaceHolders(this.harvester_ids, max, () => {
-                this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
+                this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: EntityTypes.HARVESTER_TYPE })
                 console.log('adding to queue')
             })
         }
 
 
         if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
-            let max = GetEmergencyCreepMax(STRUCTURE_SUPPLIER_TYPE, 300, 1)
+            let max = GetEmergencyCreepMax(EntityTypes.STRUCTURE_SUPPLIER_TYPE, 300, 1)
             console.log('queuing emergency creep')
             FillArrayWithPlaceHolders(this.tower_supplier_ids, max, () => {
-                this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: STRUCTURE_SUPPLIER_TYPE })
+                this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: EntityTypes.STRUCTURE_SUPPLIER_TYPE })
             })
         }
 
         FillArrayWithPlaceHolders(this.gaurd_ids, 3, () => {
-            this.creep_queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: ATTACK_TYPE })
+            this.creep_queue.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: EntityTypes.ATTACK_TYPE })
         })
 
         if (CONTAINERS_EXIST) {
             const MAX = MY_TOWERS.length === 0 ? 1 : MY_TOWERS.length
             FillArrayWithPlaceHolders(this.tower_supplier_ids, 2, () => {
-                this.creep_queue.push({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: ENERGY_LIMIT, creep_type: STRUCTURE_SUPPLIER_TYPE })
+                this.creep_queue.push({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 800, creep_type: EntityTypes.STRUCTURE_SUPPLIER_TYPE })
             })
         }
 
         const NUM_OF_HARVESTERS = CONTAINERS.length === 0 ? 2 : CONTAINERS.length
         FillArrayWithPlaceHolders(this.harvester_ids, NUM_OF_HARVESTERS, () => {
-            this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
+            let max_energy = ENERGY_LIMIT
+            let body: BodyPartConstant[] = [MOVE, WORK, CARRY, MOVE, WORK]
+            if (CONTAINERS_EXIST) {
+                body = [MOVE, CARRY, WORK, WORK, WORK]
+                max_energy = 800
+            }
+            this.creep_queue.push({ body: body, limit: max_energy, creep_type: EntityTypes.HARVESTER_TYPE })
         })
 
-        const NUM_OF_UPGRADERS = ENEMIES_EXIST ? 1 : 3
+        const NUM_OF_UPGRADERS = ENEMIES_EXIST ? 0 : 2
         FillArrayWithPlaceHolders(this.upgrader_ids, NUM_OF_UPGRADERS, () => {
-            this.creep_queue.push({ body: [WORK, CARRY, MOVE], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE })
+            this.creep_queue.push({ body: [WORK, CARRY, MOVE], limit: 800, creep_type: EntityTypes.UPGRADER_TYPE })
         })
 
         if (HAS_THINGS_TO_BUILD) {
             FillArrayWithPlaceHolders(this.builder_ids, 1, () => {
-                this.creep_queue.push({ body: [MOVE, WORK, CARRY, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: BUILDER_TYPE })
+                this.creep_queue.push({ body: [MOVE, WORK, CARRY, WORK, CARRY], limit: ENERGY_LIMIT, creep_type: EntityTypes.BUILDER_TYPE })
             })
         }
 
         if (!CONTAINERS_EXIST) {
             FillArrayWithPlaceHolders(this.repair_ids, 1, () => {
-                this.creep_queue.push({ body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: REPAIR_TYPE })
+                this.creep_queue.push({ body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY], limit: ENERGY_LIMIT, creep_type: EntityTypes.REPAIR_TYPE })
             })
         }
 

@@ -1,6 +1,6 @@
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
-import { EntityBehavior, REPAIR_TYPE } from "./BehaviorTypes";
+import { EntityBehavior, EntityTypes } from "./BehaviorTypes";
 import { BEHAVIOR_KEY, JsonObj } from "Consts";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { Timer } from "utils/Timer";
@@ -96,7 +96,7 @@ export class BuildBehavior implements EntityBehavior {
         file.WriteToFile(this.container_key, this.data[this.container_key])
 
         if (this.site === null) {
-            file.WriteToFile(BEHAVIOR_KEY, REPAIR_TYPE)
+            file.WriteToFile(BEHAVIOR_KEY, EntityTypes.REPAIR_TYPE)
         }
     }
 

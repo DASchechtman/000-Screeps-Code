@@ -5,10 +5,10 @@ export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
         .map(id => Game.getObjectById(id))
         .filter((s) => {
             const HAS_ENOUGH_ENERGY = (
-                (s as StructureContainer).store.getUsedCapacity(RESOURCE_ENERGY)
-                > creep.store.getCapacity()
+                s != null &&
+                s.store.getUsedCapacity(RESOURCE_ENERGY) > 0
             )
-            return s != null && HAS_ENOUGH_ENERGY
+            return HAS_ENOUGH_ENERGY
         })
         .sort((a, b) => {
             const CONTAINER_1 = a as StructureContainer
