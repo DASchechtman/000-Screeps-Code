@@ -1,4 +1,3 @@
-import { HARVESTER_TYPE, UPGRADER_TYPE } from "Creeps/CreepBehaviors.ts/BehaviorTypes";
 import { CreepObjectManager } from "Creeps/CreepObjManager";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
