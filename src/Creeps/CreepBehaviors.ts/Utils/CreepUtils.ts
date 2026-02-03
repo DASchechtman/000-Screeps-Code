@@ -5,10 +5,10 @@ export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
         .map(id => Game.getObjectById(id))
         .filter((s) => {
             const HAS_ENOUGH_ENERGY = (
-                (s as StructureContainer).store.getUsedCapacity(RESOURCE_ENERGY)
-                > creep.store.getCapacity()
+                s != null &&
+                s.store.getUsedCapacity(RESOURCE_ENERGY) > 0
             )
-            return s != null && HAS_ENOUGH_ENERGY
+            return HAS_ENOUGH_ENERGY
         })
         .sort((a, b) => {
             const CONTAINER_1 = a as StructureContainer
@@ -38,12 +38,21 @@ export function FlipStateBasedOnEnergyInCreep(creep: Creep, state: boolean) {
     return state
 }
 
-export function GetEnergy(creep: Creep, source: Source, container: StructureContainer | null) {
+export function GetEnergy(creep: Creep, source1: Source, source2: Source | undefined | null, container: StructureContainer | null) {
     if (container && creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
         creep.moveTo(container, { maxRooms: 1 })
     }
-    else if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, { maxRooms: 1 })
+    else {
+        let ret = creep.harvest(source1)
+        if (ret === ERR_NOT_ENOUGH_ENERGY && source2) {
+            ret = creep.harvest(source2)
+            if (ret === ERR_NOT_IN_RANGE) {
+                creep.moveTo(source2, { maxRooms: 1 })
+            }
+        }
+        else if (ret === ERR_NOT_IN_RANGE) {
+            creep.moveTo(source1, { maxRooms: 1 })
+        }
     }
 }
 
@@ -115,13 +124,13 @@ export function GetDamagedStruct(): Structure | null {
 
             let health_limit = 0
             if (s.structureType === STRUCTURE_RAMPART) {
-                health_limit = .2
+                health_limit = .35
             }
-            else if (s.structureType === STRUCTURE_CONTAINER) {
-                health_limit = .15
+            else if (s.structureType === STRUCTURE_ROAD) {
+                health_limit = .25
             }
             else {
-                health_limit = .05
+                health_limit = .2
             }
 
             return s.hits / s.hitsMax < health_limit

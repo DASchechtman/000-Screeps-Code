@@ -1,5 +1,5 @@
 import { ScreepFile } from "FileSystem/File";
-import { EntityBehavior } from "./BehaviorTypes";
+import { EntityBehavior, EntityState, EntityStateManager } from "./BehaviorTypes";
 import { RoomData } from "Rooms/RoomData";
 import { JsonObj } from "Consts";
 import { SafeReadFromFile, SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
@@ -9,10 +9,96 @@ import { GetDamagedStruct, SortStructs } from "./Utils/CreepUtils";
 const REPAIR_STATE = 0
 const ATTACK_STATE = 1
 
+class RepairState implements EntityState {
+    private tower_id: Id<StructureTower>
+    private tower: StructureTower | null
+    constructor(tower_id: Id<StructureTower>) {
+        this.tower_id = tower_id
+        this.tower = null
+    }
+
+    private GetTower(): StructureTower | null {
+        this.tower = Game.getObjectById(this.tower_id)
+        return this.tower
+    }
+
+    RunState() {
+        if (this.GetTower() == null) { return false }
+        const TOWER = this.tower!
+
+        const DAMAGED_STRUCT = GetDamagedStruct()
+        if (DAMAGED_STRUCT) {
+            TOWER.repair(DAMAGED_STRUCT)
+        }
+
+        return true
+    }
+
+    GetNextState() {
+        const TOWER = this.tower!
+
+        const CUR_ENERGY = TOWER.store.getUsedCapacity(RESOURCE_ENERGY)
+        if (CUR_ENERGY < 500) {
+            return new LowPowerRepairState(this.tower_id)
+        }
+
+        return this
+    }
+}
+
+class LowPowerRepairState implements EntityState {
+    private tower_id: Id<StructureTower>
+    private tower: StructureTower | null
+    constructor(tower: Id<StructureTower>) {
+        this.tower_id = tower
+        this.tower = null
+    }
+
+    private GetTower(): StructureTower | null {
+        this.tower = Game.getObjectById(this.tower_id)
+        return this.tower
+    }
+
+    RunState() {
+        if (this.GetTower() == null) { return false }
+        const TOWER = this.tower!
+
+        const DAMAGED_STRUCT = GetDamagedStruct()
+        const TIMER = new Timer(this.tower_id)
+        TIMER.StartTimer(3)
+
+        if (DAMAGED_STRUCT && TIMER.IsTimerDone()) {
+            TOWER.repair(DAMAGED_STRUCT)
+        }
+
+        return true
+    }
+
+    GetNextState() {
+        const TOWER = this.tower!
+
+        const CUR_ENERGY = TOWER.store.getUsedCapacity(RESOURCE_ENERGY)
+        if (CUR_ENERGY >= 500) {
+            return new RepairState(this.tower_id)
+        }
+
+        return this
+    }
+}
+
 export class TowerBehavior implements EntityBehavior {
     private static tower_ids: string[] = []
     private static creep_to_tower: Map<string, string> = new Map()
     private static index: number = 0
+    private static state_manager: EntityStateManager | null = null
+
+    private static GetStateManager(tower: Id<StructureTower>): EntityStateManager {
+        if (this.state_manager === null) {
+            this.state_manager = new EntityStateManager(new RepairState(tower))
+        }
+
+        return this.state_manager
+    }
 
     public static GetTowerId(id: string): string | undefined {
         if (this.creep_to_tower.has(id)) {
@@ -44,6 +130,7 @@ export class TowerBehavior implements EntityBehavior {
     private state_key: string
     private damaged_struct_key: string
     private id: string
+    private state_manager: EntityStateManager | null | void | undefined
 
     constructor() {
         this.tower = null
@@ -53,13 +140,10 @@ export class TowerBehavior implements EntityBehavior {
         this.data = {}
         this.state_key = "state"
         this.damaged_struct_key = "damaged struct"
+        this.state_manager = null
     }
 
-    Load(file: ScreepFile, id: string) {
-        this.tower = Game.getObjectById(id as Id<StructureTower>)
-        this.enemies = RoomData.GetRoomData().GetAllEnemyCreepIds()
-        this.id = id
-
+    private LegacyLoad(id: Id<StructureTower>, file: ScreepFile) {
         if (!TowerBehavior.tower_ids.includes(id)) {
             TowerBehavior.tower_ids[TowerBehavior.index] = id
 
@@ -85,11 +169,9 @@ export class TowerBehavior implements EntityBehavior {
                 this.data[this.damaged_struct_key] = 'N/A'
             }
         }
-
-        return this.tower !== null
     }
 
-    Run() {
+    private LegacyRun() {
         if (this.tower == null) { return }
 
         switch (this.data[this.state_key]) {
@@ -104,7 +186,23 @@ export class TowerBehavior implements EntityBehavior {
                 break
             }
         }
+    }
 
+    Load(file: ScreepFile, id: string) {
+        this.tower = Game.getObjectById(id as Id<StructureTower>)
+        this.enemies = RoomData.GetRoomData().GetAllEnemyCreepIds()
+        this.id = id
+        if (this.tower == null) { return false }
+
+        this.state_manager = TowerBehavior.GetStateManager(id as Id<StructureTower>)
+
+        return this.tower !== null
+    }
+
+    Run() {
+        if (this.state_manager?.RunState()) {
+            this.state_manager?.GetNextState()
+        }
     }
 
     Cleanup(file: ScreepFile) {

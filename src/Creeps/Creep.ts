@@ -1,6 +1,6 @@
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { FileSystem } from "FileSystem/FileSystem"
-import { ATTACK_TYPE, BUILDER_TYPE, EntityBehavior, HARVESTER_TYPE, REPAIR_TYPE, STRUCTURE_SUPPLIER_TYPE, TOWER_TYPE, UPGRADER_TYPE } from "./CreepBehaviors.ts/BehaviorTypes"
+import { EntityBehavior, EntityTypes } from "./CreepBehaviors.ts/BehaviorTypes"
 import { HarvesterBehavior } from "./CreepBehaviors.ts/HarvesterBehavior"
 import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
 import { BuildBehavior } from "./CreepBehaviors.ts/BuildBehavior"
@@ -19,27 +19,22 @@ export class EntityObj {
     private file_path: string[]
     private file: ScreepFile | null
     private behavior: EntityBehavior | null
-
-    private harvest_behavior: HarvesterBehavior
-    private upgrade_behavior: UpgraderBehavior
-    private build_behavior: BuildBehavior
-    private repair_behavior: RepairBehavior
-    private gaurd_behavior: AttackBehavior
-    private tower_behavior: TowerBehavior
-    private tower_supplier_behavior: StructureSupplierBehavior
+    private behavior_register: Array<EntityBehavior>
 
     constructor() {
-        this.harvest_behavior = new HarvesterBehavior()
-        this.upgrade_behavior = new UpgraderBehavior()
-        this.build_behavior = new BuildBehavior()
-        this.repair_behavior = new RepairBehavior()
-        this.gaurd_behavior = new AttackBehavior()
-        this.tower_behavior = new TowerBehavior()
-        this.tower_supplier_behavior = new StructureSupplierBehavior()
+        this.behavior_register = new Array<EntityBehavior>()
         this.behavior = null
         this.file = null
         this.file_path = []
         this.id = ""
+
+        this.behavior_register[EntityTypes.HARVESTER_TYPE] = new HarvesterBehavior()
+        this.behavior_register[EntityTypes.UPGRADER_TYPE] = new UpgraderBehavior()
+        this.behavior_register[EntityTypes.BUILDER_TYPE] = new BuildBehavior()
+        this.behavior_register[EntityTypes.REPAIR_TYPE] = new RepairBehavior()
+        this.behavior_register[EntityTypes.ATTACK_TYPE] = new AttackBehavior()
+        this.behavior_register[EntityTypes.TOWER_TYPE] = new TowerBehavior()
+        this.behavior_register[EntityTypes.STRUCTURE_SUPPLIER_TYPE] = new StructureSupplierBehavior()
     }
 
     public OverrideCreep(id: string) {
@@ -63,27 +58,8 @@ export class EntityObj {
             this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, creep_orig_behavior)
         }
 
-        if (creep_behavior === HARVESTER_TYPE) {
-            this.behavior = this.harvest_behavior
-        }
-        else if (creep_behavior === UPGRADER_TYPE) {
-            this.behavior = this.upgrade_behavior
-        }
-        else if (creep_behavior === BUILDER_TYPE) {
-            this.behavior = this.build_behavior
-        }
-        else if (creep_behavior === REPAIR_TYPE) {
-            this.behavior = this.repair_behavior
-        }
-        else if (creep_behavior === ATTACK_TYPE) {
-            this.behavior = this.gaurd_behavior
-        }
-        else if (creep_behavior === TOWER_TYPE) {
-            this.behavior = this.tower_behavior
-        }
-        else if (creep_behavior === STRUCTURE_SUPPLIER_TYPE) {
-            this.behavior = this.tower_supplier_behavior
-        }
+        const NEXT_BEHAVIOR = this.behavior_register.at(creep_behavior)
+        this.behavior = NEXT_BEHAVIOR ? NEXT_BEHAVIOR : null
     }
 
     public FullyOverrideCreep(id: string, behavior_type: number) {

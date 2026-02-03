@@ -75,7 +75,7 @@ export class RepairBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.source, container)
+            GetEnergy(this.creep, this.source, null, container)
         }
         else {
             let building = this.target
