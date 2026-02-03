@@ -62,7 +62,7 @@ export class UpgraderBehavior implements EntityBehavior {
 
         if (!this.data[this.state_key]) {
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.sources[1], container)
+            GetEnergy(this.creep, this.sources[1], this.sources[0], container)
         }
         else {
             if (this.creep.upgradeController(this.controller) === ERR_NOT_IN_RANGE) {

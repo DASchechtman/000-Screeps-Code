@@ -86,11 +86,11 @@ export class StructureSupplierBehavior implements EntityBehavior {
     Run() {
         if (this.creep == null) { return }
         this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
-       
+
         if (!this.data[this.state_key]) {
             if (this.source == null) { return }
             let container = Game.getObjectById(this.data[this.energy_source_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.source, container)
+            GetEnergy(this.creep, this.source, null, container)
         }
         else {
             const TEST = RoomData.GetRoomData().GetOwnedStructureIds()

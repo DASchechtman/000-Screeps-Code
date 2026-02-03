@@ -63,26 +63,38 @@ export class EntityObj {
             this.file?.WriteToFile(ORIG_BEHAVIOR_KEY, creep_orig_behavior)
         }
 
-        if (creep_behavior === HARVESTER_TYPE) {
-            this.behavior = this.harvest_behavior
-        }
-        else if (creep_behavior === UPGRADER_TYPE) {
-            this.behavior = this.upgrade_behavior
-        }
-        else if (creep_behavior === BUILDER_TYPE) {
-            this.behavior = this.build_behavior
-        }
-        else if (creep_behavior === REPAIR_TYPE) {
-            this.behavior = this.repair_behavior
-        }
-        else if (creep_behavior === ATTACK_TYPE) {
-            this.behavior = this.gaurd_behavior
-        }
-        else if (creep_behavior === TOWER_TYPE) {
-            this.behavior = this.tower_behavior
-        }
-        else if (creep_behavior === STRUCTURE_SUPPLIER_TYPE) {
-            this.behavior = this.tower_supplier_behavior
+        switch(creep_behavior) {
+            case HARVESTER_TYPE: {
+                this.behavior = this.harvest_behavior
+                break
+            }
+            case UPGRADER_TYPE: {
+                this.behavior = this.upgrade_behavior
+                break
+            }
+            case BUILDER_TYPE: {
+                this.behavior = this.build_behavior
+                break
+            }
+            case REPAIR_TYPE: {
+                this.behavior = this.repair_behavior
+                break
+            }
+            case ATTACK_TYPE: {
+                this.behavior = this.gaurd_behavior
+                break
+            }
+            case TOWER_TYPE: {
+                this.behavior = this.tower_behavior
+                break
+            }
+            case STRUCTURE_SUPPLIER_TYPE: {
+                this.behavior = this.tower_supplier_behavior
+                break
+            }
+            default: {
+                this.behavior = null
+            }
         }
     }
 

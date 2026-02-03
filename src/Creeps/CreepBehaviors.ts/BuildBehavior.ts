@@ -77,7 +77,7 @@ export class BuildBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.sources == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
-            GetEnergy(this.creep, this.sources, container)
+            GetEnergy(this.creep, this.sources, null, container)
         }
         else {
             let construct = this.site

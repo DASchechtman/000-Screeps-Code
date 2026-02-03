@@ -323,39 +323,48 @@ export class CreepObjectManager {
         const NO_HARVESTERS_ACTIVE = this.harvester_ids.filter(x => ![this.filler_data, this.queued_data].includes(x)).length === 0
         const NO_SUPPLIERS_ACTIVE = this.tower_supplier_ids.filter(x => ![this.filler_data, this.queued_data].includes(x)).length === 0
         const CONTAINERS_EXIST = CONTAINERS.length > 0
+        const ENEMIES_EXIST = RoomData.GetRoomData().GetAllEnemyCreepIds().length > 0
 
-        const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: (val: string, i: number) => void) => {
+        const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: () => void) => {
             const END = Math.min(max, 6)
+            if (max < 1) {
+                fn()
+                arr[0] = this.queued_data
+                return
+            }
+
             for (let i = 0; i < END; i++) {
                 while (i >= arr.length) {
                     arr.push(this.filler_data)
                 }
                 const SPOT = arr[i]
-                if (SPOT === this.filler_data || max === -1) {
-                    fn(SPOT, i)
+                if (SPOT === this.filler_data) {
+                    fn()
                     arr[i] = this.queued_data
-                    if (max === -1) { break }
                 }
             }
         }
 
+        const GetEmergencyCreepMax = (behavior: EntityBehaviorType, limit: number, emergency_max: number) => {
+            const NEXT_IN_QUEUE = this.creep_queue.at(0)
+            if (NEXT_IN_QUEUE == null) { return emergency_max }
+            if (NEXT_IN_QUEUE.creep_type !== behavior && NEXT_IN_QUEUE.limit !== limit) { return -1 }
+            return emergency_max
+        }
+
         if (NO_HARVESTERS_ACTIVE) {
-            let max = 1
-            let next = this.creep_queue[0]
-            if (next.creep_type !== HARVESTER_TYPE && next.limit !== 300) {
-                max = -1
-            }
-            FillArrayWithPlaceHolders(this.harvester_ids, max, (val, i) => {
+            let max = GetEmergencyCreepMax(HARVESTER_TYPE, 300, 1)
+            console.log('queuing emergency harvesters', max)
+            FillArrayWithPlaceHolders(this.harvester_ids, max, () => {
                 this.creep_queue.unshift({ body: [MOVE, WORK, CARRY], limit: 300, creep_type: HARVESTER_TYPE })
+                console.log('adding to queue')
             })
         }
 
+
         if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
-            let max = 1
-            let next = this.creep_queue[0]
-            if (next.creep_type !== STRUCTURE_SUPPLIER_TYPE && next.limit !== 300) {
-                max = -1
-            }
+            let max = GetEmergencyCreepMax(STRUCTURE_SUPPLIER_TYPE, 300, 1)
+            console.log('queuing emergency creep')
             FillArrayWithPlaceHolders(this.tower_supplier_ids, max, () => {
                 this.creep_queue.unshift({ body: [MOVE, MOVE, CARRY, CARRY, CARRY], limit: 300, creep_type: STRUCTURE_SUPPLIER_TYPE })
             })
@@ -377,7 +386,8 @@ export class CreepObjectManager {
             this.creep_queue.push({ body: [MOVE, WORK, CARRY, MOVE, WORK], limit: ENERGY_LIMIT, creep_type: HARVESTER_TYPE })
         })
 
-        FillArrayWithPlaceHolders(this.upgrader_ids, 1, () => {
+        const NUM_OF_UPGRADERS = ENEMIES_EXIST ? 1 : 3
+        FillArrayWithPlaceHolders(this.upgrader_ids, NUM_OF_UPGRADERS, () => {
             this.creep_queue.push({ body: [WORK, CARRY, MOVE], limit: ENERGY_LIMIT, creep_type: UPGRADER_TYPE })
         })
 

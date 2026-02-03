@@ -16,3 +16,24 @@ export interface EntityBehavior {
     Cleanup: (file: ScreepFile) => void
     Unload: (file: ScreepFile) => void
 }
+
+export interface EntityState {
+    GetNextState: () => EntityState
+    RunState: () => boolean
+}
+
+export class EntityStateManager {
+    private cur_state: EntityState
+
+    constructor(initial_state: EntityState) {
+        this.cur_state = initial_state
+    }
+
+    RunState(): boolean {
+        return this.cur_state.RunState()
+    }
+
+    GetNextState() {
+        this.cur_state = this.cur_state.GetNextState()
+    }
+}
