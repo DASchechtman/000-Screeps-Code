@@ -131,6 +131,7 @@ export class TowerBehavior implements EntityBehavior {
     private damaged_struct_key: string
     private id: string
     private state_manager: EntityStateManager | null | void | undefined
+    private file: ScreepFile | null
 
     constructor() {
         this.tower = null
@@ -141,57 +142,14 @@ export class TowerBehavior implements EntityBehavior {
         this.state_key = "state"
         this.damaged_struct_key = "damaged struct"
         this.state_manager = null
-    }
-
-    private LegacyLoad(id: Id<StructureTower>, file: ScreepFile) {
-        if (!TowerBehavior.tower_ids.includes(id)) {
-            TowerBehavior.tower_ids[TowerBehavior.index] = id
-
-        }
-
-        if (this.enemies.length === 0) {
-            this.data[this.state_key] = REPAIR_STATE
-        }
-        else {
-            this.data[this.state_key] = ATTACK_STATE
-        }
-
-        this.data[this.damaged_struct_key] = SafeReadFromFileWithOverwrite(file, this.damaged_struct_key, 'null')
-        const TIMER = new Timer(id)
-        TIMER.StartTimer(5)
-
-        if (this.data[this.damaged_struct_key] === 'null' || TIMER.IsTimerDone()) {
-            const DAMAGED_STRUCT = GetDamagedStruct()
-            if (DAMAGED_STRUCT) {
-                this.data[this.damaged_struct_key] = DAMAGED_STRUCT.id
-            }
-            else {
-                this.data[this.damaged_struct_key] = 'N/A'
-            }
-        }
-    }
-
-    private LegacyRun() {
-        if (this.tower == null) { return }
-
-        switch (this.data[this.state_key]) {
-            case REPAIR_STATE: {
-                const DAMAGED_STRUCT = Game.getObjectById(this.data[this.damaged_struct_key] as Id<Structure>)
-                if (DAMAGED_STRUCT == null) { return }
-                this.tower.repair(DAMAGED_STRUCT)
-                break
-            }
-
-            case ATTACK_STATE: {
-                break
-            }
-        }
+        this.file = null
     }
 
     Load(file: ScreepFile, id: string) {
         this.tower = Game.getObjectById(id as Id<StructureTower>)
         this.enemies = RoomData.GetRoomData().GetAllEnemyCreepIds()
         this.id = id
+        this.file = file
         if (this.tower == null) { return false }
 
         this.state_manager = TowerBehavior.GetStateManager(id as Id<StructureTower>)
@@ -200,7 +158,7 @@ export class TowerBehavior implements EntityBehavior {
     }
 
     Run() {
-        if (this.state_manager?.RunState()) {
+        if (this.state_manager?.RunState(this.file!)) {
             this.state_manager?.GetNextState()
         }
     }

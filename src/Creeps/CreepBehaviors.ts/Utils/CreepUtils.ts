@@ -15,7 +15,7 @@ export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
             const CONTAINER_2 = b as StructureContainer
 
             return CONTAINER_1.store.getUsedCapacity(RESOURCE_ENERGY) - CONTAINER_2.store.getUsedCapacity(RESOURCE_ENERGY)
-        }) as StructureContainer[]
+        })
 
     if (CONTAINERS.length > 0) {
         return CONTAINERS.at(-1)!.id
@@ -116,7 +116,8 @@ export function GetDamagedStruct(): Structure | null {
 
     const ROOM_STRUCTURES = RoomData.GetRoomData().GetRoomStructures([
         STRUCTURE_WALL,
-        STRUCTURE_CONTAINER
+        STRUCTURE_CONTAINER,
+        STRUCTURE_ROAD
     ])
         .map(id => Game.getObjectById(id as Id<Structure>))
         .filter(s => s != null && s.hits / s.hitsMax < .75)
@@ -131,7 +132,7 @@ export function GetDamagedStruct(): Structure | null {
 
             let health_limit = 0
             if (s.structureType === STRUCTURE_RAMPART) {
-                health_limit = .35
+                health_limit = .07
             }
             else if (s.structureType === STRUCTURE_ROAD) {
                 health_limit = .25

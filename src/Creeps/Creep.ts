@@ -13,7 +13,6 @@ import { TowerBehavior } from "./CreepBehaviors.ts/TowerBehavior"
 import { StructureSupplierBehavior } from "./CreepBehaviors.ts/StructureSupplierBehavior"
 
 
-
 export class EntityObj {
     private id: string
     private file_path: string[]

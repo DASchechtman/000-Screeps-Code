@@ -19,7 +19,7 @@ export interface EntityBehavior {
 
 export interface EntityState {
     GetNextState: () => EntityState
-    RunState: () => boolean
+    RunState: (file: ScreepFile) => boolean
 }
 
 export class EntityStateManager {
@@ -29,8 +29,8 @@ export class EntityStateManager {
         this.cur_state = initial_state
     }
 
-    RunState(): boolean {
-        return this.cur_state.RunState()
+    RunState(file: ScreepFile): boolean {
+        return this.cur_state.RunState(file)
     }
 
     GetNextState() {
