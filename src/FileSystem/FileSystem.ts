@@ -3,7 +3,7 @@ import { ScreepFile, FILE_ENDING, FOLDER_ENDING, ScreepMetaFile } from "./File"
 import { FileObjectManager } from "./FileObjManager"
 
 function DefaultFileSave(obj: any, key: string) {
-    return (data_key: string, val: any) => {
+    return (data_key: string, val: Json) => {
         if (obj[key]['data'] === undefined) { obj[key]['data'] = {} }
         obj[key]['data'][data_key] = val
     }

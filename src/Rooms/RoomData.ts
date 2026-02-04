@@ -1,4 +1,5 @@
 import { FindOwnedStructureType, FindStructureType, OwnedStructuresConstant } from "Consts"
+import { Position } from "source-map"
 import { DebugLogger } from "utils/DebugLogger"
 import { Timer } from "utils/Timer"
 
@@ -19,6 +20,7 @@ export class RoomData {
     private creep_ids: Id<Creep>[] = []
     private enemy_creep_ids: Id<Creep>[] = []
     private construction_site_ids: Id<ConstructionSite>[] = []
+    private container_ids: Id<StructureExtension>[] = []
     private timer: Timer | null = null
     private constructor() { }
 

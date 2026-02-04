@@ -39,6 +39,8 @@ export class StructureSupplierBehavior implements EntityBehavior {
     private energy_source_key: string
     private data: JsonObj
     private id: string
+    private extensions_ids_key: string
+    private num_of_extensions_key: string
 
     constructor() {
         this.creep = null
@@ -48,65 +50,85 @@ export class StructureSupplierBehavior implements EntityBehavior {
         this.energy_source_key = "from container"
         this.data = {}
         this.id = ""
+        this.extensions_ids_key = 'ordered extension ids'
+        this.num_of_extensions_key = "num of extension"
     }
 
     Load(file: ScreepFile, id: string) {
         this.creep = Game.getObjectById(id as Id<Creep>)
         this.id = id
-        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        this.data[this.tower_id_key] = SafeReadFromFileWithOverwrite(file, this.tower_id_key, 'null')
-        this.data[this.energy_source_key] = SafeReadFromFileWithOverwrite(file, this.energy_source_key, 'null')
+        let harvest_state: boolean = SafeReadFromFileWithOverwrite(file, this.state_key, false)
+        let tower_id: string = SafeReadFromFileWithOverwrite(file, this.tower_id_key, 'null')
+        let energy_source: string = SafeReadFromFileWithOverwrite(file, this.energy_source_key, 'null')
+        let extension_id_list = SafeReadFromFileWithOverwrite(file, this.extensions_ids_key, new Array<Id<StructureExtension>>())
+        let num_of_extensions: number = SafeReadFromFileWithOverwrite(file, this.num_of_extensions_key, 0)
         const HAS_CREEP = this.creep != null
+
+        if (extension_id_list.length === 0 || num_of_extensions !== extension_id_list.length) {
+            const EXTENSION_IDS = RoomData.GetRoomData().GetRoomStructures(STRUCTURE_EXTENSION)
+                .map(id => Game.getObjectById(id))
+                .sort((a, b) => {
+                    if (a == null || b == null) { return 0}
+                    const Distance = (pos: RoomPosition) => {
+                        return Math.sqrt(Math.pow(pos.x, 2) + Math.pow(pos.y, 2))
+                    }
+
+                    return Distance(b.pos) - Distance(a.pos)
+                })
+            extension_id_list = EXTENSION_IDS.map(s => s?.id).filter(s => s != null) as Id<StructureExtension>[]
+            num_of_extensions = extension_id_list.length
+        }
 
         if (this.creep && !this.source) {
             this.source = this.creep.room.find(FIND_SOURCES)[1]
         }
 
-        if (this.data[this.tower_id_key] === 'null') {
+        if (tower_id === 'null') {
             const TOWER_ID = TowerBehavior.GetTowerId(id)
             if (TOWER_ID != null) {
-                 this.data[this.tower_id_key] = TOWER_ID
+                 tower_id = TOWER_ID
             }
         }
 
         const TIMER = new Timer(id)
         TIMER.StartTimer(15)
 
-        if (this.data[this.energy_source_key] === 'null' || TIMER.IsTimerDone()) {
+        if (energy_source === 'null' || TIMER.IsTimerDone()) {
             if (!HAS_CREEP) { return false }
-            this.data[this.energy_source_key] = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
-            if (this.data[this.energy_source_key] === 'null') {
-                this.data[this.energy_source_key] = 'N/A'
+            energy_source = GetContainerIdIfThereIsEnoughStoredEnergy(this.creep!)
+            if (energy_source === 'null') {
+                energy_source = 'N/A'
             }
         }
+
+        this.data[this.state_key] = harvest_state
+        this.data[this.tower_id_key] = tower_id
+        this.data[this.energy_source_key] = energy_source
+        this.data[this.extensions_ids_key] = extension_id_list
+        this.data[this.num_of_extensions_key] = num_of_extensions
 
         return HAS_CREEP
     }
 
     Run() {
         if (this.creep == null) { return }
-        this.data[this.state_key] = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
+        let state = FlipStateBasedOnEnergyInCreep(this.creep, this.data[this.state_key] as boolean)
+        let container_id = this.data[this.energy_source_key]
 
-        if (!this.data[this.state_key]) {
+        if (!state) {
             if (this.source == null) { return }
-            let container = Game.getObjectById(this.data[this.energy_source_key] as Id<StructureContainer>)
+            let container = Game.getObjectById(container_id as Id<StructureContainer>)
             GetEnergy(this.creep, this.source, null, container)
         }
         else {
             const TEST = RoomData.GetRoomData().GetOwnedStructureIds()
-            const STRUCTS = RoomData.GetRoomData().GetOwnedStructureIds([
-                STRUCTURE_SPAWN,
-                STRUCTURE_EXTENSION,
-                STRUCTURE_TOWER
-            ])
-                .map(id => Game.getObjectById(id))
-                .filter((s) => {
-                    if (s) {
-                        return s.store.getUsedCapacity(RESOURCE_ENERGY) < s.store.getCapacity(RESOURCE_ENERGY)
-                    }
-                    return false
-                })
-                .sort(SortStructs)
+            const STRUCTS = [
+                ...RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_SPAWN).map(id => Game.getObjectById(id)),
+                ...(this.data[this.extensions_ids_key] as Array<Id<StructureExtension>>).map(id => Game.getObjectById(id)),
+                ...RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_TOWER).map(id => Game.getObjectById(id))
+            ]
+            .filter(s => s != null && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+
             const STRUCT = STRUCTS.at(0)
             if (STRUCT == null) { return }
 
@@ -114,13 +136,17 @@ export class StructureSupplierBehavior implements EntityBehavior {
                 this.creep.moveTo(STRUCT)
             }
         }
+
+        this.data[this.state_key] = state
     }
 
     Cleanup(file: ScreepFile) {
         file.WriteAllToFile([
             {key: this.state_key, value: this.data[this.state_key]},
             {key: this.tower_id_key, value: this.data[this.tower_id_key]},
-            {key: this.energy_source_key, value: this.data[this.energy_source_key]}
+            {key: this.energy_source_key, value: this.data[this.energy_source_key]},
+            {key: this.extensions_ids_key, value: this.data[this.extensions_ids_key]},
+            {key: this.num_of_extensions_key, value: this.data[this.num_of_extensions_key]}
         ])
     }
 

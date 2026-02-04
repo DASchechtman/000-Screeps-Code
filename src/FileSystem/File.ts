@@ -6,7 +6,7 @@ export const FOLDER_ENDING = ':sfldr'
 export interface ScreepFile {
     WriteToFile: (key: BaseJsonValue, value: Json) => void
     WriteAllToFile: (data: { key: BaseJsonValue, value: Json }[]) => void
-    ReadFromFile: (key: BaseJsonValue) => Json
+    ReadFromFile: (key: BaseJsonValue) => Json | undefined
     MarkForDeletion: () => void
 }
 
@@ -15,8 +15,8 @@ export class ScreepMetaFile {
     private file_name: string = ""
     private path: string[] = []
     private can_delete: boolean = false
-    private SaveFileBehavior: ((key: string, val: any) => void) = () => { }
-    private ReadFileBehavior: ((key: string) => any | undefined) = () => undefined
+    private SaveFileBehavior: ((key: string, val: Json) => void) = () => { }
+    private ReadFileBehavior: ((key: string) => Json | undefined) = () => undefined
 
     private hasProp(obj: unknown, key: string): obj is Record<string, unknown> {
         return typeof obj === 'object' && obj !== null && key in obj
@@ -90,14 +90,14 @@ export class ScreepMetaFile {
         }
     }
 
-    public ReadFromFile(key: BaseJsonValue): Json | null {
+    public ReadFromFile(key: BaseJsonValue): Json | undefined {
         key = String(key)
 
         const VAL = this.ReadFileBehavior(key)
         if (VAL === undefined) {
-            return null
+            return undefined
         }
 
-        return VAL as Json
+        return VAL
     }
 }

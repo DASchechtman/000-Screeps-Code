@@ -1,3 +1,4 @@
+import { Json } from "Consts";
 import { CreepObjectManager } from "Creeps/CreepObjManager";
 import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
@@ -18,7 +19,7 @@ declare global {
   interface Memory {
     uuid: number;
     log: any;
-    [key: string]: any
+    [key: string]: Json | undefined;
   }
 
   interface CreepMemory {
