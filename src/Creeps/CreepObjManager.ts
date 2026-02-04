@@ -348,7 +348,7 @@ export class CreepObjectManager {
         const GetEmergencyCreepMax = (behavior: EntityTypes, limit: number, emergency_max: number) => {
             const NEXT_IN_QUEUE = this.creep_queue.at(0)
             if (NEXT_IN_QUEUE == null) { return emergency_max }
-            if (NEXT_IN_QUEUE.creep_type !== behavior && NEXT_IN_QUEUE.limit !== limit) { return -1 }
+            if (NEXT_IN_QUEUE.creep_type !== behavior || NEXT_IN_QUEUE.limit !== limit) { return -1 }
             return emergency_max
         }
 

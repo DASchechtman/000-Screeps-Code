@@ -95,7 +95,6 @@ export class RoomData {
                     STRUCTS.push(...NEW_STRUCTS as Id<S>[])
                 }
                 else {
-                    console.log(`getting cached structs: ${struct_const}`)
                     const NEW_STRUCTS = this.struct_map.get(struct_const)!
                     STRUCTS.push(...NEW_STRUCTS as Id<S>[])
                 }
