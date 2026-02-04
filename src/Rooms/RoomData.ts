@@ -59,13 +59,12 @@ export class RoomData {
         return this.creep_ids
     }
 
-    public GetOwnedStructureIds<K extends OwnedStructuresConstant, S extends FindOwnedStructureType[K]>(struct_type?: K | K[]): Id<S>[] {
+    public GetOwnedStructureIds<K extends OwnedStructuresConstant, S extends FindOwnedStructureType[K]>(...struct_type: K[]): Id<S>[] {
         let x = Array.from(Object.values(Game.structures))
             .filter(s => {
+                if (struct_type.length === 0) { return true }
                 if (s.room.name !== this.room_name) { return false }
-                if (s == null) { return true }
-                if (Array.isArray(struct_type)) { return struct_type?.some(x => x === s.structureType) }
-                return s.structureType === struct_type
+                return struct_type?.some(x => x === s.structureType)
             }) as S[]
 
 

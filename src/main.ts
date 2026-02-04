@@ -96,8 +96,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
     CREEP_MANAGER.LoadEntityData(room_name)
 
     const MY_CREEPS = ROOM_DATA.GetMyCreepIds()
-    const SPAWN = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_SPAWN])
-    const STRUCTS = ROOM_DATA.GetOwnedStructureIds([STRUCTURE_TOWER])
+    const SPAWN = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_SPAWN)
+    const STRUCTS = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_TOWER)
     CREEP_MANAGER.QueueNextSpawnBody()
     const [BODY, NAME] = CREEP_MANAGER.GetSpawnBody()
 

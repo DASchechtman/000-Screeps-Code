@@ -222,8 +222,8 @@ export class CreepObjectManager {
     }
 
     public GetSpawnBody(): [BodyPartConstant[], string] {
-        const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_EXTENSION])
-        const SPAWNS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN])
+        const EXTENSIONS = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_EXTENSION)
+        const SPAWNS = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_SPAWN)
         const BODY_TO_ENERGY_MAP = new Map<BodyPartConstant, number>([
             [MOVE, 50],
             [WORK, 100],
@@ -315,9 +315,9 @@ export class CreepObjectManager {
     }
 
     public QueueNextSpawnBody() {
-        const MY_TOWERS = RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_TOWER])
+        const MY_TOWERS = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_TOWER)
         const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites()
-        const CONTAINERS = RoomData.GetRoomData().GetRoomStructures([STRUCTURE_CONTAINER])
+        const CONTAINERS = RoomData.GetRoomData().GetRoomStructures(STRUCTURE_CONTAINER)
         const ENERGY_LIMIT = 1200
         const HAS_THINGS_TO_BUILD = CONSTRUCTION_SITE.length > 0
         const NO_HARVESTERS_ACTIVE = this.harvester_ids.filter(x => ![this.filler_data, this.queued_data].includes(x)).length === 0

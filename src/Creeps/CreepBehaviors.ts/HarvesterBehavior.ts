@@ -125,7 +125,7 @@ class StructureSupplyState extends CreepState implements EntityState {
             STRUCTURE_SPAWN,
             STRUCTURE_EXTENSION
         ]
-        const SUPPLY_STRUCT_IDS = RoomData.GetRoomData().GetOwnedStructureIds([...STRUCT_TYPES])
+        const SUPPLY_STRUCT_IDS = RoomData.GetRoomData().GetOwnedStructureIds(...STRUCT_TYPES)
             .map(id => Game.getObjectById(id))
             .filter(s => s !== null)
 
@@ -168,7 +168,7 @@ class StructureSupplyState extends CreepState implements EntityState {
 function GetEnergyStorageTargets(id: string) {
     let CONTAINER_ID = BuildingAllocator.GetStructureId(STRUCTURE_CONTAINER, id)
     let x: Storage[] = [
-        ...RoomData.GetRoomData().GetOwnedStructureIds([STRUCTURE_SPAWN, STRUCTURE_EXTENSION]),
+        ...RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_SPAWN, STRUCTURE_EXTENSION),
     ]
 
     if (CONTAINER_ID != null) {

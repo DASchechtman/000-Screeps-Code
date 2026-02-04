@@ -60,8 +60,8 @@ export class StructureSupplierBehavior implements EntityBehavior {
         let harvest_state: boolean = SafeReadFromFileWithOverwrite(file, this.state_key, false)
         let tower_id: string = SafeReadFromFileWithOverwrite(file, this.tower_id_key, 'null')
         let energy_source: string = SafeReadFromFileWithOverwrite(file, this.energy_source_key, 'null')
-        let extension_id_list = SafeReadFromFileWithOverwrite(file, this.extensions_ids_key, new Array<Id<StructureExtension>>())
-        let num_of_extensions: number = SafeReadFromFileWithOverwrite(file, this.num_of_extensions_key, 0)
+        let extension_id_list: Array<Id<StructureExtension>> = SafeReadFromFileWithOverwrite(file, this.extensions_ids_key, [])
+        let num_of_extensions: number = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_EXTENSION).length
         const HAS_CREEP = this.creep != null
 
         if (extension_id_list.length === 0 || num_of_extensions !== extension_id_list.length) {
