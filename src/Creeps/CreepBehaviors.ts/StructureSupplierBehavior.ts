@@ -4,6 +4,7 @@ import { JsonObj } from "Consts";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { TowerBehavior } from "./TowerBehavior";
 import {
+  CreateConstructionSite,
   FlipStateBasedOnEnergyInCreep,
   GetContainerIdIfThereIsEnoughStoredEnergy,
   GetEnergy
@@ -311,6 +312,8 @@ export class StructureSupplierBehavior implements EntityBehavior {
       SORTED_EXTENSION_KEY,
       []
     );
+
+    if (this.creep) { CreateConstructionSite(this.creep) }
     this.file = file
     let num_of_extensions: number = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_EXTENSION).length;
     const HAS_CREEP = this.creep != null;

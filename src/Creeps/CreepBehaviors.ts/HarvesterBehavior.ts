@@ -2,7 +2,7 @@ import { JsonObj } from "Consts";
 import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { SafeReadFromFile, SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
+import { CreateConstructionSite, FlipStateBasedOnEnergyInCreep } from "./Utils/CreepUtils";
 import { EntityBehavior, EntityState, EntityStateManager } from "./BehaviorTypes";
 import { BuildingAllocator } from "utils/BuildingAllocator";
 
@@ -199,10 +199,12 @@ export class HarvesterBehavior implements EntityBehavior {
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
         this.file = file
 
+
         if (this.creep !== null) {
             if (!this.data[this.state_key]) {
                 this.sources = this.creep.room.find(FIND_SOURCES)
             }
+            CreateConstructionSite(this.creep)
         }
 
         return this.creep != null

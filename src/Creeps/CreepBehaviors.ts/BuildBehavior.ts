@@ -4,7 +4,7 @@ import { EntityBehavior, EntityTypes } from "./BehaviorTypes";
 import { BEHAVIOR_KEY, JsonObj } from "Consts";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 import { Timer } from "utils/Timer";
-import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
+import { CreateConstructionSite, FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils";
 
 export class BuildBehavior implements EntityBehavior {
     private creep: Creep | null
@@ -37,6 +37,7 @@ export class BuildBehavior implements EntityBehavior {
 
         if (this.creep) {
             this.sources = this.creep.pos.findClosestByPath(FIND_SOURCES)
+            CreateConstructionSite(this.creep)
         }
 
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
@@ -77,6 +78,14 @@ export class BuildBehavior implements EntityBehavior {
         if (!this.data[this.state_key]) {
             if (this.sources == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
+            let storage = Game.getObjectById(RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_STORAGE)[0])
+            if (storage) {
+                let ret = this.creep.withdraw(storage, RESOURCE_ENERGY)
+                if (ret === ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(storage)
+                }
+                return
+            }
             GetEnergy(this.creep, this.sources, null, container)
         }
         else {

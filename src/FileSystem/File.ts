@@ -52,7 +52,7 @@ export class ScreepMetaFile {
     }
 
     public ShouldDeleteFile() {
-        return this.tick_last_accessed === -1 || Game.time - this.tick_last_accessed >= 10
+        return this.tick_last_accessed === -1 || Game.time - this.tick_last_accessed >= 50
     }
 
     public UpdateLastAccessed() {
@@ -76,7 +76,7 @@ export class ScreepMetaFile {
     }
 
     public MarkForDeletion() {
-        this.SaveFileBehavior('can_delete', true)
+        this.SaveFileBehavior('can_delete', this.can_delete)
     }
 
     public WriteToFile(key: BaseJsonValue, value: Json) {

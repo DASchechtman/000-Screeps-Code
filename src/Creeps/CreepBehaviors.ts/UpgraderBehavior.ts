@@ -4,7 +4,7 @@ import { ScreepFile, ScreepMetaFile } from "FileSystem/File"
 import { RoomData } from "Rooms/RoomData"
 import { Timer } from "utils/Timer"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
-import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils"
+import { CreateConstructionSite, FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetEnergy } from "./Utils/CreepUtils"
 import { EntityBehavior } from "./BehaviorTypes"
 
 export class UpgraderBehavior implements EntityBehavior {
@@ -36,6 +36,7 @@ export class UpgraderBehavior implements EntityBehavior {
         if (this.creep != null) {
             this.sources = this.creep.room.find(FIND_SOURCES)
             this.controller = this.creep.room.controller
+            CreateConstructionSite(this.creep)
         }
 
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)

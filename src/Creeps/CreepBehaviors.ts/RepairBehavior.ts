@@ -3,7 +3,7 @@ import { ScreepFile, ScreepMetaFile } from "FileSystem/File";
 import { RoomData } from "Rooms/RoomData";
 import { Timer } from "utils/Timer";
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetDamagedStruct, GetEnergy, SortStructs } from "./Utils/CreepUtils";
+import { CreateConstructionSite, FlipStateBasedOnEnergyInCreep, GetContainerIdIfThereIsEnoughStoredEnergy, GetDamagedStruct, GetEnergy, SortStructs } from "./Utils/CreepUtils";
 import { EntityBehavior } from "./BehaviorTypes";
 
 export class RepairBehavior implements EntityBehavior {
@@ -35,6 +35,7 @@ export class RepairBehavior implements EntityBehavior {
 
         if (this.creep) {
             this.source = this.creep.pos.findClosestByPath(FIND_SOURCES)
+            CreateConstructionSite(this.creep)
         }
 
         this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
