@@ -73,7 +73,7 @@ export class RoomData {
             for (let struct_id in Game.structures) {
                 let struct = Game.structures[struct_id]
 
-                if (struct.room.name !== this.room_name) { continue }
+                if (struct.room.name !== this.room_name || struct.hits == null) { continue }
                 if (!this.struct_map.has(struct.structureType)) {
                     this.struct_map.set(struct.structureType, [])
                 }

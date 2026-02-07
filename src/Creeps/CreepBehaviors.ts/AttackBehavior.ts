@@ -48,7 +48,7 @@ class GaurdState implements EntityState {
     if (CREEP === null) {
       return false;
     }
-    console.log(CREEP.moveTo(12, 14));
+    CREEP.moveTo(12, 14);
     return true;
   }
 

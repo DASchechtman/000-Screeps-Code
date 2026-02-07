@@ -13,6 +13,7 @@ import {
 import { Queue } from "utils/Queue";
 import { BuildBehavior } from "./BuildBehavior";
 import { StringBuilder } from "utils/StringBuilder";
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 
 export class SpawnBehavior implements EntityBehavior {
   private static after_spawn_queue = new Queue<() => void>();
@@ -20,33 +21,11 @@ export class SpawnBehavior implements EntityBehavior {
   private spawn_id: string = "";
   private file_path = ["entities", "", "info"];
   private next_creep_name = "";
-
-  private GetCreepName(behavior: EntityTypes, Fn: (b: EntityTypes) => void) {
-    let name = ["Creep", Game.time];
-    if (behavior === EntityTypes.HARVESTER_TYPE) {
-      name[0] = "Harvester";
-    } else if (behavior === EntityTypes.UPGRADER_TYPE) {
-      name[0] = "Upgrader";
-    } else if (behavior === EntityTypes.BUILDER_TYPE) {
-      name[0] = "Builder";
-    } else if (behavior === EntityTypes.REPAIR_TYPE) {
-      name[0] = "Repairer";
-    } else if (behavior === EntityTypes.ATTACK_TYPE) {
-      name[0] = "Gaurd";
-    } else if (behavior === EntityTypes.STRUCTURE_SUPPLIER_TYPE) {
-      name[0] = "Tower Supplier";
-    }
-    return name.join(" - ");
-  }
+  private queued_roles = new Array<{creep_name: string, role: EntityTypes}>()
+  private queued_roles_key = "roles"
 
   private FindCreepFromName(name: string) {
-    for (let creep_id in Game.creeps) {
-      const CREEP = Game.creeps[creep_id];
-      if (CREEP.name === name) {
-        return CREEP;
-      }
-    }
-    return null;
+    return Game.creeps[name]
   }
 
   private CreateCreepRoleCallback(name: string, GetCreepList: (path: string[], new_vals?: any) => any[]) {
@@ -57,15 +36,15 @@ export class SpawnBehavior implements EntityBehavior {
     }
     GetCreepList(LIST)
 
-    return () => {
+    return (): void => {
       const CREEP = this.FindCreepFromName(name);
-      if (CREEP === null) {
-        return;
-      }
       const LIST = GetCreepList(this.file_path);
 
       if (PENDING_INDEX >= 0) {
         LIST[PENDING_INDEX] = CREEP.id
+      }
+      else {
+        LIST.push(CREEP.id)
       }
 
       GetCreepList(this.file_path, LIST);
@@ -76,6 +55,7 @@ export class SpawnBehavior implements EntityBehavior {
     this.spawn_id = id;
     this.spawn = Game.getObjectById(this.spawn_id as Id<StructureSpawn>);
     let found_spawn = this.spawn !== null;
+    this.queued_roles = SafeReadFromFileWithOverwrite(file, this.queued_roles_key, this.queued_roles)
     if (found_spawn) {
       this.file_path[1] = `_${this.spawn!.room.name}`;
     }
@@ -93,10 +73,23 @@ export class SpawnBehavior implements EntityBehavior {
     if (this.spawn.spawning && this.next_creep_name === "") {
       this.next_creep_name = this.spawn.spawning.name;
     }
-    else if (!this.spawn.spawning && SpawnBehavior.after_spawn_queue.Size() > 0) {
-      const NEXT = SpawnBehavior.after_spawn_queue.Dequeue()!;
-      NEXT();
-      this.next_creep_name = "";
+    else if (!this.spawn.spawning && this.queued_roles.length > 0) {
+      const NEXT_ROLE_DATA = this.queued_roles.shift()!
+      let Next = () => {}
+      if (NEXT_ROLE_DATA.role === EntityTypes.HARVESTER_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, HarvestIds)
+      } else if (NEXT_ROLE_DATA.role === EntityTypes.UPGRADER_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, UpgraderIds)
+      } else if (NEXT_ROLE_DATA.role === EntityTypes.BUILDER_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, BuilderIds)
+      } else if (NEXT_ROLE_DATA.role === EntityTypes.REPAIR_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, RepairIds)
+      } else if (NEXT_ROLE_DATA.role === EntityTypes.ATTACK_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, GaurdIds)
+      } else if (NEXT_ROLE_DATA.role === EntityTypes.STRUCTURE_SUPPLIER_TYPE) {
+        Next = this.CreateCreepRoleCallback(NEXT_ROLE_DATA.creep_name, TowerSuppliersIds)
+      }
+      Next()
     }
 
     if (NEXT_CREEP == null) {
@@ -118,25 +111,15 @@ export class SpawnBehavior implements EntityBehavior {
     if (spawn_ret === OK) {
       QUEUE.Dequeue();
       let behavior = NEXT_CREEP.creep_type;
-      if (behavior === EntityTypes.HARVESTER_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, HarvestIds));
-      } else if (behavior === EntityTypes.UPGRADER_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, UpgraderIds));
-      } else if (behavior === EntityTypes.BUILDER_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, BuilderIds));
-      } else if (behavior === EntityTypes.REPAIR_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, RepairIds));
-      } else if (behavior === EntityTypes.ATTACK_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, GaurdIds));
-      } else if (behavior === EntityTypes.STRUCTURE_SUPPLIER_TYPE) {
-        SpawnBehavior.after_spawn_queue.Enqueue(this.CreateCreepRoleCallback(NAME, TowerSuppliersIds));
-      }
+      this.queued_roles.push({creep_name: NAME, role: behavior})
     }
 
     QueueData(this.file_path, QUEUE.ToArray());
   }
 
-  Cleanup(file: ScreepFile) {}
+  Cleanup(file: ScreepFile) {
+    file.WriteToFile(this.queued_roles_key, this.queued_roles)
+  }
 
   Unload(file: ScreepFile) {}
 }

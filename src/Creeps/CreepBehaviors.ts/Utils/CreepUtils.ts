@@ -124,7 +124,8 @@ export function GetDamagedStruct(): Structure | null {
     return health;
   }).Peek();
 
-  return Game.getObjectById(Id);
+  const obj = Game.getObjectById(Id)
+  return obj;
 }
 
 export function CreateConstructionSite(creep: Creep) {
