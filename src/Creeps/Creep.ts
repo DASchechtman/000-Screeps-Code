@@ -11,6 +11,7 @@ import { DebugLogger } from "utils/DebugLogger"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 import { TowerBehavior } from "./CreepBehaviors.ts/TowerBehavior"
 import { StructureSupplierBehavior } from "./CreepBehaviors.ts/StructureSupplierBehavior"
+import { SpawnBehavior } from "./CreepBehaviors.ts/SpawnBehavior"
 
 
 export class EntityObj {
@@ -34,6 +35,7 @@ export class EntityObj {
         this.behavior_register[EntityTypes.ATTACK_TYPE] = new AttackBehavior()
         this.behavior_register[EntityTypes.TOWER_TYPE] = new TowerBehavior()
         this.behavior_register[EntityTypes.STRUCTURE_SUPPLIER_TYPE] = new StructureSupplierBehavior()
+        this.behavior_register[EntityTypes.SPAWN_TYPE] = new SpawnBehavior()
     }
 
     public OverrideCreep(id: string) {

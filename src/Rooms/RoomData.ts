@@ -49,55 +49,41 @@ export class RoomData {
     }
 
     public GetMyCreepIds() {
-        if (this.creep_ids.length === 0) {
-            for (let creep_name in Game.creeps) {
-                const CREEP = Game.creeps[creep_name]
-                if (CREEP.room.name !== this.room_name) { continue }
-                this.creep_ids.push(CREEP.id)
+        let creeps = new Array<Id<Creep>>()
+        for (let creep_name in Game.creeps) {
+            const CREEP = Game.creeps[creep_name]
+            if (CREEP.room.name !== this.room_name) {
+                continue
             }
+
+            creeps.push(CREEP.id)
         }
 
-        return this.creep_ids
+        return creeps
     }
 
     public GetOwnedStructureIds<K extends OwnedStructuresConstant, S extends FindOwnedStructureType[K]>(...struct_type: K[]): Id<S>[] {
         const STRUCTS: Id<S>[] = []
-        if (struct_type.length === 0) {
-            const NOT_FOUND_TYPES = new Array<StructureConstant>()
-            for (let struct_const of OwnedStructuresTypes) {
-                if (!this.struct_map.has(struct_const)) { NOT_FOUND_TYPES.push(struct_const) }
-            }
-
-            for (let struct of Array.from(Object.values(Game.structures))) {
-                const TYPE_PRESENT_IN_MAP = !NOT_FOUND_TYPES.includes(struct.structureType)
-                if (TYPE_PRESENT_IN_MAP) { continue }
-
-                if (!this.struct_map.has(struct.structureType)) {
-                    this.struct_map.set(struct.structureType, [])
-                }
-                this.struct_map.get(struct.structureType)!.push(struct.id)
-            }
-
-            for (let [_, struct_ids] of this.struct_map) {
-                STRUCTS.push(...struct_ids as Id<S>[])
+        if (struct_type.length > 0 && struct_type.every(k => this.struct_map.has(k))) {
+            for (let s of struct_type) {
+                STRUCTS.push(...this.struct_map.get(s)! as Id<S>[])
             }
         }
         else {
-            for (let struct_const of struct_type) {
-                if (!this.struct_map.has(struct_const)) {
-                    const NEW_STRUCTS = new Array<Id<Structure<StructureConstant>>>()
-                    for (let struct of Array.from(Object.values(Game.structures))) {
-                        if (struct.room.name !== this.room_name) { continue }
-                        if (struct.structureType !== struct_const) { continue }
-                        NEW_STRUCTS.push(struct.id)
-                    }
-                    this.struct_map.set(struct_const, NEW_STRUCTS)
-                    STRUCTS.push(...NEW_STRUCTS as Id<S>[])
+            for (let struct_id in Game.structures) {
+                let struct = Game.structures[struct_id]
+
+                if (struct.room.name !== this.room_name) { continue }
+                if (!this.struct_map.has(struct.structureType)) {
+                    this.struct_map.set(struct.structureType, [])
                 }
-                else {
-                    const NEW_STRUCTS = this.struct_map.get(struct_const)!
-                    STRUCTS.push(...NEW_STRUCTS as Id<S>[])
-                }
+
+                const ARR = this.struct_map.get(struct.structureType)!
+                if (!ARR.includes(struct.id)) { ARR.push(struct.id) }
+            }
+
+            for (let [_, arr] of this.struct_map) {
+                STRUCTS.push(...arr as Id<S>[])
             }
         }
         return STRUCTS

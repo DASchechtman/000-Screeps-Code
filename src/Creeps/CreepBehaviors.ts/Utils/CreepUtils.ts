@@ -1,5 +1,10 @@
+import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
 import { MinHeap } from "utils/Heap";
+import { EntityTypes } from "../BehaviorTypes";
+import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
+
+export type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: EntityTypes }
 
 export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
   const CONTAINERS = RoomData.GetRoomData()
@@ -127,13 +132,105 @@ export function CreateConstructionSite(creep: Creep) {
   const CONSTRUCTION_SITES = [
     ...ROOM.lookForAt(LOOK_STRUCTURES, creep.pos),
     ...ROOM.lookForAt(LOOK_CONSTRUCTION_SITES, creep.pos)
-    ]
+  ];
 
   let found_road = CONSTRUCTION_SITES.some(s => {
-    return s.structureType === STRUCTURE_ROAD
-  })
+    return s.structureType === STRUCTURE_ROAD;
+  });
 
   if (!found_road) {
-    ROOM.createConstructionSite(creep.pos, STRUCTURE_ROAD)
+    ROOM.createConstructionSite(creep.pos, STRUCTURE_ROAD);
+  }
+}
+
+export function HarvestIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.HARVESTER_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.HARVESTER_TYPE, new Array<string>());
+  }
+}
+
+export function UpgraderIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.UPGRADER_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.UPGRADER_TYPE, new Array<string>());
+  }
+}
+
+export function BuilderIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.BUILDER_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.BUILDER_TYPE, new Array<string>());
+  }
+}
+
+export function RepairIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.REPAIR_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.REPAIR_TYPE, new Array<string>());
+  }
+}
+
+export function GaurdIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.ATTACK_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.ATTACK_TYPE, new Array<string>());
+  }
+}
+
+export function TowerSuppliersIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.STRUCTURE_SUPPLIER_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.STRUCTURE_SUPPLIER_TYPE, new Array<string>());
+  }
+}
+
+export function TowerIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.TOWER_TYPE, new_ids);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.TOWER_TYPE, new Array<string>());
+  }
+}
+
+export function QueueData(path: string[], new_queue?: Array<CreepQueueData>): Array<CreepQueueData> {
+  const FILE = FileSystem.GetFileSystem().GetFile(path);
+  if (new_queue) {
+    FILE.WriteToFile("body_queue", new_queue);
+    return [];
+  } else {
+    return SafeReadFromFileWithOverwrite(FILE, "body_queue", new Array<CreepQueueData>());
+  }
+}
+
+export function SpawnIds(path: string[], new_ids?: string[]): string[] {
+  const FILE = FileSystem.GetFileSystem().GetFile(path)
+  if (new_ids) {
+    FILE.WriteToFile(EntityTypes.SPAWN_TYPE, new_ids)
+    return []
+  }
+  else {
+    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.SPAWN_TYPE, new Array<string>())
   }
 }

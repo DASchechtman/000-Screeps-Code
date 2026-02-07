@@ -71,9 +71,7 @@ Array.prototype.resize = function(size: number) {
 }
 
 export function KillAllCreeps() {
-  const MY_CREEPS = RoomData.GetRoomData().GetMyCreepIds()
-  for (let id of MY_CREEPS) {
-    let creep = Game.getObjectById(id)
+  for (let creep of Object.values(Game.creeps)) {
     console.log(creep?.suicide())
   }
 }
@@ -94,20 +92,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)
     CREEP_MANAGER.LoadEntityData(room_name)
-
-    const MY_CREEPS = ROOM_DATA.GetMyCreepIds()
-    const SPAWN = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_SPAWN)
-    const STRUCTS = ROOM_DATA.GetOwnedStructureIds(STRUCTURE_TOWER)
     CREEP_MANAGER.QueueNextSpawnBody()
-    const [BODY, NAME] = CREEP_MANAGER.GetSpawnBody()
 
-    if (BODY.length > 0) {
-      Game.getObjectById(SPAWN[0] as Id<StructureSpawn>)?.spawnCreep(BODY, NAME)
-    }
-
-    for (let creep_id of MY_CREEPS) {
-      CREEP_MANAGER.AddCreepId(creep_id)
-    }
+    const STRUCTS = ROOM_DATA.GetOwnedStructureIds()
 
     for (let struct_id of STRUCTS) {
       CREEP_MANAGER.AddStructureId(struct_id)

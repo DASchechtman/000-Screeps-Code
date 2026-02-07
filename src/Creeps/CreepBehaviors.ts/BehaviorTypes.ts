@@ -8,6 +8,7 @@ export enum EntityTypes {
     ATTACK_TYPE,
     TOWER_TYPE,
     STRUCTURE_SUPPLIER_TYPE,
+    SPAWN_TYPE
 }
 
 export interface EntityBehavior {

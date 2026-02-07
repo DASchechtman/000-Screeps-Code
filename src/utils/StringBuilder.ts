@@ -44,6 +44,24 @@ export class StringBuilder {
         this.chars.shift()
     }
 
+    public Resize(size: number) {
+        this.chars.splice(size, this.chars.length - size)
+    }
+
+    public ResizeFromChar(str: string) {
+        const INDEX = this.chars.indexOf(str.charAt(0))
+        if (INDEX >= 0) {
+            this.Resize(INDEX)
+        }
+    }
+
+    public MapFrom(index: number, Fn: (str: string ) => string) {
+        if (index < 0) { index = 0 }
+        for (let i = index; i < this.chars.length; i++) {
+            this.chars[i] = Fn(this.chars[i]).charAt(0)
+        }
+    }
+
     toString() {
         return this.chars.join('')
     }
