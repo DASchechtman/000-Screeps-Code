@@ -39,8 +39,8 @@ export class UpgraderBehavior implements EntityBehavior {
             CreateConstructionSite(this.creep)
         }
 
-        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file, this.container_key, 'null')
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false)
+        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.container_key, 'null')
 
         const TIMER = new Timer(id)
         TIMER.StartTimer(15)
@@ -78,5 +78,7 @@ export class UpgraderBehavior implements EntityBehavior {
     }
 
     Unload(file: ScreepFile) {}
+
+    RecieveOrder(data: JsonObj) { return () => ({}) }
 
 }

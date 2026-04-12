@@ -150,7 +150,7 @@ export function HarvestIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.HARVESTER_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.HARVESTER_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.HARVESTER_TYPE, new Array<string>());
   }
 }
 
@@ -160,7 +160,7 @@ export function UpgraderIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.UPGRADER_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.UPGRADER_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.UPGRADER_TYPE, new Array<string>());
   }
 }
 
@@ -170,7 +170,7 @@ export function BuilderIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.BUILDER_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.BUILDER_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.BUILDER_TYPE, new Array<string>());
   }
 }
 
@@ -180,7 +180,7 @@ export function RepairIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.REPAIR_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.REPAIR_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.REPAIR_TYPE, new Array<string>());
   }
 }
 
@@ -190,7 +190,7 @@ export function GaurdIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.ATTACK_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.ATTACK_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.ATTACK_TYPE, new Array<string>());
   }
 }
 
@@ -200,7 +200,7 @@ export function TowerSuppliersIds(path: string[], new_ids?: string[]): string[] 
     FILE.WriteToFile(EntityTypes.STRUCTURE_SUPPLIER_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.STRUCTURE_SUPPLIER_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.STRUCTURE_SUPPLIER_TYPE, new Array<string>());
   }
 }
 
@@ -211,7 +211,7 @@ export function TowerIds(path: string[], new_ids?: string[]): string[] {
     FILE.WriteToFile(EntityTypes.TOWER_TYPE, new_ids);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.TOWER_TYPE, new Array<string>());
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.TOWER_TYPE, new Array<string>());
   }
 }
 
@@ -221,7 +221,7 @@ export function QueueData(path: string[], new_queue?: Array<CreepQueueData>): Ar
     FILE.WriteToFile("body_queue", new_queue);
     return [];
   } else {
-    return SafeReadFromFileWithOverwrite(FILE, "body_queue", new Array<CreepQueueData>());
+    return SafeReadFromFileWithOverwrite(path, "body_queue", new Array<CreepQueueData>());
   }
 }
 
@@ -232,6 +232,6 @@ export function SpawnIds(path: string[], new_ids?: string[]): string[] {
     return []
   }
   else {
-    return SafeReadFromFileWithOverwrite(FILE, EntityTypes.SPAWN_TYPE, new Array<string>())
+    return SafeReadFromFileWithOverwrite(path, EntityTypes.SPAWN_TYPE, new Array<string>())
   }
 }

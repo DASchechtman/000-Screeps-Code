@@ -38,9 +38,9 @@ export class RepairBehavior implements EntityBehavior {
             CreateConstructionSite(this.creep)
         }
 
-        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        this.data[this.source_key] = SafeReadFromFileWithOverwrite(file, this.source_key, 'null')
-        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file, this.container_key, 'null')
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false)
+        this.data[this.source_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.source_key, 'null')
+        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.container_key, 'null')
 
         this.target = Game.getObjectById(this.data[this.source_key] as Id<Structure>)
 
@@ -98,4 +98,6 @@ export class RepairBehavior implements EntityBehavior {
         file.WriteToFile(this.container_key, this.data[this.container_key])
     }
     Unload(file: ScreepFile) {}
+
+    RecieveOrder(data: JsonObj) { return () => ({}) }
 }

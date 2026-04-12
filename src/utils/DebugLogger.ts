@@ -13,8 +13,8 @@ export class DebugLogger {
 
     public static InitLogger() {
         const FILE = FileSystem.GetFileSystem().GetFile(this.debug_file)
-        this.debug_flag = SafeReadFromFileWithOverwrite(FILE, 'debug logs on?', this.debug_flag)
-        this.level = SafeReadFromFileWithOverwrite(FILE, 'log level', this.level)
+        this.debug_flag = SafeReadFromFileWithOverwrite(this.debug_file, 'debug logs on?', this.debug_flag)
+        this.level = SafeReadFromFileWithOverwrite(this.debug_file, 'log level', this.level)
     }
 
     public static Log(data: any, level: number = 1) {

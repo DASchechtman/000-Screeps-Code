@@ -113,7 +113,7 @@ class SupplySpawnAndExtensionsState extends CreepState implements EntityState {
     }
     const CREEP = this.creep!;
     const EXTENSIONS = SafeReadFromFileWithOverwrite(
-      file,
+      file.GetFilePath(),
       SORTED_EXTENSION_KEY,
       new Array<Id<StructureExtension>>()
     );
@@ -304,11 +304,11 @@ export class StructureSupplierBehavior implements EntityBehavior {
   Load(file: ScreepFile, id: string) {
     this.creep = Game.getObjectById(id as Id<Creep>);
     this.id = id;
-    let harvest_state: boolean = SafeReadFromFileWithOverwrite(file, this.state_key, false);
-    let tower_id: string = SafeReadFromFileWithOverwrite(file, this.tower_id_key, "null");
-    let energy_source: string = SafeReadFromFileWithOverwrite(file, this.energy_source_key, "null");
+    let harvest_state: boolean = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false);
+    let tower_id: string = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.tower_id_key, "null");
+    let energy_source: string = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.energy_source_key, "null");
     let extension_id_list: Array<Id<StructureExtension>> = SafeReadFromFileWithOverwrite(
-      file,
+      file.GetFilePath(),
       SORTED_EXTENSION_KEY,
       []
     );
@@ -388,4 +388,6 @@ export class StructureSupplierBehavior implements EntityBehavior {
     TowerBehavior.RemoveTowerId(this.id);
     StructureSupplierBehavior.RemoveStateManager(this.id as Id<Creep>)
   }
+
+  RecieveOrder(order_data: JsonObj) { return () => ({}) }
 }

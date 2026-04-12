@@ -132,6 +132,9 @@ export class FileSystem {
       },
       MarkForDeletion: function () {
         sfile.MarkForDeletion();
+      },
+      GetFilePath: function () {
+        return sfile.GetPath();
       }
     };
   }

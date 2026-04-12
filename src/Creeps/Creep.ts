@@ -6,7 +6,7 @@ import { UpgraderBehavior } from "./CreepBehaviors.ts/UpgraderBehavior"
 import { BuildBehavior } from "./CreepBehaviors.ts/BuildBehavior"
 import { RepairBehavior } from "./CreepBehaviors.ts/RepairBehavior"
 import { AttackBehavior } from "./CreepBehaviors.ts/AttackBehavior"
-import { BEHAVIOR_KEY, ORIG_BEHAVIOR_KEY } from "Consts"
+import { BEHAVIOR_KEY, JsonObj, ORIG_BEHAVIOR_KEY } from "Consts"
 import { DebugLogger } from "utils/DebugLogger"
 import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs"
 import { TowerBehavior } from "./CreepBehaviors.ts/TowerBehavior"
@@ -49,8 +49,8 @@ export class EntityObj {
 
     public OverrideBehavior(behavior_type: number) {
         if (this.file == null) { return }
-        let creep_behavior = SafeReadFromFileWithOverwrite(this.file, BEHAVIOR_KEY, behavior_type)
-        let creep_orig_behavior = SafeReadFromFileWithOverwrite(this.file, ORIG_BEHAVIOR_KEY, behavior_type)
+        let creep_behavior = SafeReadFromFileWithOverwrite(this.file_path, BEHAVIOR_KEY, behavior_type)
+        let creep_orig_behavior = SafeReadFromFileWithOverwrite(this.file_path, ORIG_BEHAVIOR_KEY, behavior_type)
 
         if (creep_orig_behavior !== behavior_type) {
             creep_behavior = behavior_type
@@ -88,6 +88,10 @@ export class EntityObj {
     public Cleanup() {
         if (this.file == null) { return }
         this.behavior?.Cleanup(this.file)
+    }
+
+    public GiveOrder(order_data: JsonObj) {
+        return this.behavior?.RecieveOrder(order_data)
     }
 
 }

@@ -33,6 +33,11 @@ declare global {
     clear(): void
     resize(size: number): void
     toString(): string
+    everyInstance(callback: (element: T, index: number, array: T[]) => boolean): number
+  }
+
+  interface String {
+    replaceAll(searchValue: string | RegExp, replaceValue: string): string
   }
 
 }
@@ -70,9 +75,29 @@ Array.prototype.resize = function(size: number) {
   this.splice(size, this.length - size)
 }
 
+Array.prototype.everyInstance = function<T>(callback: (element: T, index: number, array: T[]) => boolean): number {
+  let inst_count = 0
+  for (let i = 0; i < this.length; i++) {
+    inst_count += Number(callback(this[i], i, this))
+  }
+  return inst_count
+}
+
+String.prototype.replaceAll = function(searchValue: string | RegExp, replaceValue: string): string {
+  if (typeof searchValue === 'string') {
+    return this.split(searchValue).join(replaceValue)
+  }
+  else {
+    return this.replace(searchValue, replaceValue)
+  }
+}
+
+
+
 export function KillAllCreeps() {
-  for (let creep of Object.values(Game.creeps)) {
-    console.log(creep?.suicide())
+  for (let name in Game.creeps) {
+    const CREEP = Game.creeps[name];
+    CREEP?.suicide();
   }
 }
 let kill = Array.from(Object.values(Game.rooms)).some(r => {
@@ -80,7 +105,7 @@ let kill = Array.from(Object.values(Game.rooms)).some(r => {
   return CONTROLLER?.owner?.username === 'test'
 })
 
-let reset = false
+let reset = true
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -93,7 +118,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
     ROOM_DATA.SetRoomName(room_name)
     CREEP_MANAGER.LoadEntityData(room_name)
     CREEP_MANAGER.QueueNextSpawnBody()
-
     const STRUCTS = ROOM_DATA.GetOwnedStructureIds()
 
     for (let struct_id of STRUCTS) {

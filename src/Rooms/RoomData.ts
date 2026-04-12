@@ -1,4 +1,5 @@
 import { FindOwnedStructureType, FindStructureType, OwnedStructuresConstant, OwnedStructuresTypes } from "Consts"
+import { EntityBehavior, EntityTypes } from "Creeps/CreepBehaviors.ts/BehaviorTypes"
 import { Position } from "source-map"
 import { DebugLogger } from "utils/DebugLogger"
 import { Timer } from "utils/Timer"
@@ -110,4 +111,64 @@ export class RoomData {
             }
         }).map(s => s.id) as Id<S>[]
     }
+
+    public AmountOfAvailableEnergyAsPercentage() {
+        if (!Game.rooms[this.room_name]) { return -1 }
+        const ENERGY_CAPACITY = Game.rooms[this.room_name].energyCapacityAvailable
+        const ENERGY_AVAILABLE = Game.rooms[this.room_name].energyAvailable
+
+        if (ENERGY_CAPACITY === 0) { return -2 }
+
+        return ENERGY_AVAILABLE / ENERGY_CAPACITY
+    }
+
+    public GetNumberOfEnemiesInRoom() {
+        return this.GetAllEnemyCreepIds().length
+    }
+
+    public NumOfCreepsInRoom(type: EntityTypes) {
+        const ROOM = Game.rooms[this.room_name]
+        let counter = 0
+        if (!ROOM) { return -1 }
+
+        for (let creep of ROOM.find(FIND_MY_CREEPS)) {
+            const NAME = creep.name.toLowerCase()
+            const ROLE = EntityTypes[type].toLowerCase().replaceAll("_", " ")
+
+            counter += Number(NAME.includes(ROLE))
+        }
+
+        return counter
+    }
+
+    public NumOfStructuresInRoom(type: StructureConstant) {
+        const ROOM = Game.rooms[this.room_name]
+        if (!ROOM) { return -1 }
+
+        return ROOM.find(FIND_STRUCTURES, {
+            filter: s => s.structureType === type
+        }).length
+    }
+
+    public AreThereEnemiesInRoom() {
+        const ROOM = Game.rooms[this.room_name]
+        if (!ROOM) { return false }
+
+        return ROOM.find(FIND_HOSTILE_CREEPS).length > 0
+    }
+
+    public AreThereDamagedStructuresInRoom() {
+        const ROOM = Game.rooms[this.room_name]
+        if (!ROOM) { return false }
+        return ROOM.find(FIND_STRUCTURES, {
+            filter: s => s.hits != null && s.hits < s.hitsMax
+        }).length > 0
+    }
+
+    public AreThereConstructionSitesInRoom() {
+        const ROOM = Game.rooms[this.room_name]
+        if (!ROOM) { return false }
+        return ROOM.find(FIND_CONSTRUCTION_SITES).length > 0
+    }
+
 }

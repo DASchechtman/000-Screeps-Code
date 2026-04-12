@@ -196,7 +196,7 @@ export class HarvesterBehavior implements EntityBehavior {
     Load(file: ScreepFile, id: string) {
         this.creep_id = id
         this.creep = Game.getObjectById(this.creep_id as Id<Creep>)
-        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false)
         this.file = file
 
 
@@ -211,6 +211,7 @@ export class HarvesterBehavior implements EntityBehavior {
     }
 
     Run() {
+        console.log(`Running harvester ${this.creep_id}`)
         const MANAGER = HarvesterBehavior.GetStateManager(this.creep_id as Id<Creep>)
         if (MANAGER.RunState(this.file!)) { MANAGER.GetNextState() }
     }
@@ -223,5 +224,7 @@ export class HarvesterBehavior implements EntityBehavior {
         BuildingAllocator.RemoveStructureId(STRUCTURE_CONTAINER, this.creep_id)
         HarvesterBehavior.state_manager.delete(this.creep_id as Id<Creep>)
     }
+
+    public RecieveOrder(order_data: JsonObj) { return () => ({}) }
 
 }

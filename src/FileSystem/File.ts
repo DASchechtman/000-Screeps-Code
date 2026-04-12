@@ -8,6 +8,7 @@ export interface ScreepFile {
     WriteAllToFile: (data: { key: BaseJsonValue, value: Json }[]) => void
     ReadFromFile: (key: BaseJsonValue) => Json | undefined
     MarkForDeletion: () => void
+    GetFilePath: () => string[]
 }
 
 export class ScreepMetaFile {

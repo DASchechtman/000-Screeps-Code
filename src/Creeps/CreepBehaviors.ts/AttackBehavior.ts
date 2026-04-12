@@ -15,7 +15,7 @@ class GaurdState implements EntityState {
 
   private BlacklistedCreepsInRoom() {
     const FILE = FileSystem.GetFileSystem().GetFile(ENEMIES_FILE);
-    const BLACK_LIST = SafeReadFromFileWithOverwrite(FILE, ENEMIES_KEY, new Array<string>());
+    const BLACK_LIST = SafeReadFromFileWithOverwrite(ENEMIES_FILE, ENEMIES_KEY, new Array<string>());
     const ENEMIES_IN_ROOM = RoomData.GetRoomData()
       .GetAllEnemyCreepIds()
       .some(id => {
@@ -58,7 +58,7 @@ class GaurdState implements EntityState {
       return new AttackState(this.creep_id);
     } else if (this.AnyCreepsDamaged()) {
       const CREEPS = RoomData.GetRoomData().GetAllEnemyCreepIds();
-      const BLACK_LIST = SafeReadFromFileWithOverwrite(FILE, ENEMIES_KEY, new Array<string>());
+      const BLACK_LIST = SafeReadFromFileWithOverwrite(ENEMIES_FILE, ENEMIES_KEY, new Array<string>());
 
       for (let id of CREEPS) {
         const CREEP = Game.getObjectById(id);
@@ -90,7 +90,7 @@ class AttackState implements EntityState {
 
   private GetBlackList() {
     const FILE = FileSystem.GetFileSystem().GetFile(ENEMIES_FILE);
-    const BLACK_LIST = SafeReadFromFileWithOverwrite(FILE, ENEMIES_KEY, new Array<string>());
+    const BLACK_LIST = SafeReadFromFileWithOverwrite(ENEMIES_FILE, ENEMIES_KEY, new Array<string>());
     return BLACK_LIST;
   }
 
@@ -178,8 +178,8 @@ export class AttackBehavior implements EntityBehavior {
     this.file = file;
     this.creep_id = id;
 
-    let state = SafeReadFromFileWithOverwrite(file, this.state_key, false);
-    let enemies = SafeReadFromFileWithOverwrite(this.enemy_file, this.enemy_key, new Array<string>());
+    let state = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false);
+    let enemies = SafeReadFromFileWithOverwrite(ENEMIES_FILE, this.enemy_key, new Array<string>());
 
     const INJURED_CREEP_COUNT = this.ally_creeps
       .map(c => Game.getObjectById(c as Id<Creep>))
@@ -212,4 +212,6 @@ export class AttackBehavior implements EntityBehavior {
   public Unload(file: ScreepFile) {
     AttackBehavior.RemoveStateManager(this.creep_id as Id<Creep>);
   }
+
+  public RecieveOrder(order_data: JsonObj) { return () => ({}); }
 }

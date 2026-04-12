@@ -31,7 +31,7 @@ export class Timer {
         const FILE = FileSystem.GetFileSystem().GetExistingFile(this.path)
         if (FILE == null) { return }
 
-        const CUR_TIME = SafeReadFromFileWithOverwrite(FILE, this.timer_current_key, 1)
+        const CUR_TIME = SafeReadFromFileWithOverwrite(this.path, this.timer_current_key, 1)
         FILE.WriteToFile(this.timer_current_key, CUR_TIME + 1 > 0 ? CUR_TIME + 1 : 0)
     }
 
@@ -48,12 +48,21 @@ export class Timer {
         }
     }
 
+    public StopTimer() {
+        FileSystem.GetFileSystem().DeleteFile(this.path)
+    }
+
+    public HasTimerStarted() {
+        const FILE = FileSystem.GetFileSystem().GetExistingFile(this.path)
+        return FILE != null
+    }
+
     public IsTimerDone() {
         const FILE = FileSystem.GetFileSystem().GetExistingFile(this.path)
         if (FILE == null) { return false }
 
-        const TIME_LIMIT = Number(SafeReadFromFile(FILE, this.timer_end_key))
-        const CUR_TIME = Number(SafeReadFromFile(FILE, this.timer_current_key))
+        const TIME_LIMIT = Number(SafeReadFromFile(this.path, this.timer_end_key))
+        const CUR_TIME = Number(SafeReadFromFile(this.path, this.timer_current_key))
 
         return CUR_TIME % TIME_LIMIT === 0
     }

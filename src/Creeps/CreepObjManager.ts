@@ -1,9 +1,6 @@
 import { EntityObj } from "./Creep";
 import { EntityTypes } from "./CreepBehaviors.ts/BehaviorTypes";
-import { FileSystem } from "FileSystem/FileSystem";
 import { RoomData } from "Rooms/RoomData";
-import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
-import { Json } from "Consts";
 import {
   BuilderIds,
   CreepQueueData,
@@ -16,8 +13,8 @@ import {
   TowerSuppliersIds,
   UpgraderIds
 } from "./CreepBehaviors.ts/Utils/CreepUtils";
-
-type DataObj = { [key: number | string]: Json };
+import { CreepScheduler } from "./CreepScheduler";
+import { Timer } from "utils/Timer";
 
 export class CreepObjectManager {
   private static manager: CreepObjectManager | null = null;
@@ -30,6 +27,7 @@ export class CreepObjectManager {
   }
 
   private entity: EntityObj;
+  private scheduler = new CreepScheduler();
   private filler_data: string;
   private queued_data: string;
   private file_path: string[];
@@ -42,9 +40,9 @@ export class CreepObjectManager {
   private gaurd_ids: string[];
   private tower_ids: string[];
   private tower_supplier_ids: string[];
-  private creep_queue: CreepQueueData[];
   private spawn_ids: string[];
   private all_ids: (() => string[])[];
+  private message_callbacks = new Array<() => any>();
 
   private constructor() {
     this.entity = new EntityObj();
@@ -60,15 +58,18 @@ export class CreepObjectManager {
     this.gaurd_ids = [];
     this.tower_ids = [];
     this.tower_supplier_ids = [];
-    this.creep_queue = [];
     this.spawn_ids = [];
     this.all_ids = [];
   }
 
-  private RunEntityCode(behavior: number, id_arr: string[], OverWrite: (path: string[], new_vals?: string[]) => string[]) {
+  private RunEntityCode(
+    behavior: number,
+    id_arr: string[],
+    OverWrite: (path: string[], new_vals?: string[]) => string[]
+  ) {
     for (let i = 0; i < id_arr.length; i++) {
       let id = id_arr[i];
-      if ([this.filler_data, this.queued_data, 'pending'].includes(id)) {
+      if ([this.filler_data, this.queued_data, "pending"].includes(id)) {
         continue;
       }
 
@@ -77,7 +78,7 @@ export class CreepObjectManager {
       this.entity.Load(failed_id => {
         console.log(`unloading - ${failed_id}`);
         id_arr[i] = this.filler_data;
-        OverWrite(this.file_path, id_arr)
+        OverWrite(this.file_path, id_arr);
       });
       this.entity.Run();
       this.entity.Cleanup();
@@ -138,9 +139,15 @@ export class CreepObjectManager {
       const EXTENSION_OBJS = EXTENSIONS.map(id => Game.getObjectById(id)).filter(
         s => s != null
       ) as StructureExtension[];
+
       max_energy =
         300 * SPAWNS.length +
-        EXTENSION_OBJS.reduce((prev, cur) => prev + cur.store.getUsedCapacity(RESOURCE_ENERGY), 0);
+        EXTENSION_OBJS.reduce((prev, cur) => {
+          if (cur.store == null) {
+            return 0;
+          }
+          return prev + cur.store.getUsedCapacity(RESOURCE_ENERGY);
+        }, 0);
     }
 
     const BuildBody = (parts: BodyPartConstant[], energy_limit: number | undefined | null) => {
@@ -170,6 +177,10 @@ export class CreepObjectManager {
     return BuildBody(body, energy_limit);
   }
 
+  private HandleSpawnMessage(message: any) {
+
+  }
+
   public LoadEntityData(room_name: string) {
     this.room_name = room_name;
     this.file_path = ["entities", `_${room_name}`, "info"];
@@ -177,6 +188,7 @@ export class CreepObjectManager {
   }
 
   public RunAllActiveEntities() {
+    this.GiveEntitiesOrders();
     this.RunEntityCode(EntityTypes.SPAWN_TYPE, this.spawn_ids, SpawnIds);
     this.RunEntityCode(EntityTypes.HARVESTER_TYPE, this.harvester_ids, HarvestIds);
     this.RunEntityCode(EntityTypes.UPGRADER_TYPE, this.upgrader_ids, UpgraderIds);
@@ -185,6 +197,7 @@ export class CreepObjectManager {
     this.RunEntityCode(EntityTypes.ATTACK_TYPE, this.gaurd_ids, GaurdIds);
     this.RunEntityCode(EntityTypes.STRUCTURE_SUPPLIER_TYPE, this.tower_supplier_ids, TowerSuppliersIds);
     this.RunEntityCode(EntityTypes.TOWER_TYPE, this.tower_ids, TowerIds);
+    this.ReadMessageCallbacks();
   }
 
   public AddStructureId(id: Id<Structure<StructureConstant>>) {
@@ -202,123 +215,56 @@ export class CreepObjectManager {
   }
 
   public QueueNextSpawnBody() {
-    const QUEUE = QueueData(this.file_path);
-    const MY_TOWERS = RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_TOWER);
-    const CONSTRUCTION_SITE = RoomData.GetRoomData().GetConstructionSites();
-    const CONTAINERS = RoomData.GetRoomData().GetRoomStructures(STRUCTURE_CONTAINER);
-    const ENERGY_LIMIT = 1200;
-    const HAS_THINGS_TO_BUILD = CONSTRUCTION_SITE.length > 0;
-    const NO_HARVESTERS_ACTIVE = this.harvester_ids.every(x => x === this.filler_data || x === this.queued_data);
-    const NO_SUPPLIERS_ACTIVE = this.tower_supplier_ids.every(x => x === this.filler_data || x === this.queued_data);
-    const CONTAINERS_EXIST = CONTAINERS.length > 0;
-    const ENEMIES_EXIST = RoomData.GetRoomData().GetAllEnemyCreepIds().length > 0;
-
-    const FillArrayWithPlaceHolders = (arr: string[], max: number, fn: () => void) => {
-      const END = Math.min(max, 6);
-      if (max < 1) {
-        fn();
-        arr[0] = this.queued_data;
-        return;
-      }
-
-      for (let i = 0; i < END; i++) {
-        while (i >= arr.length) {
-          arr.push(this.filler_data);
-        }
-        const SPOT = arr[i];
-        if (SPOT === this.filler_data) {
-          fn();
-          arr[i] = this.queued_data;
-        }
-      }
-    };
-
-    const GetEmergencyCreepMax = (behavior: EntityTypes, limit: number, emergency_max: number) => {
-      const NEXT_IN_QUEUE = QUEUE.at(0);
-      if (NEXT_IN_QUEUE == null) {
-        return emergency_max;
-      }
-      if (NEXT_IN_QUEUE.creep_type !== behavior || NEXT_IN_QUEUE.limit !== limit) {
-        return -1;
-      }
-      return emergency_max;
-    };
-
-    if (NO_HARVESTERS_ACTIVE) {
-      let max = GetEmergencyCreepMax(EntityTypes.HARVESTER_TYPE, 300, 1);
-      console.log(max)
-      FillArrayWithPlaceHolders(this.harvester_ids, max, () => {
-        QUEUE.unshift({ body: [MOVE, CARRY, WORK], limit: 300, creep_type: EntityTypes.HARVESTER_TYPE });
-        console.log("adding to queue");
-      });
-    }
-    else if (NO_SUPPLIERS_ACTIVE && CONTAINERS_EXIST) {
-      let max = GetEmergencyCreepMax(EntityTypes.STRUCTURE_SUPPLIER_TYPE, 300, 1);
-      console.log("queuing emergency creep");
-      FillArrayWithPlaceHolders(this.tower_supplier_ids, max, () => {
-        QUEUE.unshift({
-          body: [MOVE, MOVE, CARRY, CARRY, CARRY],
-          limit: 300,
-          creep_type: EntityTypes.STRUCTURE_SUPPLIER_TYPE
-        });
-      });
-    }
-
-    FillArrayWithPlaceHolders(this.gaurd_ids, 3, () => {
-      QUEUE.push({ body: [MOVE, ATTACK, TOUGH, TOUGH, TOUGH], limit: null, creep_type: EntityTypes.ATTACK_TYPE });
-    });
-
-    if (CONTAINERS_EXIST) {
-      const MAX = MY_TOWERS.length === 0 ? 1 : MY_TOWERS.length;
-      FillArrayWithPlaceHolders(this.tower_supplier_ids, 2, () => {
-        QUEUE.push({
-          body: [MOVE, MOVE, CARRY, CARRY, CARRY],
-          limit: 800,
-          creep_type: EntityTypes.STRUCTURE_SUPPLIER_TYPE
-        });
-      });
-    }
-
-    const NUM_OF_HARVESTERS = CONTAINERS.length === 0 ? 2 : CONTAINERS.length;
-    FillArrayWithPlaceHolders(this.harvester_ids, NUM_OF_HARVESTERS, () => {
-      let max_energy = ENERGY_LIMIT;
-      let body: BodyPartConstant[] = [MOVE, WORK, CARRY, MOVE, WORK];
-      if (CONTAINERS_EXIST) {
-        body = [MOVE, CARRY, WORK, WORK, WORK];
-        max_energy = 800;
-      }
-      QUEUE.push({ body: body, limit: max_energy, creep_type: EntityTypes.HARVESTER_TYPE });
-    });
-
-    const NUM_OF_UPGRADERS = ENEMIES_EXIST ? 0 : 2;
-    FillArrayWithPlaceHolders(this.upgrader_ids, NUM_OF_UPGRADERS, () => {
-      QUEUE.push({ body: [WORK, CARRY, MOVE], limit: 800, creep_type: EntityTypes.UPGRADER_TYPE });
-    });
-
-    if (HAS_THINGS_TO_BUILD) {
-      FillArrayWithPlaceHolders(this.builder_ids, 1, () => {
-        QUEUE.push({
-          body: [MOVE, WORK, CARRY, WORK, CARRY],
-          limit: ENERGY_LIMIT,
-          creep_type: EntityTypes.BUILDER_TYPE
-        });
-      });
-    }
-
-    if (!CONTAINERS_EXIST) {
-      FillArrayWithPlaceHolders(this.repair_ids, 1, () => {
-        QUEUE.push({
-          body: [WORK, CARRY, MOVE, MOVE, MOVE, CARRY],
-          limit: ENERGY_LIMIT,
-          creep_type: EntityTypes.REPAIR_TYPE
-        });
-      });
-    }
-
     QueueData(
-      this.file_path,
-      QUEUE.map(x => ({ ...x, body: this.GetCreepBody(x.body, x.limit) }))
-    );
+        this.file_path,
+        this.scheduler.GetCreepsToSpawn((body, energy_limit) => this.GetCreepBody(body, energy_limit))
+      );
+
+  }
+
+  public GiveEntitiesOrders() {
+    const QUEUE = QueueData(this.file_path);
+    if (QUEUE.length > 0) {
+      const NEXT = QUEUE.at(0)!
+
+      for (let id of this.spawn_ids) {
+        this.entity.FullyOverrideCreep(id, EntityTypes.SPAWN_TYPE);
+        const RES = this.entity.GiveOrder({
+          creep_type: NEXT.creep_type,
+          body: NEXT.body,
+          order_type: "spawn"
+        });
+
+        if (RES) {
+          this.message_callbacks.push(RES);
+        }
+      }
+    }
+  }
+
+  public ReadMessageCallbacks() {
+    for (let fn of this.message_callbacks) {
+      const RES = fn();
+      const FROM = RES.type as EntityTypes | undefined;
+      if (FROM === EntityTypes.SPAWN_TYPE) {
+        //this.HandleSpawnMessage(RES);
+      } else if (FROM === EntityTypes.HARVESTER_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.BUILDER_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.REPAIR_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.ATTACK_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.STRUCTURE_SUPPLIER_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.TOWER_TYPE) {
+        // to be completed later
+      } else if (FROM === EntityTypes.UPGRADER_TYPE) {
+        // to be completed later
+      }
+    }
+    this.message_callbacks.clear();
   }
 
   public SaveCreepData() {

@@ -3,15 +3,16 @@
     "module": "esnext",
     "lib": ["es2018"],
     "target": "es2018",
-    "moduleResolution": "Node",
+    "moduleResolution": "node",
     "outDir": "dist",
-    "baseUrl": "src/",
+    "paths": { "*": [ "./src/*" ]},
     "sourceMap": true,
     "strict": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
-    "allowUnreachableCode": false
+    "allowUnreachableCode": false,
+    "types": ["node", "screeps"],
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }

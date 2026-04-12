@@ -1,3 +1,4 @@
+import { JsonObj } from "Consts"
 import { ScreepFile } from "FileSystem/File"
 
 export enum EntityTypes {
@@ -16,6 +17,7 @@ export interface EntityBehavior {
     Run: () => void
     Cleanup: (file: ScreepFile) => void
     Unload: (file: ScreepFile) => void
+    RecieveOrder: (order_data: JsonObj) => () => any
 }
 
 export interface EntityState {

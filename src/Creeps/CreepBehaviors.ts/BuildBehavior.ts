@@ -40,9 +40,9 @@ export class BuildBehavior implements EntityBehavior {
             CreateConstructionSite(this.creep)
         }
 
-        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file, this.state_key, false)
-        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file, this.container_key, 'null')
-        this.data[this.site_key] = SafeReadFromFileWithOverwrite(file, this.site_key, 'null')
+        this.data[this.state_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.state_key, false)
+        this.data[this.container_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.container_key, 'null')
+        this.data[this.site_key] = SafeReadFromFileWithOverwrite(file.GetFilePath(), this.site_key, 'null')
 
         this.site = Game.getObjectById(this.data[this.site_key] as Id<ConstructionSite>)
 
@@ -79,7 +79,7 @@ export class BuildBehavior implements EntityBehavior {
             if (this.sources == null) { return }
             let container = Game.getObjectById(this.data[this.container_key] as Id<StructureContainer>)
             let storage = Game.getObjectById(RoomData.GetRoomData().GetOwnedStructureIds(STRUCTURE_STORAGE)[0])
-            if (storage) {
+            if (storage && storage.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
                 let ret = this.creep.withdraw(storage, RESOURCE_ENERGY)
                 if (ret === ERR_NOT_IN_RANGE) {
                     this.creep.moveTo(storage)
@@ -110,4 +110,5 @@ export class BuildBehavior implements EntityBehavior {
     }
 
     public Unload(file: ScreepFile) {}
+    public RecieveOrder(order_data: JsonObj) { return () => ({}) }
 }

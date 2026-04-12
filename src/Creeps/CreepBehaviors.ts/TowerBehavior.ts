@@ -188,4 +188,6 @@ export class TowerBehavior implements EntityBehavior {
         }
     }
 
+    RecieveOrder(order_data: JsonObj) { return () => ({}) }
+
 }
