@@ -4,7 +4,11 @@ import { BaseJsonValue, Json } from "Consts"
 import { FileSystem } from "FileSystem/FileSystem"
 import { RoomData } from "Rooms/RoomData"
 
-export function SafeReadFromFileWithOverwrite<T extends Json>(file_path: string[], key: BaseJsonValue, write_if_fail: T) {
+export function SafeReadFromFileWithOverwrite<T extends Json>(file_path: string[] | ScreepFile, key: BaseJsonValue, write_if_fail: T) {
+    if (!Array.isArray(file_path)) {
+        file_path = file_path.GetFilePath();
+    }
+    
     let file = FileSystem.GetFileSystem().GetFile(file_path)
     let ret_val = file.ReadFromFile(key)
 

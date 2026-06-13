@@ -1,108 +1,69 @@
-import { RoomData } from "Rooms/RoomData"
-import { Timer } from "./Timer"
-import { FindOwnedStructureType, FindStructureType, OwnedStructuresConstant, OwnedStructuresTypes } from "Consts"
+import { RoomData } from "Rooms/RoomData";
+import { Timer } from "./Timer";
+import { FindOwnedStructureType, FindStructureType, OwnedStructuresConstant, OwnedStructuresTypes } from "Consts";
+
 
 export class BuildingAllocator {
-    private static structs = new Map<StructureConstant, Array<Id<Structure<StructureConstant>>>>()
-    private static used_struct_indexes = new Map<StructureConstant, Map<number, string>>()
-    private static id_to_struct = new Map<string, Id<Structure<StructureConstant>>>()
+  private static creep_id_to_struct_id: Map<string, Id<Structure<StructureConstant>>> = new Map();
+  private static struct_id_to_creep_id: Map<Id<Structure<StructureConstant>>, string> = new Map();
+  private static struct_type_to_struct_ids: Map<StructureConstant, Array<Id<Structure<StructureConstant>>>> = new Map();
+  private static room: RoomData = RoomData.GetRoomData();
 
-    public static GetStructureId<K extends StructureConstant, S extends FindStructureType[K]>(type: K, id: string): Id<S> | null {
-        if (!this.structs.has(type)) {
-            const STRUCT_ARR: Array<Id<Structure<StructureConstant>>> = []
-
-            if (OwnedStructuresTypes.some(x => x === type)) {
-                STRUCT_ARR.push(...RoomData.GetRoomData().GetOwnedStructureIds(type as OwnedStructuresConstant))
-            }
-            else {
-                STRUCT_ARR.push(...RoomData.GetRoomData().GetRoomStructures(type))
-            }
-
-            this.structs.set(type, STRUCT_ARR)
-            this.used_struct_indexes.set(type, new Map())
-        }
-        else {
-            const TIMER = new Timer(id)
-            TIMER.StartTimer(10)
-
-            if (TIMER.IsTimerDone()) {
-                const STRUCT_ARR: Array<Id<Structure<StructureConstant>>> = []
-
-                if (OwnedStructuresTypes.some(x => x === type)) {
-                    STRUCT_ARR.push(...RoomData.GetRoomData().GetOwnedStructureIds(type as OwnedStructuresConstant))
-                }
-                else {
-                    STRUCT_ARR.push(...RoomData.GetRoomData().GetRoomStructures(type))
-                }
-
-                this.structs.set(type, STRUCT_ARR)
-            }
-        }
-
-        const STRUCT_ARR = this.structs.get(type)!
-        const INDEX_MAP = this.used_struct_indexes.get(type)!
-        const IDS_TO_REMOVE = new Array<Id<Structure<StructureConstant>>>()
-
-        for (let id of STRUCT_ARR) {
-            if (Game.getObjectById(id as Id<Structure>) == null) {
-                IDS_TO_REMOVE.push(id)
-            }
-        }
-
-        for (let invalid_struct_ids of IDS_TO_REMOVE) {
-            this.RemoveStructureIdFromList(type, invalid_struct_ids)
-        }
-
-        if (this.id_to_struct.has(id)) {
-            const STRUCT_ID = this.id_to_struct.get(id)!
-            return STRUCT_ID as Id<S>
-        }
-
-
-        let struct_id: Id<Structure<StructureConstant>> | null = null
-
-        for (let i = 0; i < STRUCT_ARR.length; i++) {
-            if (!INDEX_MAP.has(i)) {
-                const STRUCT = STRUCT_ARR[i]
-                struct_id = STRUCT
-                this.id_to_struct.set(id, struct_id)
-                INDEX_MAP.set(i, id)
-                break
-            }
-        }
-
-        return struct_id as Id<S>
+  public static GetStructureId<K extends StructureConstant, S extends FindStructureType[K]>(
+    type: K,
+    creep_id: string
+  ): Id<S> | null {
+    if (!this.struct_type_to_struct_ids.has(type)) {
+      const STRUCT_ARR = this.room.GetRoomStructures(type);
+      this.struct_type_to_struct_ids.set(type, STRUCT_ARR);
     }
 
-    public static RemoveStructureId(type: StructureConstant, id: string) {
-        if (this.id_to_struct.has(id)) {
-            const INDEXES_TO_UNMAP = new Array<number>()
-            const MAPPING = this.used_struct_indexes.get(type)!
-            this.id_to_struct.delete(id)
-
-            for (let [index, used_id] of MAPPING) {
-                if (id === used_id) {
-                    INDEXES_TO_UNMAP.push(index)
-                }
-            }
-
-            for (let index of INDEXES_TO_UNMAP) {
-                MAPPING.delete(index)
-            }
-        }
+    if (this.creep_id_to_struct_id.has(creep_id)) {
+      const STRUCT_ID = this.creep_id_to_struct_id.get(creep_id)!;
+      return STRUCT_ID as Id<S>;
     }
 
-    public static RemoveStructureIdFromList(type: StructureConstant, invalid_struct_id: Id<Structure<StructureConstant>>) {
-        if (this.structs.has(type)) {
-            const ARR = this.structs.get(type)!
-            const INDEX = ARR.indexOf(invalid_struct_id)
-            if (INDEX >= 0) { ARR.splice(INDEX, 1) }
-
-            for (let [creep_id, struct_id] of this.id_to_struct) {
-                if (struct_id === invalid_struct_id) {
-                    this.RemoveStructureId(type, creep_id)
-                }
-            }
-        }
+    let i = 0;
+    let struct_arr = this.struct_type_to_struct_ids.get(type)!;
+    while (i < this.struct_type_to_struct_ids.get(type)!.length && this.struct_id_to_creep_id.has(struct_arr[i])) {
+      i++;
     }
+
+    if (i >= struct_arr.length) {
+      return null;
+    }
+
+    const STRUCT_ID = struct_arr[i];
+    this.creep_id_to_struct_id.set(creep_id, STRUCT_ID);
+    this.struct_id_to_creep_id.set(STRUCT_ID, creep_id);
+    return STRUCT_ID as Id<S>;
+  }
+
+  public static RemoveStructureId(type: StructureConstant, creep_id: string) {
+    const STRUCT_ID = this.creep_id_to_struct_id.get(creep_id);
+    if (STRUCT_ID == null) {
+      return;
+    }
+    this.creep_id_to_struct_id.delete(creep_id);
+    this.struct_id_to_creep_id.delete(STRUCT_ID);
+  }
+
+  public static RemoveStructureIdFromList(
+    type: StructureConstant,
+    invalid_struct_id: Id<Structure<StructureConstant>>
+  ) {
+    if (!this.struct_type_to_struct_ids.has(type)) {
+      return;
+    }
+    const ARR = this.struct_type_to_struct_ids.get(type)!;
+    const INDEX = ARR.indexOf(invalid_struct_id);
+    if (INDEX >= 0) {
+      ARR.splice(INDEX, 1);
+      if (this.struct_id_to_creep_id.has(invalid_struct_id)) {
+        const CREEP_ID = this.struct_id_to_creep_id.get(invalid_struct_id)!;
+        this.struct_id_to_creep_id.delete(invalid_struct_id);
+        this.creep_id_to_struct_id.delete(CREEP_ID);
+      }
+    }
+  }
 }

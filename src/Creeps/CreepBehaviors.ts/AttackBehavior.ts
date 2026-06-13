@@ -48,7 +48,19 @@ class GaurdState implements EntityState {
     if (CREEP === null) {
       return false;
     }
-    CREEP.moveTo(12, 14);
+    let x = -1
+    let y = -1
+
+    for (let flag in Game.flags) {
+      const FLAG = Game.flags[flag];
+      if (FLAG.room?.name === CREEP.room.name && FLAG.name === "Bunker") {
+        x = FLAG.pos.x;
+        y = FLAG.pos.y;
+        break;
+      }
+    }
+
+    CREEP.moveTo(x, y);
     return true;
   }
 

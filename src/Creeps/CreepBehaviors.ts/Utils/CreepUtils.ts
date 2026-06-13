@@ -104,7 +104,7 @@ export function GetDamagedStruct(): Structure | null {
   const ALL_STRUCTS = [
     ...RoomData.GetRoomData().GetOwnedStructureIds(),
     ...RoomData.GetRoomData().GetRoomStructures([STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_WALL])
-  ];
+  ].filter(id => Game.getObjectById(id)?.structureType !== STRUCTURE_CONTROLLER);
 
   let Id = new MinHeap(ALL_STRUCTS, struct => {
     let s = Game.getObjectById(struct);

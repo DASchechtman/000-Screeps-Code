@@ -29,7 +29,7 @@ declare global {
   }
 
   interface Array<T> {
-    at(index: number): T | undefined
+    at(index: number): T
     clear(): void
     resize(size: number): void
     toString(): string
@@ -47,18 +47,20 @@ declare const global: {
 }
 
 Array.prototype.at = function(index: number) {
-  if (index >= this.length) {
-    return undefined
-  }
-  else if (index < 0 && this.length + index < 0) {
-    return undefined
-  }
+  index = Math.trunc(index)
 
   if (index < 0) {
-    return this[this.length + index]
+    let i = this.length + index
+    if (i < 0) {
+      let x = -Math.trunc(index / this.length) * this.length
+      i = this.length + x + index
+      if (i === this.length) { i = 0 }
+    }
+
+    return this[i]
   }
   else {
-    return this[index]
+    return this[index % this.length]
   }
 }
 
@@ -105,7 +107,9 @@ let kill = Array.from(Object.values(Game.rooms)).some(r => {
   return CONTROLLER?.owner?.username === 'test'
 })
 
-let reset = true
+let x = [1,2,3,4,5].at(-7)
+
+let reset = false
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -113,6 +117,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const FILE_SYSTEM = FileSystem.GetFileSystem()
   const CREEP_MANAGER = CreepObjectManager.GetCreepManager()
   const ROOM_DATA = RoomData.GetRoomData()
+
 
   for (let room_name in Game.rooms) {
     ROOM_DATA.SetRoomName(room_name)

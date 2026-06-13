@@ -64,40 +64,27 @@ export class RoomData {
     }
 
     public GetOwnedStructureIds<K extends OwnedStructuresConstant, S extends FindOwnedStructureType[K]>(...struct_type: K[]): Id<S>[] {
-        const STRUCTS: Id<S>[] = []
-        if (struct_type.length > 0 && struct_type.every(k => this.struct_map.has(k))) {
-            for (let s of struct_type) {
-                STRUCTS.push(...this.struct_map.get(s)! as Id<S>[])
-            }
-        }
-        else {
-            for (let struct_id in Game.structures) {
-                let struct = Game.structures[struct_id]
-
-                if (struct.room.name !== this.room_name || struct.hits == null) { continue }
-                if (!this.struct_map.has(struct.structureType)) {
-                    this.struct_map.set(struct.structureType, [])
+        if (!Game.rooms[this.room_name]) { return [] }
+        let ids = Game.rooms[this.room_name].find(FIND_MY_STRUCTURES, {
+            filter: s => {
+                if (Array.isArray(struct_type)) {
+                    if (struct_type.length === 0) { return true }
+                    return struct_type.some(x => x === s.structureType)
                 }
-
-                const ARR = this.struct_map.get(struct.structureType)!
-                if (!ARR.includes(struct.id)) { ARR.push(struct.id) }
+                return struct_type === s.structureType
             }
+        }).map(s => s.id) as Id<S>[]
 
-            for (let [_, arr] of this.struct_map) {
-                STRUCTS.push(...arr as Id<S>[])
-            }
-        }
-        return STRUCTS
+        return ids
     }
 
     public GetConstructionSites() {
+        if (!Game.rooms[this.room_name]) { return [] }
+
         if (this.construction_site_ids.length === 0) {
-            for (let site_key in Game.constructionSites) {
-                const SITE = Game.constructionSites[site_key]
-                if (SITE.room?.name !== this.room_name) { continue }
-                this.construction_site_ids.push(SITE.id)
-            }
+            this.construction_site_ids = Game.rooms[this.room_name].find(FIND_CONSTRUCTION_SITES).map(cs => cs.id)
         }
+
         return this.construction_site_ids
     }
 

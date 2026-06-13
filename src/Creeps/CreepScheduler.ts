@@ -70,7 +70,7 @@ export class CreepScheduler {
       QUEUE.push({ type: EntityTypes.HARVESTER_TYPE, priority: this.HarvestPriority(), energy_limit: EXISTING_HARVESTERS ? 1200 : 300 });
     }
 
-    if (this.room_data.AreThereDamagedStructuresInRoom() && STORAGE && STORAGE.store.getUsedCapacity(RESOURCE_ENERGY) < 2000) {
+    if (this.room_data.AreThereDamagedStructuresInRoom()) {
       for (let i = this.room_data.NumOfCreepsInRoom(EntityTypes.REPAIR_TYPE); i < 1; i++) {
         QUEUE.push({ type: EntityTypes.REPAIR_TYPE, priority: this.RepairPriority(), energy_limit: 1200 });
       }
@@ -82,7 +82,7 @@ export class CreepScheduler {
       }
     }
 
-    for (let i = EXISTING_SUPPLIERS; i < MAX_TOWERS; i++) {
+    for (let i = EXISTING_SUPPLIERS; i < MAX_TOWERS + 1; i++) {
       QUEUE.push({ type: EntityTypes.STRUCTURE_SUPPLIER_TYPE, priority: this.SupplierPriority(), energy_limit: EXISTING_SUPPLIERS ? 1200 : 300 });
     }
 
@@ -91,7 +91,7 @@ export class CreepScheduler {
     }
 
     for (let i = this.room_data.NumOfCreepsInRoom(EntityTypes.ATTACK_TYPE); i < 3; i++) {
-      QUEUE.push({ type: EntityTypes.ATTACK_TYPE, priority: this.AttackPriority(), energy_limit: null });
+      QUEUE.push({ type: EntityTypes.ATTACK_TYPE, priority: this.AttackPriority(), energy_limit: this.room_data.AreThereEnemiesInRoom() ? null : 1200 });
     }
 
     return QUEUE

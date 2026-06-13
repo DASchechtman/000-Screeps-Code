@@ -66,6 +66,51 @@ export class SpawnBehavior implements EntityBehavior {
     return list
   }
 
+  private SpawnNextCreep(next_role: EntityTypes, creep: Creep | undefined) {
+    if (creep == null) { return false }
+
+    switch (next_role) {
+        case EntityTypes.HARVESTER_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, HarvestIds(this.GetFilePath()))
+          HarvestIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+        case EntityTypes.UPGRADER_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, UpgraderIds(this.GetFilePath()))
+          UpgraderIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+        case EntityTypes.BUILDER_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, BuilderIds(this.GetFilePath()))
+          BuilderIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+        case EntityTypes.REPAIR_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, RepairIds(this.GetFilePath()))
+          RepairIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+        case EntityTypes.ATTACK_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, GaurdIds(this.GetFilePath()))
+          GaurdIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+        case EntityTypes.STRUCTURE_SUPPLIER_TYPE: {
+          const LIST = this.AddCreepToRoleList(creep, TowerSuppliersIds(this.GetFilePath()))
+          TowerSuppliersIds(this.GetFilePath(), LIST);
+          this.queued_roles.shift();
+          break
+        }
+      }
+
+      return true
+  }
+
   Load(file: ScreepFile, id: string) {
     this.spawn_id = id;
     this.spawn = Game.getObjectById(this.spawn_id as Id<StructureSpawn>);
@@ -86,6 +131,22 @@ export class SpawnBehavior implements EntityBehavior {
       return;
     }
 
+    if (!this.spawn.spawning && this.queued_roles.length > 0) {
+      const NEXT_CREEP = this.queued_roles[0];
+      const NEXT_NAME = NEXT_CREEP.creep_name;
+      const NEXT_ROLE = NEXT_CREEP.role;
+
+      if (this.next_creep_role == null) {
+        this.next_creep_role = NEXT_ROLE;
+        this.next_creep_name = NEXT_NAME;
+      }
+
+      if (this.SpawnNextCreep(this.next_creep_role, Game.creeps[this.next_creep_name])) {
+        this.next_creep_name = "";
+        this.next_creep_role = null;
+      }
+    }
+
     const QUEUE = QueueData(this.GetFilePath())
     const NEXT = QUEUE.length > 0 ? QUEUE[0] : null;
 
@@ -98,51 +159,7 @@ export class SpawnBehavior implements EntityBehavior {
       this.next_creep_role = NEXT.creep_type;
       this.queued_roles.push({ creep_name: this.next_creep_name, role: this.next_creep_role });
     }
-    else if (!this.spawn.spawning && this.queued_roles.length > 0) {
-      const NEXT_CREEP = this.queued_roles[0];
-      const NEXT_NAME = NEXT_CREEP.creep_name;
-      const NEXT_ROLE = NEXT_CREEP.role;
-      const CREEP = Game.creeps[NEXT_NAME];
 
-      switch (NEXT_ROLE) {
-        case EntityTypes.HARVESTER_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, HarvestIds(this.GetFilePath()))
-          HarvestIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-        case EntityTypes.UPGRADER_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, UpgraderIds(this.GetFilePath()))
-          UpgraderIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-        case EntityTypes.BUILDER_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, BuilderIds(this.GetFilePath()))
-          BuilderIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-        case EntityTypes.REPAIR_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, RepairIds(this.GetFilePath()))
-          RepairIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-        case EntityTypes.ATTACK_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, GaurdIds(this.GetFilePath()))
-          GaurdIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-        case EntityTypes.STRUCTURE_SUPPLIER_TYPE: {
-          const LIST = this.AddCreepToRoleList(CREEP, TowerSuppliersIds(this.GetFilePath()))
-          TowerSuppliersIds(this.GetFilePath(), LIST);
-          this.queued_roles.shift();
-          break
-        }
-      }
-    }
   }
 
   Cleanup(file: ScreepFile) {
