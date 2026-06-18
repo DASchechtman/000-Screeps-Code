@@ -12,6 +12,7 @@ const ATTACK_STATE = 1
 class RepairState implements EntityState {
     private tower_id: Id<StructureTower>
     private tower: StructureTower | null
+    private timer_map = new Map<string, number>()
     constructor(tower_id: Id<StructureTower>) {
         this.tower_id = tower_id
         this.tower = null
@@ -26,10 +27,24 @@ class RepairState implements EntityState {
         if (this.GetTower() == null) { return false }
         const TOWER = this.tower!
 
+        if (!this.timer_map.has(TOWER.id)) {
+            this.timer_map.set(TOWER.id, 0)
+        }
+
         const DAMAGED_STRUCT = GetDamagedStruct()
-        if (DAMAGED_STRUCT) {
+        let frequency = 1
+
+        if (TOWER.store.getUsedCapacity(RESOURCE_ENERGY)! < 500) {
+            frequency = 3
+        }
+
+        const COUNTER = this.timer_map.get(TOWER.id)!
+
+        if (DAMAGED_STRUCT && COUNTER % frequency === 0) {
             TOWER.repair(DAMAGED_STRUCT)
         }
+
+        this.timer_map.set(TOWER.id, COUNTER + 1)
 
         return true
     }

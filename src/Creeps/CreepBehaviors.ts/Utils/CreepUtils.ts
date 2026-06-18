@@ -7,7 +7,7 @@ import { SafeReadFromFileWithOverwrite } from "utils/UtilFuncs";
 export type CreepQueueData = { body: BodyPartConstant[], limit: number | null, creep_type: EntityTypes }
 
 export function GetContainerIdIfThereIsEnoughStoredEnergy(creep: Creep) {
-  const CONTAINERS = RoomData.GetRoomData()
+  let CONTAINERS = RoomData.GetRoomData()
     .GetRoomStructures(STRUCTURE_CONTAINER)
     .map(id => Game.getObjectById(id))
     .filter(s => {

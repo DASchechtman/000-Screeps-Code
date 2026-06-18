@@ -40,6 +40,10 @@ declare global {
     replaceAll(searchValue: string | RegExp, replaceValue: string): string
   }
 
+  interface RoomPosition {
+    Equals(pos: RoomPosition): boolean
+  }
+
 }
 // Syntax for adding properties to `global` (ex "global.log")
 declare const global: {
@@ -92,6 +96,10 @@ String.prototype.replaceAll = function(searchValue: string | RegExp, replaceValu
   else {
     return this.replace(searchValue, replaceValue)
   }
+}
+
+RoomPosition.prototype.Equals = function(pos: RoomPosition): boolean {
+  return this.x === pos.x && this.y === pos.y && this.roomName === pos.roomName
 }
 
 

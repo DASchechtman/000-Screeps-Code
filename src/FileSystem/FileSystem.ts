@@ -109,7 +109,7 @@ export class FileSystem {
             for (let creep_key in file[key]) {
                 const TIME = file[key][creep_key]?._move?.time
                 if (Game.time - Number(TIME) >= 300 || TIME == null) {
-                    file[key][creep_key] = undefined
+                    Delete(file[key], creep_key)
                 }
             }
         }
@@ -195,6 +195,10 @@ export class FileSystem {
 
   public Cleanup() {
     this.file_obj_manager.ReturnAllFiles();
+    if (FileSystem.ticks_passed < 0) {
+      FileSystem.ticks_passed = 0;
+    }
+    
     if (FileSystem.ticks_passed++ % 25 === 0) {
       this.CleanUpMemory();
     }

@@ -58,9 +58,9 @@ export class CreepScheduler {
   ): CreepQueueData[] {
     const QUEUE = new Array<{ type: EntityTypes; priority: number; energy_limit: number | null }>();
 
-    const MAX_HARVESTERS = Math.max(2, this.room_data.NumOfStructuresInRoom(STRUCTURE_CONTAINER))
+    const NUM_OF_CONTAINERS = this.room_data.NumOfStructuresInRoom(STRUCTURE_CONTAINER)
+    const MAX_HARVESTERS = Math.max(2, NUM_OF_CONTAINERS)
     const MAX_TOWERS = this.room_data.NumOfStructuresInRoom(STRUCTURE_TOWER)
-    const MAX_CONTAINERS = this.room_data.NumOfStructuresInRoom(STRUCTURE_CONTAINER)
     const EXISTING_HARVESTERS = this.room_data.NumOfCreepsInRoom(EntityTypes.HARVESTER_TYPE)
     const EXISTING_SUPPLIERS = this.room_data.NumOfCreepsInRoom(EntityTypes.STRUCTURE_SUPPLIER_TYPE)
 
@@ -82,7 +82,7 @@ export class CreepScheduler {
       }
     }
 
-    for (let i = EXISTING_SUPPLIERS; i < MAX_TOWERS + 1; i++) {
+    for (let i = EXISTING_SUPPLIERS; i < MAX_TOWERS + 1 && NUM_OF_CONTAINERS > 0; i++) {
       QUEUE.push({ type: EntityTypes.STRUCTURE_SUPPLIER_TYPE, priority: this.SupplierPriority(), energy_limit: EXISTING_SUPPLIERS ? 1200 : 300 });
     }
 

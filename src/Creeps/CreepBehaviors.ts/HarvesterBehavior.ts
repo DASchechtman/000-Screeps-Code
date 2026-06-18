@@ -56,7 +56,10 @@ class DepositInContainerState extends CreepState implements EntityState {
     if (CREEP_X !== CONTAINER_X || CREEP_Y !== CONTAINER_Y) {
       CREEP.moveTo(CONTAINER);
     } else {
-      CREEP.transfer(CONTAINER, RESOURCE_ENERGY);
+      let RET = CREEP.transfer(CONTAINER, RESOURCE_ENERGY);
+      if (RET !== OK) {
+        CREEP.drop(RESOURCE_ENERGY);
+      }
     }
 
     return true;
@@ -100,7 +103,17 @@ class HarvestEnergyState extends CreepState implements EntityState {
     }
 
     let ret = CREEP.harvest(this.source);
-    if (ret === ERR_NOT_IN_RANGE || (ret === ERR_NOT_ENOUGH_ENERGY && this.container)) {
+    if (ret === ERR_NOT_ENOUGH_ENERGY && this.container) {
+      let x = CREEP.pos.lookFor(LOOK_RESOURCES);
+      let i = x.findIndex(r => r.resourceType === RESOURCE_ENERGY)
+      if ( i !== -1) {
+        CREEP.pickup(x[i]);
+      }
+      else if (!CREEP.pos.isEqualTo(this.container.pos)) {
+        CREEP.moveTo(this.container);
+      }
+    }
+    else if (ret === ERR_NOT_IN_RANGE) {
       CREEP.moveTo(this.container ? this.container : this.source);
     }
 
@@ -109,9 +122,10 @@ class HarvestEnergyState extends CreepState implements EntityState {
 
   GetNextState(): EntityState {
     const FILLED = this.creep!.store.getFreeCapacity(RESOURCE_ENERGY) === 0;
-    if (this.container) {
+    if (FILLED && this.container) {
       return new DepositInContainerState(this.creep_id);
-    } else if (FILLED) {
+    }
+    else if (FILLED) {
       return new StructureSupplyState(this.creep_id);
     }
     return this;
@@ -155,16 +169,7 @@ class StructureSupplyState extends CreepState implements EntityState {
       }
     }
 
-    if (target == null) {
-      for (let spawns in Game.spawns) {
-        if (Game.spawns[spawns].room.name === this.creep?.room.name) {
-          target = Game.spawns[spawns];
-          break;
-        }
-      }
-    }
-
-    if (target == null) { return true; }
+    if (target == null) { return false; }
 
     let ret = this.creep!.transfer(target, RESOURCE_ENERGY);
     if (ret === ERR_NOT_IN_RANGE) {
